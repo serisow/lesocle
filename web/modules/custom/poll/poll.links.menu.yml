@@ -1,0 +1,13 @@
+#poll.admin:
+#  title: 'Polls'
+#  description: 'Configure and manage polls'
+#  parent: system.admin_structure
+#  route_name: entity.poll.collection
+#  weight: -5
+
+poll.settings:
+  title: 'Poll global Setting'
+  description: 'Configure global settings for the polls'
+  parent: system.admin_structure
+  route_name: poll.settings
+  weight: -5

@@ -1,0 +1,7 @@
+administer polls:
+  title: 'Administer Polls'
+  description: 'Create, edit, and delete polls.'
+
+administer poll settings:
+  title: 'Administer poll settings'
+  description: 'Configure poll module settings.'

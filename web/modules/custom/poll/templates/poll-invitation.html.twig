@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ subject }}</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #4a4a4a;">{{ subject }}</h1>
+  <p>Dear {{ participant_name }},</p>
+  <p>You have been invited to take the poll "{{ poll_name }}".</p>
+  <p>Please click on the following link to start your poll:</p>
+  <p>
+    <a href="{{ poll_link }}" style="display: inline-block; padding: 10px 20px; background-color: #0066cc; color: #ffffff; text-decoration: none; border-radius: 5px;">
+      Start Poll
+    </a>
+  </p>
+  <p>If the button above doesn't work, you can copy and paste this link into your browser:</p>
+  <p>{{ poll_link }}</p>
+  <p>Best regards,<br>The Poll Team</p>
+</div>
+</body>
+</html>

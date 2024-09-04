@@ -1,0 +1,8 @@
+name: Participant
+type: module
+description: Creating custom entity type
+package: Custom
+core_version_requirement: ^10 || ^11
+
+dependencies:
+  - poll:poll

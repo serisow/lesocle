@@ -1,0 +1,8 @@
+name: 'Poll'
+type: module
+description: 'Defines configurable polls.'
+package: custom
+core_version_requirement: ^10 || ^11
+
+'interface translation project': poll
+'interface translation server pattern': modules/custom/poll/translations/%project-%language.po

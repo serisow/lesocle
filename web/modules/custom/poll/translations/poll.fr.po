@@ -1,0 +1,57 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Poll module\n"
+"POT-Creation-Date: 2023-06-14 10:00+0100\n"
+"PO-Revision-Date: 2023-06-14 10:00+0100\n"
+"Last-Translator: Your Name <your.email@example.com>\n"
+"Language-Team: French <FR@example.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+msgid "General Information"
+msgstr "Informations générales"
+
+msgid "Manage Questions"
+msgstr "Gérer les questions"
+
+msgid "Manage Participants"
+msgstr "Gérer les participants"
+
+msgid "Question"
+msgstr "Question"
+
+msgid "Question Type"
+msgstr "Type de question"
+
+msgid "Answer Options"
+msgstr "Options de réponse"
+
+msgid "Add another option"
+msgstr "Ajouter une autre option"
+
+msgid "Advanced Settings"
+msgstr "Paramètres avancés"
+
+msgid "Update question type"
+msgstr "Mettre à jour le type de question"
+
+msgid "Cancel"
+msgstr "Annuler"
+
+msgid "Edit Multiple Choice Question"
+msgstr "Modifier la question à choix multiples"
+
+msgid "Edit True/False Question"
+msgstr "Modifier la question vrai/faux"
+
+msgid "Edit Short Answer Question"
+msgstr "Modifier la question à réponse courte"
+
+msgid "True"
+msgstr "Vrai"
+
+msgid "False"
+msgstr "Faux"
+

@@ -1,0 +1,5 @@
+entity.participant.add_form:
+  route_name: entity.participant.add_form
+  title: 'Add Participant'
+  appears_on:
+    - entity.participant.collection

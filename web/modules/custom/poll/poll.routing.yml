@@ -1,0 +1,221 @@
+entity.poll.collection:
+  path: '/admin/structure/polls'
+  defaults:
+    _entity_list: 'poll'
+    _title: 'Poll Management'
+  requirements:
+    _permission: 'administer polls'
+
+entity.poll.add_form:
+  path: '/admin/structure/polls/add'
+  defaults:
+    _entity_form: 'poll.add'
+    _title: 'Add poll'
+  requirements:
+    _permission: 'administer polls'
+
+entity.poll.edit_form:
+  path: '/admin/structure/polls/{poll}'
+  defaults:
+    _entity_form: 'poll.edit'
+    _title: 'Edit poll'
+  requirements:
+    _permission: 'administer polls'
+  options:
+    _admin_route: TRUE
+
+entity.poll.delete_form:
+  path: '/admin/structure/polls/{poll}/delete'
+  defaults:
+    _entity_form: 'poll.delete'
+    _title: 'Delete poll'
+  requirements:
+    _permission: 'administer polls'
+
+entity.poll.export:
+  path: '/admin/structure/polls/{poll}/export'
+  defaults:
+    _controller: '\Drupal\poll\Controller\ExportPollController::exportPoll'
+    _title: 'Export poll'
+  requirements:
+    _permission: 'administer polls'
+
+
+poll.question_type_delete:
+  path: '/admin/structure/polls/{poll}/question_types/{question_type}/delete'
+  defaults:
+    _form: '\Drupal\poll\Form\PollQuestionTypeDeleteForm'
+    _title: 'Delete poll Question Type'
+  requirements:
+    _permission: 'administer polls'
+
+# This route is for organizing the form using local tasks
+entity.poll.edit_questions:
+  path: '/admin/structure/polls/{poll}/questions'
+  defaults:
+    _entity_form: 'poll.edit'
+    _title: 'Edit poll Questions'
+  requirements:
+    _permission: 'administer polls'
+
+poll.question_type_add_form:
+  path: '/admin/structure/polls/{poll}/add/{question_type}'
+  defaults:
+    _form: '\Drupal\poll\Form\PollQuestionTypeAddForm'
+    _title_callback: '\Drupal\poll\Form\PollQuestionTypeAddForm::getTitle'
+  requirements:
+    _permission: 'administer polls'
+  options:
+    _admin_route: TRUE
+    parameters:
+      poll:
+        type: entity:poll
+
+poll.question_type_edit_form:
+  path: '/admin/structure/polls/{poll}/question_types/{question_type}/uuid/{uuid}'
+  defaults:
+    _form: '\Drupal\poll\Form\PollQuestionTypeEditForm'
+    _title: 'Edit poll Question Type'
+  requirements:
+    _permission: 'administer polls'
+  options:
+    parameters:
+      poll:
+        type: entity:poll
+
+
+poll.question_type_add_ajax:
+  path: '/admin/structure/polls/{poll}/add-question-type-ajax'
+  defaults:
+    _controller: '\Drupal\poll\Controller\PollQuestionTypeController::addQuestionTypeAjax'
+  requirements:
+    _permission: 'administer polls'
+  options:
+    parameters:
+      poll:
+        type: entity:poll
+
+# route which handle the submit of the modal when the "Update question type" button is clicked
+poll.question_type_ajax:
+  path: '/admin/structure/polls/{poll}/question-type-ajax/{question_type}'
+  defaults:
+    _controller: '\Drupal\poll\Controller\PollQuestionTypeController::questionTypeAjax'
+    question_type: null
+  requirements:
+    _permission: 'administer polls'
+  options:
+    parameters:
+      poll:
+        type: entity:poll
+
+entity.poll.participants:
+  path: '/admin/structure/polls/{poll}/participants'
+  defaults:
+    _controller: '\Drupal\poll\Controller\PollParticipantsController::content'
+    _title: 'Manage Participants'
+  requirements:
+    _permission: 'administer polls'
+  options:
+    parameters:
+      poll:
+        type: entity:poll
+    _admin_route: TRUE
+
+poll.submit_data:
+  path: '/api/poll/submit'
+  defaults:
+    _controller: '\Drupal\poll\Controller\PollApiController::submitPoll'
+    _title: 'Submit poll Data'
+  requirements:
+    _permission: 'access content'
+  methods: [POST]
+
+poll.add_multiple_choice_option:
+  path: '/admin/structure/polls/{poll}/add-multiple-choice-option'
+  defaults:
+    _controller: '\Drupal\poll\Controller\MultipleChoiceController::addMultipleChoiceOption'
+  requirements:
+    _permission: 'administer polls'
+  options:
+    parameters:
+      poll:
+        type: entity:poll
+
+
+# When use add a new option in the modal, input tex, when the input focus left,
+# the onchange event fire, this route is hit
+poll.question_type_on_option_change:
+  path: '/admin/structure/polls/{poll}/question-type-onchange-input/{question_type}'
+  defaults:
+    _controller: '\Drupal\poll\Controller\MultipleChoiceController::handleOnInputChange'
+    question_type: null
+  requirements:
+    _permission: 'administer polls'
+  options:
+    parameters:
+      poll:
+        type: entity:poll
+
+poll.take:
+  path: '/api/poll/take/{access_token}'
+  defaults:
+    _controller: '\Drupal\poll\Controller\PollApiController::getPollForParticipant'
+    _title: 'Take poll'
+  requirements:
+    _access: 'TRUE'
+  methods: [GET]
+
+poll.analysis:
+  path: '/poll/analysis/{poll_id}'
+  defaults:
+    _controller: '\Drupal\poll\Controller\PollAnalysisController::analyzePolls'
+    _title: 'Get poll responses'
+  requirements:
+    _access: 'TRUE'
+  methods: [GET]
+
+poll.settings:
+  path: '/admin/config/poll/settings'
+  defaults:
+    _form: '\Drupal\poll\Form\PollSettingsForm'
+    _title: 'Poll Settings'
+  requirements:
+    _permission: 'administer poll settings'
+
+poll.send_invite:
+  path: '/admin/structure/polls/{poll}/send-invite/{participant}'
+  defaults:
+    _controller: '\Drupal\poll\Controller\PollInviteController::sendInvite'
+    _title: 'Send Poll Invite'
+  requirements:
+    _permission: 'administer polls'
+  options:
+    parameters:
+      poll:
+        type: entity:poll
+      participant:
+        type: entity:participant
+
+poll.register_start:
+  path: '/api/poll/register-start'
+  defaults:
+    _controller: '\Drupal\poll\Controller\PollApiController::registerPollStart'
+  methods: [POST]
+  requirements:
+    _access: 'TRUE'
+
+poll.save_answer:
+  path: '/api/poll/save-answer'
+  defaults:
+    _controller: '\Drupal\poll\Controller\PollApiController::saveAnswer'
+  methods: [POST]
+  requirements:
+    _access: 'TRUE'
+
+poll.redirect_to_insight:
+  path: '/admin/structure/polls/{poll}/view-analysis'
+  defaults:
+    _controller: '\Drupal\poll\Controller\PollRedirectController::redirectToInsight'
+    _title: 'View Poll Analysis'
+  requirements:
+    _permission: 'administer polls'

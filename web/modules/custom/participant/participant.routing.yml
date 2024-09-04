@@ -1,0 +1,65 @@
+entity.participant.settings:
+  path: 'admin/content/participant'
+  defaults:
+    _form: '\Drupal\participant\Form\ParticipantSettingsForm'
+    _title: 'Participant Settings'
+  requirements:
+    _permission: 'administer participants'
+
+entity.participant.collection:
+  path: '/admin/content/participants'
+  defaults:
+    _entity_list: 'participant'
+    _title: 'Participants'
+  requirements:
+    _permission: 'view participants'
+
+entity.participant.add_form:
+  path: '/admin/content/participant/add'
+  defaults:
+    _entity_form: 'participant.add'
+    _title: 'Add Participant'
+  requirements:
+    _permission: 'create participants'
+
+entity.participant.canonical:
+  path: '/participant/{participant}'
+  defaults:
+    _entity_view: 'participant'
+    _title: 'Participant'
+  requirements:
+    _entity_access: 'participant.view'
+
+entity.participant.edit_form:
+  path: '/admin/content/participant/{participant}/edit'
+  defaults:
+    _entity_form: 'participant.edit'
+    _title: 'Edit Participant'
+  requirements:
+    _entity_access: 'participant.update'
+
+entity.participant.delete_form:
+  path: '/admin/content/participant/{participant}/delete'
+  defaults:
+    _entity_form: 'participant.delete'
+    _title: 'Delete Participant'
+  requirements:
+    _entity_access: 'participant.delete'
+
+participant.edit_modal:
+  path: '/admin/structure/polls/{poll}/participant/{participant}/edit-modal'
+  defaults:
+    _controller: '\Drupal\participant\Controller\ParticipantController::openEditModal'
+    _title: 'Edit Participant'
+  requirements:
+    _permission: 'administer participants'
+
+poll.add_participant_modal:
+  path: '/admin/structure/polls/{poll}/add-participant-modal'
+  defaults:
+    _controller: '\Drupal\participant\Controller\ParticipantController::openAddModal'
+    _title: 'Add Participant'
+  requirements:
+    _permission: 'administer participants'
+  options:
+    _admin_route: TRUE

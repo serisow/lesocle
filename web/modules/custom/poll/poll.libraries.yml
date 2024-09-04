@@ -1,0 +1,38 @@
+admin:
+  version: VERSION
+  css:
+    theme:
+      css/poll.admin.css: {}
+      css/poll.modal.css: {}
+
+question_type_modal:
+  js:
+    js/poll-question-type-modal.js: {}
+    js/multiple-choice-question.js: { }
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+    - core/drupal.dialog
+
+invite:
+  js:
+    js/poll-invite.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+
+poll_participant:
+  js:
+    js/poll-participant.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - core/drupal.dialog
+
+participant_styles:
+  css:
+    theme:
+      css/participant_styles.css: {}
