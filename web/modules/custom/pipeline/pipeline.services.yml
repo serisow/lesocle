@@ -2,3 +2,7 @@ services:
   plugin.manager.step_type:
     class: Drupal\pipeline\Plugin\StepTypeManager
     parent: default_plugin_manager
+
+  pipeline.openai_service:
+    class: Drupal\pipeline\Service\OpenAIService
+    arguments: [ '@http_client', '@logger.factory' ]

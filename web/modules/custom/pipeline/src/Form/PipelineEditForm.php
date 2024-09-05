@@ -166,11 +166,28 @@ class PipelineEditForm extends PipelineFormBase {
         $step_number++;
       }
     }
+
     $form['#attributes']['data-action-url'] = $this->entity->toUrl('edit-form')->toString();
     return $form;
   }
 
+  public function executePipeline(array &$form, FormStateInterface $form_state) {
+    $pipeline = $this->entity;
+    $batch = [
+      'title' => $this->t('Executing Pipeline'),
+      'operations' => [],
+      'finished' => '\Drupal\pipeline\PipelineBatch::finishBatch',
+    ];
 
+    foreach ($pipeline->getStepTypes() as $step_type) {
+      $batch['operations'][] = [
+        '\Drupal\pipeline\PipelineBatch::processStep',
+        [$pipeline->id(), $step_type->getUuid()],
+      ];
+    }
+
+    batch_set($batch);
+  }
   public function validateAddStepType(array &$form, FormStateInterface $form_state) {
     $new_step_type = $form_state->getValue(['add_step', 'step_type']);
     if (empty($new_step_type)) {
@@ -290,7 +307,12 @@ class PipelineEditForm extends PipelineFormBase {
   public function actions(array $form, FormStateInterface $form_state) {
     $actions = parent::actions($form, $form_state);
     $actions['submit']['#value'] = $this->t('Update pipeline');
-
+    $actions['execute'] = [
+      '#type' => 'submit',
+      '#value' => $this->t('Execute Pipeline'),
+      '#submit' => ['::executePipeline'],
+      '#weight' => 5,
+    ];
     return $actions;
   }
 
