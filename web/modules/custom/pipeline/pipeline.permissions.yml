@@ -1,0 +1,7 @@
+administer pipelines:
+  title: 'Administer Pipelines'
+  description: 'Create, edit, and delete pipelines.'
+
+administer pipeline settings:
+  title: 'Administer pipeline settings'
+  description: 'Configure pipeline module settings.'

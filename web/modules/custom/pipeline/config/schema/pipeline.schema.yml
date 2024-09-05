@@ -1,0 +1,42 @@
+pipeline.pipeline.*:
+  type: config_entity
+  label: 'Pipeline'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'
+    instructions:
+      type: text
+      label: 'Instructions'
+    status:
+      type: string
+      label: 'Status'
+    langcode:
+      type: string
+      label: 'Language code'
+    created:
+      type: integer
+      label: 'Created timestamp'
+    changed:
+      type: integer
+      label: 'Changed timestamp'
+    step_types:
+      type: sequence
+      sequence:
+        type: mapping
+        mapping:
+          id:
+            type: string
+          data:
+            type: pipeline.step_type.[%parent.id]
+          weight:
+            type: integer
+          uuid:
+            type: string
+
+pipeline.step_type.*:
+  type: mapping
+  label: 'Step type settings'

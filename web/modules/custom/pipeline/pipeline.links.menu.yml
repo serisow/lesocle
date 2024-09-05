@@ -1,0 +1,13 @@
+#pipeline.admin:
+#  title: 'Pipelines'
+#  description: 'Configure and manage pipelines'
+#  parent: system.admin_structure
+#  route_name: entity.pipeline.collection
+#  weight: -5
+
+pipeline.settings:
+  title: 'Pipeline global Setting'
+  description: 'Configure global settings for the pipelines'
+  parent: system.admin_structure
+  route_name: pipeline.settings
+  weight: -5

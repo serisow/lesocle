@@ -1,0 +1,4 @@
+services:
+  plugin.manager.step_type:
+    class: Drupal\pipeline\Plugin\StepTypeManager
+    parent: default_plugin_manager

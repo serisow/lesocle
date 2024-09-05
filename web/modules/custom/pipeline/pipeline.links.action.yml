@@ -1,0 +1,5 @@
+pipeline.pipeline_add:
+  route_name: entity.pipeline.add_form
+  title: 'Add Pipeline'
+  appears_on:
+    - entity.pipeline.collection

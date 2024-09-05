@@ -1,0 +1,149 @@
+entity.pipeline.collection:
+  path: '/admin/structure/pipelines'
+  defaults:
+    _entity_list: 'pipeline'
+    _title: 'Pipeline Management'
+  requirements:
+    _permission: 'administer pipelines'
+
+entity.pipeline.add_form:
+  path: '/admin/structure/pipelines/add'
+  defaults:
+    _entity_form: 'pipeline.add'
+    _title: 'Add pipeline'
+  requirements:
+    _permission: 'administer pipelines'
+
+entity.pipeline.edit_form:
+  path: '/admin/structure/pipelines/{pipeline}'
+  defaults:
+    _entity_form: 'pipeline.edit'
+    _title: 'Edit pipeline'
+  requirements:
+    _permission: 'administer pipelines'
+  options:
+    _admin_route: TRUE
+
+entity.pipeline.delete_form:
+  path: '/admin/structure/pipelines/{pipeline}/delete'
+  defaults:
+    _entity_form: 'pipeline.delete'
+    _title: 'Delete pipeline'
+  requirements:
+    _permission: 'administer pipelines'
+
+entity.pipeline.export:
+  path: '/admin/structure/pipelines/{pipeline}/export'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\ExportPipelineController::exportPipeline'
+    _title: 'Export pipeline'
+  requirements:
+    _permission: 'administer pipelines'
+
+
+pipeline.step_type_delete:
+  path: '/admin/structure/pipelines/{pipeline}/step_types/{step_type}/delete'
+  defaults:
+    _form: '\Drupal\pipeline\Form\PipelineStepTypeDeleteForm'
+    _title: 'Delete pipeline Step Type'
+  requirements:
+    _permission: 'administer pipelines'
+
+# This route is for organizing the form using local tasks
+entity.pipeline.edit_steps:
+  path: '/admin/structure/pipelines/{pipeline}/steps'
+  defaults:
+    _entity_form: 'pipeline.edit'
+    _title: 'Edit pipeline Steps'
+  requirements:
+    _permission: 'administer pipelines'
+
+pipeline.step_type_add_form:
+  path: '/admin/structure/pipelines/{pipeline}/add/{step_type}'
+  defaults:
+    _form: '\Drupal\pipeline\Form\PipelineStepTypeAddForm'
+    _title_callback: '\Drupal\pipeline\Form\PipelineStepTypeAddForm::getTitle'
+  requirements:
+    _permission: 'administer pipelines'
+  options:
+    _admin_route: TRUE
+    parameters:
+      pipeline:
+        type: entity:pipeline
+
+pipeline.step_type_edit_form:
+  path: '/admin/structure/pipelines/{pipeline}/step_types/{step_type}/uuid/{uuid}'
+  defaults:
+    _form: '\Drupal\pipeline\Form\PipelineStepTypeEditForm'
+    _title: 'Edit pipeline Step Type'
+  requirements:
+    _permission: 'administer pipelines'
+  options:
+    parameters:
+      pipeline:
+        type: entity:pipeline
+
+
+pipeline.step_type_add_ajax:
+  path: '/admin/structure/pipelines/{pipeline}/add-step-type-ajax'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\PipelineStepTypeController::addStepTypeAjax'
+  requirements:
+    _permission: 'administer pipelines'
+  options:
+    parameters:
+      pipeline:
+        type: entity:pipeline
+
+# route which handle the submit of the modal when the "Update step type" button is clicked
+pipeline.step_type_ajax:
+  path: '/admin/structure/pipelines/{pipeline}/step-type-ajax/{step_type}'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\PipelineStepTypeController::stepTypeAjax'
+    step_type: null
+  requirements:
+    _permission: 'administer pipelines'
+  options:
+    parameters:
+      pipeline:
+        type: entity:pipeline
+
+
+pipeline.add_multiple_choice_option:
+  path: '/admin/structure/pipelines/{pipeline}/add-multiple-choice-option'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\MultipleChoiceController::addMultipleChoiceOption'
+  requirements:
+    _permission: 'administer pipelines'
+  options:
+    parameters:
+      pipeline:
+        type: entity:pipeline
+
+# When use add a new option in the modal, input tex, when the input focus left,
+# the onchange event fire, this route is hit
+pipeline.step_type_on_option_change:
+  path: '/admin/structure/pipelines/{pipeline}/step-type-onchange-input/{step_type}'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\MultipleChoiceController::handleOnInputChange'
+    step_type: null
+  requirements:
+    _permission: 'administer pipelines'
+  options:
+    parameters:
+      pipeline:
+        type: entity:pipeline
+
+
+pipeline.settings:
+  path: '/admin/config/pipeline/settings'
+  defaults:
+    _form: '\Drupal\pipeline\Form\PipelineSettingsForm'
+    _title: 'Pipeline Settings'
+  requirements:
+    _permission: 'administer pipeline settings'
+
+
+
+
+

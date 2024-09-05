@@ -1,0 +1,16 @@
+admin:
+  version: VERSION
+  css:
+    theme:
+      css/pipeline.admin.css: {}
+      css/pipeline.modal.css: {}
+
+step_type_modal:
+  js:
+    js/pipeline-step-type-modal.js: {}
+    js/multiple-choice-step.js: { }
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/once
+    - core/drupal.dialog

@@ -37,5 +37,5 @@ RUN echo 'http://dl-cdn.alpinelinux.org/alpine/v3.8/main' >> /etc/apk/repositori
 # Add wkhtmltopdf
 #COPY --from=wkhtmltopdf /bin/wkhtmltopdf /bin/wkhtmltopdf
 # Copy xdebug configuration
-#COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
+COPY ./xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 USER wodby

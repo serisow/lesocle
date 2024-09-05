@@ -1,0 +1,28 @@
+entity.pipeline.collection:
+  title: 'Pipelines'
+  route_name: entity.pipeline.collection
+  base_route: entity.pipeline.collection
+
+#entity.pipeline.edit_form:
+#  title: 'Edit'
+#  route_name: entity.pipeline.edit_form
+#  base_route: entity.pipeline.edit_form
+
+#entity.pipeline.delete_form:
+#  title: 'Delete'
+#  route_name: entity.pipeline.delete_form
+#  base_route: entity.pipeline.edit_form
+#  weight: 10
+
+entity.pipeline.edit_form:
+  route_name: entity.pipeline.edit_form
+  title: 'General Information'
+  base_route: entity.pipeline.edit_form
+
+entity.pipeline.edit_steps:
+  route_name: entity.pipeline.edit_steps
+  title: 'Steps'
+  base_route: entity.pipeline.edit_form
+  weight: 10
+  class: Drupal\pipeline\Plugin\Menu\PipelineStepLocalTasks
+

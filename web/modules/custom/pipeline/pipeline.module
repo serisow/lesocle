@@ -1,0 +1,13 @@
+<?php
+
+
+use Drupal\Core\Render\Markup;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
+/**
+ * Implements hook_menu_links_discovered_alter().
+ */
+function pipeline_menu_links_discovered_alter(&$links) {
+ unset($links['system.admin_content']);
+}
+

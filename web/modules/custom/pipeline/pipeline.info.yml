@@ -1,0 +1,8 @@
+name: 'Pipeline'
+type: module
+description: 'Defines configurable pipelines.'
+package: custom
+core_version_requirement: ^10 || ^11
+
+'interface translation project': pipeline
+'interface translation server pattern': modules/custom/pipeline/translations/%project-%language.po
