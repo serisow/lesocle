@@ -1,6 +1,4 @@
 <?php
-
-
 namespace Drupal\pipeline\Form;
 
 use Drupal\Core\Entity\EntityForm;
@@ -64,11 +62,14 @@ class LLMConfigForm extends EntityForm
 
     // Model Name field.
     $form['model_name'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Model Name'),
-      '#maxlength' => 255,
-      '#default_value' => $llm_config->getModelName(),
-      '#description' => $this->t('The name of the LLM model.'),
+      '#options' => [
+        'gpt-3.5-turbo' => 'GPT-3.5 Turbo',
+        'gpt-4' => 'GPT-4',
+        // Add more options as needed
+      ],
+      '#default_value' => $llm_config->get('model_name'),
       '#required' => TRUE,
     ];
 

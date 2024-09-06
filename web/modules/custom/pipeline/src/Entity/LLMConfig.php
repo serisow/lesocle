@@ -16,7 +16,8 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *       "add" = "Drupal\pipeline\Form\LLMConfigForm",
  *       "edit" = "Drupal\pipeline\Form\LLMConfigForm",
  *       "delete" = "Drupal\pipeline\Form\LLMConfigDeleteForm"
- *     }
+ *     },
+ *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *   },
  *   config_prefix = "llm_config",
  *   admin_permission = "administer llm config",
@@ -35,6 +36,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "id",
  *     "label",
  *     "api_url",
+ *     "api_key",
  *     "model_name",
  *     "model_version",
  *     "temperature",
@@ -42,7 +44,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "top_p",
  *     "frequency_penalty",
  *     "presence_penalty",
- *     "stop_sequence"
+ *     "stop_sequence",
  *   }
  * )
  */
@@ -131,6 +133,13 @@ class LLMConfig extends ConfigEntityBase {
    * @var string
    */
   protected $stop_sequence = "\n";
+
+  /**
+   * The LLM service plugin ID.
+   *
+   * @var string
+   */
+  protected $service_id = 'openai';
 
   // Getters and Setters.
 
@@ -334,4 +343,29 @@ class LLMConfig extends ConfigEntityBase {
     $this->stop_sequence = $stop_sequence;
   }
 
+  public function setServiceId(string $service_id): self {
+    $this->service_id = $service_id;
+    return $this;
+  }
+
+  /**
+   * Maps model names to their corresponding service IDs.
+   *
+   * @var array
+   */
+  protected static $modelServiceMap = [
+    'gpt-3.5-turbo' => 'openai',
+    'gpt-4' => 'openai',
+    // Add more mappings as needed
+  ];
+
+  /**
+   * Gets the service ID based on the model name.
+   *
+   * @return string
+   *   The service ID.
+   */
+  public function getServiceId(): string {
+    return self::$modelServiceMap[$this->model_name] ?? 'openai';
+  }
 }

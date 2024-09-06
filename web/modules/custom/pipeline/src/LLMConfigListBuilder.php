@@ -4,6 +4,7 @@ namespace Drupal\pipeline;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Url;
 
 /**
  * Provides a list controller for the LLM Config entity.
@@ -32,8 +33,35 @@ class LLMConfigListBuilder extends ConfigEntityListBuilder {
     $row['api_url'] = $entity->getApiUrl();
     $row['model_name'] = $entity->getModelName();
     $row['model_version'] = $entity->getModelVersion();
-    $row['operations'] = $this->buildOperations($entity);
     return $row + parent::buildRow($entity);
+  }
+
+  public function getDefaultOperations(EntityInterface $entity) {
+    $operations = parent::getDefaultOperations($entity);
+
+    $operations['edit'] = [
+      'title' => $this->t('Edit'),
+      'weight' => 10,
+      'url' => $entity->toUrl('edit-form'),
+    ];
+
+    $operations['delete'] = [
+      'title' => $this->t('Delete'),
+      'weight' => 100,
+      'url' => $entity->toUrl('delete-form'),
+    ];
+
+    return $operations;
+  }
+  /**
+   * {@inheritdoc}
+   */
+  public function render() {
+    $build = parent::render();
+    $build['table']['#empty'] = $this->t('There are currently no llm config.', [
+      ':url' => Url::fromRoute('entity.llm_config.add_form')->toString(),
+    ]);
+    return $build;
   }
 
 }

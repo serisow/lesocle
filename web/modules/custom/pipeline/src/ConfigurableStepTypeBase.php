@@ -40,7 +40,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       '#default_value' => $step_description,
       '#description' => $this->t('Enter the text of the description.'),
       '#required' => TRUE,
-      '#rows' => 7,
+      '#rows' => 2,
     ];
     return $this->additionalConfigurationForm($form, $form_state);
   }

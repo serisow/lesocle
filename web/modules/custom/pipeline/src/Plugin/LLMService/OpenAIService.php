@@ -1,12 +1,20 @@
 <?php
-namespace Drupal\pipeline\Service;
+namespace Drupal\pipeline\Plugin\LLMService;
 
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Plugin\PluginBase;
+use Drupal\pipeline\Plugin\LLMServiceInterface;
 use GuzzleHttp\ClientInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class OpenAIService
-{
-
+/**
+ * @LLMService(
+ *   id = "openai",
+ *   label = @Translation("OpenAI Service")
+ * )
+ */
+class OpenAIService  extends PluginBase implements LLMServiceInterface, ContainerFactoryPluginInterface {
   /**
    * The HTTP client.
    *
@@ -29,11 +37,22 @@ class OpenAIService
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger factory.
    */
-  public function __construct(ClientInterface $http_client, LoggerChannelFactoryInterface $logger_factory)
-  {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, LoggerChannelFactoryInterface $logger_factory) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->httpClient = $http_client;
     $this->loggerFactory = $logger_factory;
   }
+
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('http_client'),
+      $container->get('logger.factory')
+    );
+  }
+
 
   /**
    * Calls the OpenAI API.
@@ -50,8 +69,7 @@ class OpenAIService
    *
    * @throws \Exception
    */
-  public function callOpenAI(string $api_url, string $api_key, string $prompt): string
-  {
+  public function callOpenAI(string $api_url, string $api_key, string $prompt): string {
     $messages = [
       [
         'role' => 'system',
@@ -87,5 +105,12 @@ class OpenAIService
       $this->loggerFactory->get('pipeline')->error('Error calling OpenAI API: @error', ['@error' => $e->getMessage()]);
       throw new \Exception('Failed to call OpenAI API: ' . $e->getMessage());
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function callLLM(array $config, string $prompt): string {
+    return $this->callOpenAI($config['api_url'], $config['api_key'], $prompt);
   }
 }

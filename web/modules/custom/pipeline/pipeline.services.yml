@@ -3,6 +3,6 @@ services:
     class: Drupal\pipeline\Plugin\StepTypeManager
     parent: default_plugin_manager
 
-  pipeline.openai_service:
-    class: Drupal\pipeline\Service\OpenAIService
-    arguments: [ '@http_client', '@logger.factory' ]
+  plugin.manager.llm_service:
+    class: Drupal\pipeline\Plugin\LLMServiceManager
+    parent: default_plugin_manager
