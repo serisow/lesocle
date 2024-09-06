@@ -26,3 +26,13 @@ entity.pipeline.edit_steps:
   weight: 10
   class: Drupal\pipeline\Plugin\Menu\PipelineStepLocalTasks
 
+llm_config.edit:
+  route_name: entity.llm_config.edit_form
+  title: 'Edit'
+  base_route: entity.llm_config.canonical
+
+llm_config.delete:
+  route_name: entity.llm_config.delete_form
+  title: 'Delete'
+  base_route: entity.llm_config.canonical
+

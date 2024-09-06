@@ -143,3 +143,48 @@ pipeline.settings:
   requirements:
     _permission: 'administer pipeline settings'
 
+
+# LLM CONFIG routes
+entity.llm_config.canonical:
+  path: '/admin/config/llm/{llm_config}'
+  defaults:
+    _entity_view: 'llm_config.full'
+    _title: 'LLM Config'
+  requirements:
+    _permission: 'administer llm config'
+  options:
+    parameters:
+      llm_config:
+        type: entity:llm_config
+
+entity.llm_config.collection:
+  path: '/admin/config/llm'
+  defaults:
+    _entity_list: 'llm_config'
+    _title: 'LLM Configurations'
+  requirements:
+    _permission: 'administer llm config'
+
+entity.llm_config.add_form:
+  path: '/admin/config/llm/add'
+  defaults:
+    _entity_form: 'llm_config.add'
+    _title: 'Add LLM Configuration'
+  requirements:
+    _permission: 'administer llm config'
+
+entity.llm_config.edit_form:
+  path: '/admin/config/llm/{llm_config}/edit'
+  defaults:
+    _entity_form: 'llm_config.edit'
+    _title: 'Edit LLM Configuration'
+  requirements:
+    _permission: 'administer llm config'
+
+entity.llm_config.delete_form:
+  path: '/admin/config/llm/{llm_config}/delete'
+  defaults:
+    _entity_form: 'llm_config.delete'
+    _title: 'Delete LLM Configuration'
+  requirements:
+    _permission: 'administer llm config'

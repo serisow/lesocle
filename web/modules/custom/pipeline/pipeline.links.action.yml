@@ -3,3 +3,19 @@ pipeline.pipeline_add:
   title: 'Add Pipeline'
   appears_on:
     - entity.pipeline.collection
+
+llm_config.add:
+  route_name: entity.llm_config.add_form
+  title: 'Add LLM Configuration'
+  appears_on:
+    - entity.llm_config.collection
+
+llm_config.edit:
+  route_name: entity.llm_config.edit_form
+  title: 'Edit'
+  base_route: entity.llm_config.canonical
+
+llm_config.delete:
+  route_name: entity.llm_config.delete_form
+  title: 'Delete'
+  base_route: entity.llm_config.canonical

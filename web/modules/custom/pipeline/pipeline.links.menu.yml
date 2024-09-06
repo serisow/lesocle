@@ -11,3 +11,10 @@ pipeline.settings:
   parent: system.admin_structure
   route_name: pipeline.settings
   weight: -5
+
+pipeline.llm_config_list:
+  title: 'LLM Configurations'
+  description: 'Manage configurations for LLM APIs'
+  parent: system.admin_config
+  route_name: entity.llm_config.collection
+  weight: 100
