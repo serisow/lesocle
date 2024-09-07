@@ -3,21 +3,18 @@
 namespace Drupal\pipeline\Plugin\StepType;
 
 use Drupal\pipeline\AbstractLLMStepType;
-use Drupal\pipeline\ConfigurableStepTypeBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\pipeline\Service\OpenAIService;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Provides an 'OpenAI Test' step type.
+ * Provides an 'LLM' step type.
  *
  * @StepType(
- *   id = "openai_test",
- *   label = @Translation("OpenAI Test Step"),
- *   description = @Translation("A step to test OpenAI API calls.")
+ *   id = "llm_step",
+ *   label = @Translation("LLM Step"),
+ *   description = @Translation("A step to issue LLM API calls.")
  * )
  */
-class OpenAITestStep extends AbstractLLMStepType {
+class LLMStep extends AbstractLLMStepType {
   /**
    * {@inheritdoc}
    */

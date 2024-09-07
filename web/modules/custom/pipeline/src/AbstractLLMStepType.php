@@ -107,9 +107,9 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $model_service_map = [
       'gpt-3.5-turbo' => 'openai',
       'gpt-4' => 'openai',
-      // Add more mappings as needed
+      'gemini-1.5-flash' => 'gemini',
+      'claude-3-5-sonnet-20240620' => 'anthropic'
     ];
-
     return $model_service_map[$model_name] ?? 'openai'; // Default to 'openai' if not found
   }
 }

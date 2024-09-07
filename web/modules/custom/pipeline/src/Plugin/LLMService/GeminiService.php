@@ -10,11 +10,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * @LLMService(
- *   id = "openai",
- *   label = @Translation("OpenAI Service")
+ *   id = "gemini",
+ *   label = @Translation("Gemini Service")
  * )
  */
-class OpenAIService  extends PluginBase implements LLMServiceInterface, ContainerFactoryPluginInterface {
+class GeminiService extends PluginBase implements LLMServiceInterface, ContainerFactoryPluginInterface {
   /**
    * The HTTP client.
    *
@@ -29,14 +29,6 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
    */
   protected $loggerFactory;
 
-  /**
-   * Constructs a new OpenAIService object.
-   *
-   * @param \GuzzleHttp\ClientInterface $http_client
-   *   The HTTP client.
-   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
-   *   The logger factory.
-   */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, LoggerChannelFactoryInterface $logger_factory) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->httpClient = $http_client;
@@ -53,14 +45,13 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
     );
   }
 
-
   /**
-   * Calls the OpenAI API.
+   * Calls the Gemini API.
    *
    * @param string $api_url
-   *   The OpenAI API URL.
+   *   The Gemini API URL.
    * @param string $api_key
-   *   The OpenAI API key.
+   *   The Gemini API key.
    * @param string $prompt
    *   The prompt to send to the API.
    *
@@ -69,12 +60,8 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
    *
    * @throws \Exception
    */
-  public function callOpenAI(array $config, string $prompt): string {
+  public function callGemini(string $api_url, string $api_key, string $prompt): string {
     $messages = [
-      [
-        'role' => 'system',
-        'content' => 'You are a helpful assistant.',
-      ],
       [
         'role' => 'user',
         'content' => $prompt,
@@ -82,13 +69,13 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
     ];
 
     try {
-      $response = $this->httpClient->post($config['api_url'], [
+      $response = $this->httpClient->post($api_url, [
         'headers' => [
-          'Authorization' => 'Bearer ' . $config['api_key'],
+          'Authorization' => 'Bearer ' . $api_key,
           'Content-Type' => 'application/json',
         ],
         'json' => [
-          'model' => 'gpt-3.5-turbo',
+          'model' => 'gemini-1.5-pro',  // Set the specific Gemini model
           'messages' => $messages,
         ],
       ]);
@@ -99,20 +86,18 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
       if (isset($data['choices'][0]['message']['content'])) {
         return $data['choices'][0]['message']['content'];
       } else {
-        throw new \Exception('Unexpected response format from OpenAI API.');
+        throw new \Exception('Unexpected response format from Gemini API.');
       }
     } catch (\Exception $e) {
-      $this->loggerFactory->get('pipeline')->error('Error calling OpenAI API: @error', ['@error' => $e->getMessage()]);
-      throw new \Exception('Failed to call OpenAI API: ' . $e->getMessage());
+      $this->loggerFactory->get('pipeline')->error('Error calling Gemini API: @error', ['@error' => $e->getMessage()]);
+      throw new \Exception('Failed to call Gemini API: ' . $e->getMessage());
     }
   }
 
   /**
    * {@inheritdoc}
-   *
-   * @TODO:SSOW : PASS THE ENTIRE CONFIG (for example change the model in callOpenAI)
    */
   public function callLLM(array $config, string $prompt): string {
-    return $this->callOpenAI($config, $prompt);
+    return $this->callGemini($config['api_url'], $config['api_key'], $prompt);
   }
 }

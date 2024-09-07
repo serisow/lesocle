@@ -1,5 +1,4 @@
 <?php
-
 namespace Drupal\pipeline;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
