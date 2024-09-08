@@ -13,9 +13,18 @@ class PipelineBatch {
 
     if ($step_type instanceof StepTypeExecutableInterface) {
       try {
+        // Get the LLM Config associated with this step
+        $config = $step_type->getConfiguration();
+        $llm_config_id = $config['data']['llm_config'] ?? '';
+        $llm_config = \Drupal::entityTypeManager()->getStorage('llm_config')->load($llm_config_id);
+        $model_name = $llm_config ? $llm_config->getModelName() : 'N/A';
+
         $result = $step_type->execute($context);
         $context['results'][] = $result;
-        $context['message'] = t('Processed step: @step', ['@step' => $step_type->getStepDescription()]);
+        $context['message'] = t('Processed step: @step (Model: @model)', [
+          '@step' => $step_type->getStepDescription(),
+          '@model' => $model_name,
+        ]);
 
         // Save the updated pipeline
         $pipeline->save();

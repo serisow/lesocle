@@ -15,18 +15,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 class GeminiService extends PluginBase implements LLMServiceInterface, ContainerFactoryPluginInterface {
-  /**
-   * The HTTP client.
-   *
-   * @var \GuzzleHttp\ClientInterface
-   */
   protected $httpClient;
-
-  /**
-   * The logger factory.
-   *
-   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
-   */
   protected $loggerFactory;
 
   public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, LoggerChannelFactoryInterface $logger_factory) {
@@ -45,46 +34,40 @@ class GeminiService extends PluginBase implements LLMServiceInterface, Container
     );
   }
 
-  /**
-   * Calls the Gemini API.
-   *
-   * @param string $api_url
-   *   The Gemini API URL.
-   * @param string $api_key
-   *   The Gemini API key.
-   * @param string $prompt
-   *   The prompt to send to the API.
-   *
-   * @return string
-   *   The response from the API.
-   *
-   * @throws \Exception
-   */
-  public function callGemini(string $api_url, string $api_key, string $prompt): string {
-    $messages = [
-      [
-        'role' => 'user',
-        'content' => $prompt,
+  public function callGemini(string $api_key, string $prompt, array $config): string {
+    $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-exp-0827:generateContent?key={$api_key}";
+
+    $payload = [
+      'contents' => [
+        [
+          'role' => 'user',
+          'parts' => [
+            ['text' => $prompt]
+          ]
+        ]
       ],
+      'generationConfig' => [
+        'temperature' => $config['temperature'] ?? 1,
+        'topK' => $config['top_k'] ?? 64,
+        'topP' => $config['top_p'] ?? 0.95,
+        'maxOutputTokens' => $config['max_tokens'] ?? 8192,
+        'responseMimeType' => 'text/plain'
+      ]
     ];
 
     try {
-      $response = $this->httpClient->post($api_url, [
+      $response = $this->httpClient->post($url, [
         'headers' => [
-          'Authorization' => 'Bearer ' . $api_key,
           'Content-Type' => 'application/json',
         ],
-        'json' => [
-          'model' => 'gemini-1.5-pro',  // Set the specific Gemini model
-          'messages' => $messages,
-        ],
+        'json' => $payload,
       ]);
 
       $content = $response->getBody()->getContents();
       $data = json_decode($content, TRUE);
 
-      if (isset($data['choices'][0]['message']['content'])) {
-        return $data['choices'][0]['message']['content'];
+      if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+        return $data['candidates'][0]['content']['parts'][0]['text'];
       } else {
         throw new \Exception('Unexpected response format from Gemini API.');
       }
@@ -94,10 +77,12 @@ class GeminiService extends PluginBase implements LLMServiceInterface, Container
     }
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public function callLLM(array $config, string $prompt): string {
-    return $this->callGemini($config['api_url'], $config['api_key'], $prompt);
+    return $this->callGemini($config['api_key'], $prompt, [
+      'temperature' => $config['temperature'] ?? 1,
+      'top_k' => $config['top_k'] ?? 64,
+      'top_p' => $config['top_p'] ?? 0.95,
+      'max_tokens' => $config['max_tokens'] ?? 8192,
+    ]);
   }
 }

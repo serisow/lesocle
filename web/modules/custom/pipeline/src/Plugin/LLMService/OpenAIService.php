@@ -88,7 +88,7 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
           'Content-Type' => 'application/json',
         ],
         'json' => [
-          'model' => 'gpt-3.5-turbo',
+          'model' => $config['model_name'],
           'messages' => $messages,
         ],
       ]);

@@ -67,7 +67,7 @@ class PipelineListBuilder extends ConfigEntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     $row['label'] = $entity->label();
-    $row['status'] = $this->t($entity->getStatus());
+    $row['status'] = $this->t($entity->getStatus() ?: 'Unknown');;
     $row['step_count'] = $entity->getStepCount();
     $language = $entity->language();
     $row['langcode'] = $language ? $language->getName() : $this->t('Unknown');

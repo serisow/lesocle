@@ -68,7 +68,8 @@ class LLMConfigForm extends EntityForm
         'gpt-3.5-turbo' => 'GPT-3.5 Turbo',
         'gpt-4' => 'GPT-4',
         'gemini-1.5-flash' => 'GEMINI-1.5 Flash',
-        'claude-3-5-sonnet-20240620' => 'Claude-3-5-sonnet'
+        'claude-3-5-sonnet-20240620' => 'Claude-3-5-sonnet',
+        'claude-3-opus-20240229'     => 'Claude-3-opus',
         // Add more options as needed
       ],
       '#default_value' => $llm_config->get('model_name'),

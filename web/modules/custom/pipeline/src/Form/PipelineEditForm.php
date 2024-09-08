@@ -87,6 +87,7 @@ class PipelineEditForm extends PipelineFormBase {
           $this->t('N°'),
           $this->t('Step'),
           $this->t('Step Type'),
+          $this->t('Model'),
           $this->t('Weight'),
           $this->t('Operations'),
         ],
@@ -146,11 +147,17 @@ class PipelineEditForm extends PipelineFormBase {
       $step_number = 1;
       foreach ($this->entity->getStepTypes() as $step_type) {
         $uuid = $step_type->getUuid();
+        $config = $step_type->getConfiguration();
+        $llm_config_id = $config['data']['llm_config'] ?? '';
+        $llm_config = $this->entityTypeManager->getStorage('llm_config')->load($llm_config_id);
+        $model_name = $llm_config ? $llm_config->getModelName() : 'N/A';
+
         $form['step_types'][$uuid] = [
           '#attributes' => ['class' => ['draggable']],
           'number' => ['#plain_text' => $step_number],
           'step_description' => ['#plain_text' => $this->trimText($step_type->getConfiguration()['data']['step_description'] ?? '', 50)],
           'step_type' => ['#plain_text' => $step_type->label()],
+          'model' => ['#plain_text' => $model_name],
           'weight' => [
             '#type' => 'weight',
             '#title' => $this->t('Weight for @title', ['@title' => $step_type->label()]),

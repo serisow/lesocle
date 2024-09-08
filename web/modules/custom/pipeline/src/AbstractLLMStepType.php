@@ -68,6 +68,10 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     return $options;
   }
 
+  protected function getLLMConfig($llm_config_id) {
+    return $this->entityTypeManager->getStorage('llm_config')->load($llm_config_id);
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -76,7 +80,9 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $prompt = $config['prompt'];
 
     if (!empty($context['results'])) {
-      $prompt .= "\n\nPrevious step result: " . end($context['results']);
+      $previous_result = end($context['results']);
+      //$prompt .= "\n\nPrevious step result: " . end($context['results']);
+      $prompt = str_replace('{PREVIOUS_STEP_RESULT}', $previous_result, $prompt);
     }
 
     if (empty($config['llm_config'])) {
@@ -99,6 +105,8 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $response = $llm_service->callLLM($llm_config->toArray(), $prompt);
 
     $this->configuration['response'] = $response;
+    // Store the response in the context for the next step
+    $context['last_response'] = $response;
     return $response;
   }
 
@@ -108,7 +116,8 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
       'gpt-3.5-turbo' => 'openai',
       'gpt-4' => 'openai',
       'gemini-1.5-flash' => 'gemini',
-      'claude-3-5-sonnet-20240620' => 'anthropic'
+      'claude-3-5-sonnet-20240620' => 'anthropic',
+      'claude-3-opus-20240229' => 'anthropic',
     ];
     return $model_service_map[$model_name] ?? 'openai'; // Default to 'openai' if not found
   }
