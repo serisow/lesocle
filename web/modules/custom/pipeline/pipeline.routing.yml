@@ -188,3 +188,38 @@ entity.llm_config.delete_form:
     _title: 'Delete LLM Configuration'
   requirements:
     _permission: 'administer llm config'
+
+
+# ACTION CONFIG routes
+
+entity.action_config.collection:
+  path: '/admin/config/action-config'
+  defaults:
+    _entity_list: 'action_config'
+    _title: 'Action Configurations'
+  requirements:
+    _permission: 'administer action config'
+
+entity.action_config.add_form:
+  path: '/admin/config/action-config/add'
+  defaults:
+    _entity_form: 'action_config.add'
+    _title: 'Add Action Configuration'
+  requirements:
+    _permission: 'administer action config'
+
+entity.action_config.edit_form:
+  path: '/admin/config/action-config/{action_config}/edit'
+  defaults:
+    _entity_form: 'action_config.edit'
+    _title: 'Edit Action Configuration'
+  requirements:
+    _permission: 'administer action config'
+
+entity.action_config.delete_form:
+  path: '/admin/config/action-config/{action_config}/delete'
+  defaults:
+    _entity_form: 'action_config.delete'
+    _title: 'Delete Action Configuration'
+  requirements:
+    _permission: 'administer action config'

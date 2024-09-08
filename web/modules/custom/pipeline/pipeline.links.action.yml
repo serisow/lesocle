@@ -19,3 +19,19 @@ llm_config.delete:
   route_name: entity.llm_config.delete_form
   title: 'Delete'
   base_route: entity.llm_config.canonical
+
+action_config.add:
+  route_name: entity.action_config.add_form
+  title: 'Add Action Configuration'
+  appears_on:
+    - entity.action_config.collection
+
+action_config.edit:
+  route_name: entity.action_config.edit_form
+  title: 'Edit'
+  base_route: entity.action_config.canonical
+
+action_config.delete:
+  route_name: entity.action_config.delete_form
+  title: 'Delete'
+  base_route: entity.action_config.canonical

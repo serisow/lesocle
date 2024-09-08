@@ -6,3 +6,7 @@ services:
   plugin.manager.llm_service:
     class: Drupal\pipeline\Plugin\LLMServiceManager
     parent: default_plugin_manager
+
+  plugin.manager.action_service:
+    class: Drupal\pipeline\Plugin\ActionServiceManager
+    parent: default_plugin_manager

@@ -5,3 +5,7 @@ administer pipelines:
 administer pipeline settings:
   title: 'Administer pipeline settings'
   description: 'Configure pipeline module settings.'
+
+administer action config:
+  title: 'Administer Action Configurations'
+  description: 'Create, edit, and delete action configurations.'

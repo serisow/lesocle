@@ -1,5 +1,4 @@
 <?php
-
 namespace Drupal\pipeline\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;

@@ -17,4 +17,11 @@ pipeline.llm_config_list:
   description: 'Manage configurations for LLM APIs'
   parent: system.admin_config
   route_name: entity.llm_config.collection
-  weight: 100
+  weight: -6
+
+pipeline.action_config_list:
+  title: 'Action Configurations[Pipeline]'
+  description: 'Manage configurations for Actions'
+  parent: system.admin_config
+  route_name: entity.action_config.collection
+  weight: -7
