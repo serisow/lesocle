@@ -4,6 +4,7 @@ namespace Drupal\pipeline\Plugin\StepType;
 use Drupal\pipeline\ConfigurableStepTypeBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\pipeline\Plugin\ActionServiceManager;
+use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -13,7 +14,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   description = @Translation("A step to perform Drupal actions or call external APIs.")
  * )
  */
-class ActionStep extends ConfigurableStepTypeBase {
+class ActionStep extends ConfigurableStepTypeBase implements StepTypeExecutableInterface {
   protected $actionServiceManager;
 
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -64,12 +65,19 @@ class ActionStep extends ConfigurableStepTypeBase {
     $action_config = $this->entityTypeManager->getStorage('action_config')->load($action_config_id);
 
     if (!$action_config) {
-      throw new \Exception("Action Configuration not found: " . $action_config_id);
+        throw new \Exception("Action Configuration not found: " . $action_config_id);
     }
 
     $action_type = $action_config->get('action_type');
     $action_service = $this->actionServiceManager->createInstance($action_type);
 
-    return $action_service->executeAction($action_config->toArray(), $context);
+    // Retrieve the last LLM step's response
+    $last_response = $context['last_response'] ?? '';
+
+    // Add the last response to the action config
+    $action_config_array = $action_config->toArray();
+    $action_config_array['last_response'] = $last_response;
+
+    return $action_service->executeAction($action_config_array, $context);
   }
 }

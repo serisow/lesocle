@@ -53,17 +53,27 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
   /**
    * {@inheritdoc}
    */
-  public function executeAction(array $config, array &$context): string {
-    $entity_type = $config['entity_type'];
-    $bundle = $config['entity_bundle'];
+    public function executeAction(array $config, array &$context): string {
+        $entity_type = $config['target_entity_type'];
+        $bundle = $config['entity_bundle'];
+        $results = $context['results'] ?? [];
+        if (!empty($results)) {
+            $storage = $this->entityTypeManager->getStorage($entity_type);
+            $entity = $storage->create([
+                'type' => $bundle,
+                'title' => $results[0],
+                'body' => [
+                    'value' => $results[1],
+                    'format' => 'full_html',
+                ],
+                // Add other necessary fields based on the entity type and bundle
+            ]);
 
-    $storage = $this->entityTypeManager->getStorage($entity_type);
-    $entity = $storage->create([
-      'type' => $bundle,
-      // Add other necessary fields based on the entity type and bundle
-    ]);
+            $entity->save();
+            return "Created new {$entity_type} entity of type {$bundle} with ID: " . $entity->id();
+        } else {
+            return "Cannot create the article, see log for details.";
+        }
 
-    $entity->save();
-    return "Created new {$entity_type} entity of type {$bundle} with ID: " . $entity->id();
-  }
+    }
 }
