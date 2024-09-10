@@ -6,6 +6,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\pipeline\Plugin\LLMServiceInterface;
 use GuzzleHttp\ClientInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -34,8 +35,12 @@ class GeminiService extends PluginBase implements LLMServiceInterface, Container
     );
   }
 
-  public function callGemini(string $api_key, string $prompt, array $config): string {
-    $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-exp-0827:generateContent?key={$api_key}";
+  public function callGemini(array $config, string $prompt): string {
+    $maxRetries = 3;
+    $retryDelay = 5;
+    $api_url = $config['api_url'];
+    $api_key = $config['api_key'];
+    $url = "{$api_url}?key={$api_key}";
 
     $payload = [
       'contents' => [
@@ -55,34 +60,36 @@ class GeminiService extends PluginBase implements LLMServiceInterface, Container
       ]
     ];
 
-    try {
-      $response = $this->httpClient->post($url, [
-        'headers' => [
-          'Content-Type' => 'application/json',
-        ],
-        'json' => $payload,
-      ]);
+    for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+      try {
+        $response = $this->httpClient->post($url, [
+          'headers' => [
+            'Content-Type' => 'application/json',
+          ],
+          'json' => $payload,
+          'timeout' => 120, // Increased timeout to 120 seconds
+        ]);
 
-      $content = $response->getBody()->getContents();
-      $data = json_decode($content, TRUE);
+        $content = $response->getBody()->getContents();
+        $data = json_decode($content, TRUE);
 
-      if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
-        return $data['candidates'][0]['content']['parts'][0]['text'];
-      } else {
-        throw new \Exception('Unexpected response format from Gemini API.');
+        if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+          return $data['candidates'][0]['content']['parts'][0]['text'];
+        } else {
+          throw new \Exception('Unexpected response format from Gemini API.');
+        }
+      } catch (RequestException $e) {
+        if ($attempt === $maxRetries) {
+          $this->loggerFactory->get('pipeline')->error('Error calling Gemini API after ' . $maxRetries . ' attempts: @error', ['@error' => $e->getMessage()]);
+          throw new \Exception('Failed to call Gemini API after multiple attempts: ' . $e->getMessage());
+        }
+        $this->loggerFactory->get('pipeline')->warning('Attempt ' . $attempt . ' failed. Retrying in ' . $retryDelay . ' seconds...');
+        sleep($retryDelay);
       }
-    } catch (\Exception $e) {
-      $this->loggerFactory->get('pipeline')->error('Error calling Gemini API: @error', ['@error' => $e->getMessage()]);
-      throw new \Exception('Failed to call Gemini API: ' . $e->getMessage());
     }
+    throw new \Exception('Failed to call Gemini API after exhausting all retry attempts.');
   }
-
   public function callLLM(array $config, string $prompt): string {
-    return $this->callGemini($config['api_key'], $prompt, [
-      'temperature' => $config['temperature'] ?? 1,
-      'top_k' => $config['top_k'] ?? 64,
-      'top_p' => $config['top_p'] ?? 0.95,
-      'max_tokens' => $config['max_tokens'] ?? 8192,
-    ]);
+    return $this->callGemini($config, $prompt);
   }
 }

@@ -20,7 +20,7 @@ pipeline.llm_config_list:
   weight: -6
 
 pipeline.action_config_list:
-  title: 'Action Configurations[Pipeline]'
+  title: 'Action Config'
   description: 'Manage configurations for Actions'
   parent: system.admin_config
   route_name: entity.action_config.collection

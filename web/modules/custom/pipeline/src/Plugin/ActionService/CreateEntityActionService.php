@@ -59,11 +59,18 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
         $results = $context['results'] ?? [];
         if (!empty($results)) {
             $storage = $this->entityTypeManager->getStorage($entity_type);
+           $final_result =  end($results);
+            // Extract title and body from the final result
+            preg_match('/<h1>(.*?)<\/h1>/s', $final_result, $title_matches);
+            $title = $title_matches[1] ?? 'Senegalese Hydrocarbons';
+
+            // Remove the title from the body
+            $body = preg_replace('/<h1>.*?<\/h1>/s', '', $final_result, 1);
             $entity = $storage->create([
                 'type' => $bundle,
-                'title' => $results[0],
+                'title' =>  $title,
                 'body' => [
-                    'value' => $results[1],
+                    'value' => $body,
                     'format' => 'full_html',
                 ],
                 // Add other necessary fields based on the entity type and bundle

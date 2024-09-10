@@ -37,8 +37,8 @@ services:
       PHP_MEMORY_LIMIT: 512M
       PHP_POST_MAX_SIZE: 100M
       PHP_UPLOAD_MAX_FILESIZE: 50M
-      PHP_MAX_EXECUTION_TIME: 28800
-      PHP_FPM_REQUEST_TERMINATE_TIMEOUT: "300s" # Set to 5 minutes; Résoud le probléme du message "Gateway Timeout"
+      PHP_MAX_EXECUTION_TIME: 64000
+      PHP_FPM_REQUEST_TERMINATE_TIMEOUT: "600s" # Set to 10 minutes; Résoud le probléme du message "Gateway Timeout"
       PHP_MAX_INPUT_VARS: 4096
 
       # Read instructions at https://wodby.com/docs/stacks/php/local/#xdebug

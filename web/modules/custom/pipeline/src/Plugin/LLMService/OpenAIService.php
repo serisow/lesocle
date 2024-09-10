@@ -6,6 +6,7 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\pipeline\Plugin\LLMServiceInterface;
 use GuzzleHttp\ClientInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -69,42 +70,55 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
    *
    * @throws \Exception
    */
+
   public function callOpenAI(array $config, string $prompt): string {
-    $messages = [
-      [
-        'role' => 'system',
-        'content' => 'You are a helpful assistant.',
-      ],
-      [
-        'role' => 'user',
-        'content' => $prompt,
-      ],
-    ];
+    $maxRetries = 3;
+    $retryDelay = 5;
 
-    try {
-      $response = $this->httpClient->post($config['api_url'], [
-        'headers' => [
-          'Authorization' => 'Bearer ' . $config['api_key'],
-          'Content-Type' => 'application/json',
-        ],
-        'json' => [
-          'model' => $config['model_name'],
-          'messages' => $messages,
-        ],
-      ]);
+    for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
+      try {
+        $messages = [
+          [
+            'role' => 'system',
+            'content' => 'You are a helpful assistant.',
+          ],
+          [
+            'role' => 'user',
+            'content' => $prompt,
+          ],
+        ];
 
-      $content = $response->getBody()->getContents();
-      $data = json_decode($content, TRUE);
+        $response = $this->httpClient->post($config['api_url'], [
+          'headers' => [
+            'Authorization' => 'Bearer ' . $config['api_key'],
+            'Content-Type' => 'application/json',
+          ],
+          'json' => [
+            'model' => $config['model_name'],
+            'messages' => $messages,
+          ],
+          'timeout' => 120, // Increased timeout
+        ]);
 
-      if (isset($data['choices'][0]['message']['content'])) {
-        return $data['choices'][0]['message']['content'];
-      } else {
-        throw new \Exception('Unexpected response format from OpenAI API.');
+        $content = $response->getBody()->getContents();
+        $data = json_decode($content, TRUE);
+
+        if (isset($data['choices'][0]['message']['content'])) {
+          return $data['choices'][0]['message']['content'];
+        } else {
+          throw new \Exception('Unexpected response format from OpenAI API.');
+        }
+      } catch (RequestException $e) {
+        if ($attempt === $maxRetries) {
+          $this->loggerFactory->get('pipeline')->error('Error calling OpenAI API after ' . $maxRetries . ' attempts: @error', ['@error' => $e->getMessage()]);
+          throw new \Exception('Failed to call OpenAI API after multiple attempts: ' . $e->getMessage());
+        }
+        $this->loggerFactory->get('pipeline')->warning('Attempt ' . $attempt . ' failed. Retrying in ' . $retryDelay . ' seconds...');
+        sleep($retryDelay);
       }
-    } catch (\Exception $e) {
-      $this->loggerFactory->get('pipeline')->error('Error calling OpenAI API: @error', ['@error' => $e->getMessage()]);
-      throw new \Exception('Failed to call OpenAI API: ' . $e->getMessage());
     }
+    // Add this line at the end of the function
+    throw new \Exception('Failed to call OpenAI API after exhausting all retry attempts.');
   }
 
   /**
