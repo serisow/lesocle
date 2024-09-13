@@ -81,7 +81,6 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
 
     if (!empty($context['results'])) {
       $previous_result = end($context['results']);
-      //$prompt .= "\n\nPrevious step result: " . end($context['results']);
       $prompt = str_replace('{PREVIOUS_STEP_RESULT}', $previous_result, $prompt);
     }
 
@@ -115,6 +114,7 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $model_service_map = [
       'gpt-3.5-turbo' => 'openai',
       'gpt-4' => 'openai',
+      'dall-e-3' => 'openai_image',
       'gemini-1.5-flash' => 'gemini',
       'claude-3-5-sonnet-20240620' => 'anthropic',
       'claude-3-opus-20240229' => 'anthropic',

@@ -67,6 +67,7 @@ class LLMConfigForm extends EntityForm
       '#options' => [
         'gpt-3.5-turbo' => 'GPT-3.5 Turbo',
         'gpt-4' => 'GPT-4',
+        'dall-e-3' => 'DALL-E-3',
         'gemini-1.5-flash' => 'GEMINI-1.5 Flash',
         'claude-3-5-sonnet-20240620' => 'Claude-3-5-sonnet',
         'claude-3-opus-20240229'     => 'Claude-3-opus',

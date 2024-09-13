@@ -8,7 +8,6 @@ use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
 
 class PipelineBatch {
   use StringTranslationTrait;
-
   public static function processStep($pipeline_id, $step_uuid, &$context) {
     $pipeline = \Drupal::entityTypeManager()->getStorage('pipeline')->load($pipeline_id);
     $step_type = $pipeline->getStepType($step_uuid);

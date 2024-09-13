@@ -62,7 +62,7 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
            $final_result =  end($results);
             // Extract title and body from the final result
             preg_match('/<h1>(.*?)<\/h1>/s', $final_result, $title_matches);
-            $title = $title_matches[1] ?? 'Senegalese Hydrocarbons';
+            $title = $title_matches[1] ?? 'TITLE GO HERE';
 
             // Remove the title from the body
             $body = preg_replace('/<h1>.*?<\/h1>/s', '', $final_result, 1);
