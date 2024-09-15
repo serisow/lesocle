@@ -20,6 +20,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
   public function defaultConfiguration() {
     return [
         'step_description' => '',
+        'step_output_key' => '',
       ] + $this->additionalDefaultConfiguration();
   }
 
@@ -41,6 +42,15 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       '#description' => $this->t('Enter the text of the description.'),
       '#required' => TRUE,
       '#rows' => 2,
+      '#weight' => -5
+    ];
+    $form['step_output_key'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Output Key'),
+      '#description' => $this->t('The key under which this step\'s output will be stored in the pipeline context.'),
+      '#default_value' => $this->configuration['step_output_key'],
+      '#required' => FALSE,
+      '#weight' => 1
     ];
     return $this->additionalConfigurationForm($form, $form_state);
   }
@@ -56,6 +66,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $this->configuration['step_description'] = $form_state->getValue('step_description');
+    $this->configuration['step_output_key'] = $form_state->getValue('step_output_key');
     $this->additionalSubmitConfigurationForm($form, $form_state);
   }
 

@@ -156,6 +156,21 @@ abstract class StepTypeBase extends PluginBase implements StepTypeInterface, Con
   /**
    * {@inheritdoc}
    */
+  public function getStepOutputKey() : string {
+    return $this->configuration['step_output_key'] ?? '';
+  }
+
+  /**
+   * Need to be override in LLMStep type.
+   * {@inheritdoc}
+   */
+  public function getPrompt() : string {
+    return  '';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getConfiguration() {
     return [
       'uuid' => $this->getUuid(),

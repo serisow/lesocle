@@ -72,6 +72,22 @@ interface StepTypeInterface extends ConfigurableInterface, PluginInspectionInter
   public function setStepDescription($title);
 
   /**
+   * Returns the step output key of the step type.
+   *
+   * @return string
+   *   Either the step output key of step type, or an empty string.
+   */
+  public function getStepOutputKey() : string;
+
+  /**
+   * Returns the prompt of the step type.
+   *
+   * @return string
+   *   Either the prompt of step type, or an empty string.
+   */
+  public function getPrompt() : string;
+
+  /**
    * Check whether a request is an ajax one.
    * @return bool
    */

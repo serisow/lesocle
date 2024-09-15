@@ -5,6 +5,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\pipeline\Plugin\LLMServiceManager;
+use Drupal\pipeline\Plugin\ModelManager;
 use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -16,6 +17,11 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
    */
   protected $llmServiceManager;
 
+  /**
+   * @var \Drupal\pipeline\Plugin\ModelManager
+   */
+  protected $modelManager;
+
   public function __construct(
     array $configuration,
     $plugin_id, $plugin_definition,
@@ -23,10 +29,12 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     RequestStack $request_stack,
     EntityTypeManagerInterface $entity_type_manager,
     FormBuilderInterface $form_builder,
-    LLMServiceManager $llm_service_manager
+    LLMServiceManager $llm_service_manager,
+    ModelManager $model_manager
     ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $logger,  $request_stack, $entity_type_manager, $form_builder);
     $this->llmServiceManager = $llm_service_manager;
+    $this->modelManager = $model_manager;
   }
 
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -38,7 +46,8 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
       $container->get('request_stack'),
       $container->get('entity_type.manager'),
       $container->get('form_builder'),
-      $container->get('plugin.manager.llm_service')
+      $container->get('plugin.manager.llm_service'),
+      $container->get('plugin.manager.model_manager')
     );
   }
   protected function additionalConfigurationForm(array $form, FormStateInterface $form_state) {
@@ -79,9 +88,14 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $config = $this->getConfiguration()['data'];
     $prompt = $config['prompt'];
 
+    // search the output_key
+    $search = '';
+    if (array_key_exists($this->getUuid(), $context['memory'])) {
+      $search = '{'. $config['step_output_key'] .'}';
+    }
     if (!empty($context['results'])) {
       $previous_result = end($context['results']);
-      $prompt = str_replace('{PREVIOUS_STEP_RESULT}', $previous_result, $prompt);
+      $prompt = str_replace( $search, $previous_result, $prompt);
     }
 
     if (empty($config['llm_config'])) {
@@ -104,21 +118,29 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $response = $llm_service->callLLM($llm_config->toArray(), $prompt);
 
     $this->configuration['response'] = $response;
-    // Store the response in the context for the next step
-    $context['last_response'] = $response;
+    // Check if the response is an image
+    if ($service_id === 'openai_image') {
+      $context['image_data'] = $response;
+    } else {
+      $context['last_response'] = $response;
+    }
     return $response;
   }
 
 
   protected function getServiceIdForModel($model_name) {
-    $model_service_map = [
-      'gpt-3.5-turbo' => 'openai',
-      'gpt-4' => 'openai',
-      'dall-e-3' => 'openai_image',
-      'gemini-1.5-flash' => 'gemini',
-      'claude-3-5-sonnet-20240620' => 'anthropic',
-      'claude-3-opus-20240229' => 'anthropic',
-    ];
-    return $model_service_map[$model_name] ?? 'openai'; // Default to 'openai' if not found
+    $plugin = $this->modelManager->createInstanceFromModelName($model_name);
+    return $plugin->getServiceId();
+  }
+
+  protected function processOutput($response, array &$memory) {
+    $memory[$this->getPluginId()] = $response;
+  }
+
+  protected function buildPrompt($prompt, array $memory) {
+    foreach ($memory as $key => $value) {
+      $prompt = str_replace("{{$key}}", $value, $prompt);
+    }
+    return $prompt;
   }
 }

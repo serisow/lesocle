@@ -18,7 +18,6 @@ class LLMConfigListBuilder extends ConfigEntityListBuilder {
     $header['label'] = $this->t('LLM Config Name');
     $header['api_url'] = $this->t('API URL');
     $header['model_name'] = $this->t('Model Name');
-    $header['model_version'] = $this->t('Model Version');
     $header['operations'] = $this->t('Operations');
     return $header + parent::buildHeader();
   }
@@ -32,7 +31,6 @@ class LLMConfigListBuilder extends ConfigEntityListBuilder {
     $row['label'] = $entity->toLink($entity->label());
     $row['api_url'] = $entity->getApiUrl();
     $row['model_name'] = $entity->getModelName();
-    $row['model_version'] = $entity->getModelVersion();
     return $row + parent::buildRow($entity);
   }
 

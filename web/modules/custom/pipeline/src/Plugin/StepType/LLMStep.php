@@ -54,6 +54,14 @@ class LLMStep extends AbstractLLMStepType {
   }
 
   /**
+   * Need to be overriden in LLMStep type.
+   * {@inheritdoc}
+   */
+  public function getPrompt() : string {
+    return $this->configuration['prompt'] ?? '';
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function execute(array &$context): string {

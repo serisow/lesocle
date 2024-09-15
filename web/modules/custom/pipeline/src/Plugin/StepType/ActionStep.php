@@ -72,11 +72,13 @@ class ActionStep extends ConfigurableStepTypeBase implements StepTypeExecutableI
     $action_service = $this->actionServiceManager->createInstance($action_type);
 
     // Retrieve the last LLM step's response
-    $last_response = $context['last_response'] ?? '';
+    //$last_response = $context['last_response'] ?? '';
+    $memory = $context['memory'] ?? [];
 
     // Add the last response to the action config
     $action_config_array = $action_config->toArray();
-    $action_config_array['last_response'] = $last_response;
+    //$action_config_array['last_response'] = $last_response;
+    $action_config_array['memory'] = $memory;
 
     return $action_service->executeAction($action_config_array, $context);
   }
