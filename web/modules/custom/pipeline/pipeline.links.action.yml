@@ -4,6 +4,16 @@ pipeline.pipeline_add:
   appears_on:
     - entity.pipeline.collection
 
+
+pipeline.pipeline_export:
+  route_name: entity.pipeline.export
+  title: 'Export Pipeline'
+  appears_on:
+    - entity.pipeline.edit_form
+    - entity.pipeline.edit_questions
+    - entity.pipeline.participants
+
+
 llm_config.add:
   route_name: entity.llm_config.add_form
   title: 'Add LLM Configuration'

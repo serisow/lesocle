@@ -52,10 +52,10 @@ class GeminiService extends PluginBase implements LLMServiceInterface, Container
         ]
       ],
       'generationConfig' => [
-        'temperature' => $config['temperature'] ?? 1,
-        'topK' => $config['top_k'] ?? 64,
-        'topP' => $config['top_p'] ?? 0.95,
-        'maxOutputTokens' => $config['max_tokens'] ?? 8192,
+        'temperature' => $config['parameters']['temperature'] ?? 1,
+        'topK' => $config['parameters']['top_k'] ?? 64,
+        'topP' => $config['parameters']['top_p'] ?? 0.95,
+        'maxOutputTokens' => $config['parameters']['max_tokens'] ?? 8192,
         'responseMimeType' => 'text/plain'
       ]
     ];

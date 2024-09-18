@@ -124,7 +124,6 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
   /**
    * {@inheritdoc}
    *
-   * @TODO:SSOW : PASS THE ENTIRE CONFIG (for example change the model in callOpenAI)
    */
   public function callLLM(array $config, string $prompt): string {
     return $this->callOpenAI($config, $prompt);

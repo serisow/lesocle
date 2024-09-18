@@ -88,14 +88,19 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $config = $this->getConfiguration()['data'];
     $prompt = $config['prompt'];
 
-    // search the output_key
-    $search = '';
-    if (array_key_exists($this->getUuid(), $context['memory'])) {
-      $search = '{'. $config['step_output_key'] .'}';
+    // Get required previous results
+    if (is_string($config['required_steps'])) {
+      $required_steps = [trim($config['required_steps'])];
+    } elseif(is_array($config['required_steps'])) {
+      $required_steps = $config['required_steps'];
+    } else {
+      $required_steps = [];
     }
-    if (!empty($context['results'])) {
-      $previous_result = end($context['results']);
-      $prompt = str_replace( $search, $previous_result, $prompt);
+    $previous_results = $this->getPreviousResults($context, $required_steps);
+
+    // Replace placeholders in the prompt
+    foreach ($previous_results as $key => $value) {
+      $prompt = str_replace('{' . $key . '}', $value, $prompt);
     }
 
     if (empty($config['llm_config'])) {
@@ -118,6 +123,7 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $response = $llm_service->callLLM($llm_config->toArray(), $prompt);
 
     $this->configuration['response'] = $response;
+    $context['memory'][$config['step_output_key']] = $response;
     // Check if the response is an image
     if ($service_id === 'openai_image') {
       $context['image_data'] = $response;
@@ -133,14 +139,25 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     return $plugin->getServiceId();
   }
 
-  protected function processOutput($response, array &$memory) {
-    $memory[$this->getPluginId()] = $response;
+  /**
+   * Get results from specific previous steps.
+   *
+   * @param array $context
+   *   The context array containing all step results.
+   * @param array $step_keys
+   *   An array of step output keys to retrieve.
+   *
+   * @return array
+   *   An array of requested step results.
+   */
+  protected function getPreviousResults(array &$context, array $step_keys) {
+    $results = [];
+    foreach ($step_keys as $key) {
+      if (isset($context['results'][$key])) {
+        $results[$key] = $context['results'][$key];
+      }
+    }
+    return $results;
   }
 
-  protected function buildPrompt($prompt, array $memory) {
-    foreach ($memory as $key => $value) {
-      $prompt = str_replace("{{$key}}", $value, $prompt);
-    }
-    return $prompt;
-  }
 }

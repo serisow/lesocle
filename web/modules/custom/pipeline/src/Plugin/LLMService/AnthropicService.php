@@ -56,7 +56,7 @@ class AnthropicService extends PluginBase implements LLMServiceInterface, Contai
                 'content' => $prompt,
               ],
             ],
-            'max_tokens' => (int) $config['max_tokens'] ?? 1000,
+            'max_tokens' => (int) $config['parameters']['max_tokens'] ?? 1000,
           ],
           'timeout' => 120, // Increased timeout to 120 seconds
         ]);

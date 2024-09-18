@@ -27,6 +27,7 @@
         "drupal/redis": "^1.8",
         "drupal/smtp": "^1.4",
         "drupal/symfony_mailer": "^1.5",
+        "drupal/token": "^1.15",
         "drush/drush": "^13.0",
         "vlucas/phpdotenv": "^5.6"
     },

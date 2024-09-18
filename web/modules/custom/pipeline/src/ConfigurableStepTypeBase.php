@@ -21,6 +21,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
     return [
         'step_description' => '',
         'step_output_key' => '',
+        'required_steps' => ''
       ] + $this->additionalDefaultConfiguration();
   }
 
@@ -52,6 +53,16 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       '#required' => FALSE,
       '#weight' => 1
     ];
+    $form['required_steps'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Required Steps'),
+      '#description' => $this->t('Enter one step output key per line. These are the steps from which we expect results.'),
+      '#default_value' => is_array($this->configuration['required_steps'])
+        ? implode("\r\n", $this->configuration['required_steps'])
+        : $this->configuration['required_steps'],
+      '#required' => FALSE,
+      '#weight' => 2
+    ];
     return $this->additionalConfigurationForm($form, $form_state);
   }
 
@@ -67,6 +78,8 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $this->configuration['step_description'] = $form_state->getValue('step_description');
     $this->configuration['step_output_key'] = $form_state->getValue('step_output_key');
+    $required_steps = $form_state->getValue(['data', 'required_steps']);
+    $this->configuration['required_steps'] = array_filter(explode("\r\n", $required_steps));
     $this->additionalSubmitConfigurationForm($form, $form_state);
   }
 

@@ -12,16 +12,14 @@ class PipelineBatch {
     $pipeline = \Drupal::entityTypeManager()->getStorage('pipeline')->load($pipeline_id);
     $step_type = $pipeline->getStepType($step_uuid);
 
-    if (!isset($context['memory'])) {
-      $context['memory'] = [];
-    }
-
     if ($step_type instanceof StepTypeExecutableInterface) {
       try {
+        if (!isset($context['memory'])) {
+          $context['memory'] = [];
+        }
         // Get the LLM Config associated with this step
         $config = $step_type->getConfiguration();
         $step_info = '';
-        $context['memory'][$step_uuid] = $step_type->getStepOutputKey();
 
         if ($step_type instanceof LLMStep) {
           $llm_config_id = $config['data']['llm_config'] ?? '';
@@ -36,8 +34,11 @@ class PipelineBatch {
         }
 
         $result = $step_type->execute($context);
-        $context['results'][] = $result;
+        // Store the result in memory
+        $context['memory'][$step_type->getStepOutputKey()] = $result;
 
+        // Also keep the results array for backwards compatibility
+        $context['results'][$step_type->getStepOutputKey()] = $result;
 
         $context['message'] = t('Processed step: @step @info', [
           '@step' => $step_type->getStepDescription(),
@@ -56,8 +57,8 @@ class PipelineBatch {
   public static function finishBatch($success, $results, $operations) {
     if ($success) {
       $message = t('Pipeline executed successfully.');
-      foreach ($results as $index => $result) {
-        \Drupal::messenger()->addMessage(t('Step @index result: @result', ['@index' => $index + 1, '@result' => $result]));
+      foreach ($results as $step => $result) {
+        \Drupal::messenger()->addMessage(t('Step @index result: @result', ['@index' => $step, '@result' => $result]));
       }
     } else {
       $message = t('Pipeline execution failed.');
