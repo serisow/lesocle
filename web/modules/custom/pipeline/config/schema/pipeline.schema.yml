@@ -23,6 +23,9 @@ pipeline.pipeline.*:
     changed:
       type: integer
       label: 'Changed timestamp'
+    scheduled_time:
+      type: integer
+      label: 'Scheduled execution timestamp'
     step_types:
       type: sequence
       sequence:

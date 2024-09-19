@@ -187,4 +187,22 @@ interface PipelineInterface extends ConfigEntityInterface {
    * @return $this
    */
   public function setStatus($status);
+
+  /**
+   * Gets the scheduled execution time.
+   *
+   * @return int|null
+   *   The scheduled execution timestamp, or NULL if not set.
+   */
+  public function getScheduledTime();
+
+  /**
+   * Sets the scheduled execution time.
+   *
+   * @param int $timestamp
+   *   The scheduled execution timestamp.
+   *
+   * @return $this
+   */
+  public function setScheduledTime($timestamp);
 }

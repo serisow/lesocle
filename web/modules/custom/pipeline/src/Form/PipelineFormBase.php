@@ -1,6 +1,7 @@
 <?php
 namespace Drupal\pipeline\Form;
 
+use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -90,6 +91,14 @@ abstract class PipelineFormBase extends EntityForm {
       '#description' => $this->t('Select the current status of the pipeline.'),
     ];
 
+    $form['scheduled_time'] = [
+      '#type' => 'datetime',
+      '#title' => $this->t('Schedule Execution'),
+      '#description' => $this->t('Set a date and time for scheduled execution. Leave blank for immediate execution.'),
+      '#default_value' => $this->entity->getScheduledTime() ? DrupalDateTime::createFromTimestamp($this->entity->getScheduledTime()) : NULL,
+      '#date_time_element' => 'time',
+    ];
+
     return $form;
   }
 
@@ -102,7 +111,6 @@ abstract class PipelineFormBase extends EntityForm {
 
     // Set the new status before saving
     $entity->setStatus($new_status);
-
     $result = parent::save($form, $form_state);
 
     // Determine which tab we're on
@@ -113,6 +121,17 @@ abstract class PipelineFormBase extends EntityForm {
     } else {
       // Otherwise, use the default redirect to the edit form
       $form_state->setRedirectUrl($this->entity->toUrl('edit-form'));
+    }
+  }
+
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    parent::submitForm($form, $form_state);
+
+    $scheduled_time = $form_state->getValue('scheduled_time');
+    if ($scheduled_time instanceof DrupalDateTime) {
+      $this->entity->setScheduledTime($scheduled_time->getTimestamp());
+    } else {
+      $this->entity->setScheduledTime(NULL);
     }
   }
 

@@ -41,8 +41,9 @@ use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
  *     "instructions",
  *     "status",
  *     "langcode",
- *      "created",
- *      "changed",
+ *     "created",
+ *     "changed",
+ *     "scheduled_time"
  *   }
  * )
  */
@@ -73,7 +74,18 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    */
   protected  $stepTypesCollection;
 
+  /**
+   * Give some informations about the pipeline.
+   * @var string
+   */
   protected $instructions;
+
+  /**
+   * The scheduled execution time of the pipeline.
+   *
+   * @var int
+   */
+  protected $scheduled_time;
 
   const STATUS_INACTIVE = 'inactive';
   const STATUS_ACTIVE = 'active';
@@ -295,6 +307,29 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
     $this->setChangedTime(time());
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  /**
+   * Gets the scheduled execution time.
+   *
+   * @return int|null
+   *   The scheduled execution timestamp, or NULL if not set.
+   */
+   public function getScheduledTime() {
+     return $this->scheduled_time;
+   }
 
-
+  /**
+   * Sets the scheduled execution time.
+   *
+   * @param int $timestamp
+   *   The scheduled execution timestamp.
+   *
+   * @return $this
+   */
+   public function setScheduledTime($timestamp) {
+     $this->scheduled_time = $timestamp;
+     return $this;
+   }
 }
