@@ -87,15 +87,12 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    */
   protected $scheduled_time;
 
-  const STATUS_INACTIVE = 'inactive';
-  const STATUS_ACTIVE = 'active';
-
   /**
-   * The status of the pipeline.
+   * The pipeline status.
    *
-   * @var string
+   * @var bool
    */
-  protected $status = self::STATUS_INACTIVE;
+  protected $status = TRUE;
 
   /**
    * The pipeline language code.
@@ -231,21 +228,13 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
   /**
    * {@inheritdoc}
    */
-  public function isActive() {
-    return $this->status === self::STATUS_ACTIVE;
+  public function isEnabled(): bool {
+    return (bool) $this->status;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setActive($active) {
-    $this->status = $active ? self::STATUS_ACTIVE : self::STATUS_INACTIVE;
-    return $this;
-  }
-
-  public function getStatus() {
-    return $this->status;
-  }
   public function setStatus($status) {
     $this->status = $status;
     return $this;

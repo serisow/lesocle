@@ -12,7 +12,7 @@ pipeline.pipeline.*:
       type: text
       label: 'Instructions'
     status:
-      type: string
+      type: boolean
       label: 'Status'
     langcode:
       type: string

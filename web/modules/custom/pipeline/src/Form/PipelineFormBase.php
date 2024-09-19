@@ -73,22 +73,21 @@ abstract class PipelineFormBase extends EntityForm {
       '#required' => TRUE,
     ];
 
-    $form['langcode'] = [
-      '#type' => 'language_select',
-      '#title' => $this->t('Pipeline Language'),
-      '#default_value' => $this->entity->getLangcode(),
-      '#languages' => LanguageInterface::STATE_ALL,
+    $form['status_container'] = [
+      '#type' => 'container',
+      '#attributes' => ['class' => ['form-item']],
     ];
 
-    $form['status'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Pipeline Status'),
-      '#options' => [
-        Pipeline::STATUS_INACTIVE => $this->t('Inactive'),
-        Pipeline::STATUS_ACTIVE => $this->t('Active'),
-      ],
-      '#default_value' => $this->entity->isNew() ? Pipeline::STATUS_INACTIVE : $this->entity->getStatus(),
-      '#description' => $this->t('Select the current status of the pipeline.'),
+    $form['status_container']['status'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#default_value' => $this->entity->isEnabled(),
+    ];
+
+    $form['status_container']['status_description'] = [
+      '#type' => 'item',
+      '#description' => $this->t('Whether the pipeline is enabled or disabled.'),
+      '#wrapper_attributes' => ['class' => ['description']],
     ];
 
     $form['scheduled_time'] = [
@@ -99,6 +98,13 @@ abstract class PipelineFormBase extends EntityForm {
       '#date_time_element' => 'time',
     ];
 
+    $form['langcode'] = [
+      '#type' => 'language_select',
+      '#title' => $this->t('Pipeline Language'),
+      '#default_value' => $this->entity->getLangcode(),
+      '#languages' => LanguageInterface::STATE_ALL,
+    ];
+
     return $form;
   }
 
@@ -106,13 +112,8 @@ abstract class PipelineFormBase extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $entity = $this->entity;
-    $new_status = $form_state->getValue('status');
-
-    // Set the new status before saving
-    $entity->setStatus($new_status);
-    $result = parent::save($form, $form_state);
-
+    // The entity is already saved in submitForm, so we don't need to save it again here
+    $this->messenger()->addMessage($this->t('The pipeline %label has been saved.', ['%label' => $this->entity->label()]));
     // Determine which tab we're on
     $route_name = $this->getRouteMatch()->getRouteName();
     if ($route_name == 'entity.pipeline.edit_steps') {
@@ -125,6 +126,10 @@ abstract class PipelineFormBase extends EntityForm {
   }
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    // Handle status update
+    $status = $form_state->getValue(['status_container', 'status']);
+    $this->entity->setStatus($status);
+
     parent::submitForm($form, $form_state);
 
     $scheduled_time = $form_state->getValue('scheduled_time');
@@ -133,6 +138,8 @@ abstract class PipelineFormBase extends EntityForm {
     } else {
       $this->entity->setScheduledTime(NULL);
     }
+    // Save the entity
+    $this->entity->save();
   }
 
 }

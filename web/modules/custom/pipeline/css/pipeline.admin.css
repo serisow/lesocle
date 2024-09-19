@@ -167,3 +167,17 @@
   border-top: none;
   border-radius: 0 0 5px 5px;
 }
+
+.form-item-status-container {
+  display: flex;
+  align-items: center;
+}
+
+.form-item-status-container .form-checkbox {
+  margin-right: 10px;
+}
+
+.form-item-status-container .description {
+  margin-top: 0;
+  margin-bottom: 0;
+}

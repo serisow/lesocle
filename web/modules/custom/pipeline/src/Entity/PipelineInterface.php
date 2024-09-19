@@ -105,22 +105,6 @@ interface PipelineInterface extends ConfigEntityInterface {
   public function getStepCount();
 
   /**
-   * @return bool
-   *   TRUE if the pipeline is active, FALSE otherwise.
-   */
-  public function isActive();
-
-  /**
-   * Sets the active status of the pipeline.
-   *
-   * @param bool $active
-   *   TRUE to set this pipeline to active, FALSE to set it to inactive.
-   *
-   * @return $this
-   */
-  public function setActive($active);
-
-  /**
    * Return the langcode.
    * @return string
    */
@@ -171,18 +155,18 @@ interface PipelineInterface extends ConfigEntityInterface {
 
 
   /**
-   * Gets the status of the pipeline.
+   * Returns whether the pipeline is enabled.
    *
-   * @return string
-   *   The status of the pipeline (active, inactive, or closed).
+   * @return bool
+   *   TRUE if the pipeline is enabled, FALSE otherwise.
    */
-  public function getStatus();
+  public function isEnabled();
 
   /**
-   * Sets the status of the pipeline.
+   * Sets the pipeline status.
    *
-   * @param string $status
-   *   The status to set (use class constants).
+   * @param bool $status
+   *   TRUE to enable this pipeline, FALSE to disable.
    *
    * @return $this
    */
