@@ -223,3 +223,34 @@ entity.action_config.delete_form:
     _title: 'Delete Action Configuration'
   requirements:
     _permission: 'administer action config'
+
+pipeline.api.scheduled:
+  path: '/api/pipelines/scheduled'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\PipelineApiController::getScheduledPipelines'
+    _title: 'Get Scheduled Pipelines'
+  requirements:
+    _permission: 'access content'
+  #options:
+  #  _auth: ['basic_auth', 'cookie']
+
+pipeline.api.get:
+  path: '/api/pipelines/{id}'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\PipelineApiController::getPipeline'
+    _title: 'Get Pipeline'
+  requirements:
+    _permission: 'access content'
+  #options:
+  #  _auth: ['basic_auth', 'cookie']
+
+pipeline.execution_result:
+  path: '/api/pipeline/{pipeline}/execution-result'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\PipelineExecutionController::receiveExecutionResult'
+  methods: [POST]
+  requirements:
+    _permission: 'access content'
+    #_access: 'TRUE'
+  #options:
+  #  _auth: ['basic_auth']

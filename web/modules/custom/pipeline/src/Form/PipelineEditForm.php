@@ -79,7 +79,7 @@ class PipelineEditForm extends PipelineFormBase {
     } elseif ($route_name == 'entity.pipeline.edit_steps') {
       // Steps tab
       // Remove the fields from PipelineFormBase as they're not needed on this tab
-      unset($form['label'], $form['id'], $form['instructions'], $form['status'], $form['langcode']);
+      unset($form['label'], $form['id'], $form['instructions'], $form['status_container'], $form['langcode'], $form['scheduled_time']);
       // Build the list of existing step types for this pipeline.
       $form['step_types'] = [
         '#type' => 'table',
