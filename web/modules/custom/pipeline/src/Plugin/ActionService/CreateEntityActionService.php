@@ -39,13 +39,9 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition,
     EntityTypeManagerInterface $entity_type_manager,
-    FileSystemInterface $file_system,
-    FileRepositoryInterface $file_repository
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
-    $this->fileSystem = $file_system;
-    $this->fileRepository = $file_repository;
   }
 
   /**
@@ -57,108 +53,44 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
       $plugin_id,
       $plugin_definition,
       $container->get('entity_type.manager'),
-      $container->get('file_system'),
-      $container->get('file.repository')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-    public function executeAction(array $config, array &$context): string {
-        $entity_type = $config['target_entity_type'];
-        $bundle = $config['entity_bundle'];
-        $results = $context['results'] ?? [];
-        if (!empty($results)) {
-          $storage = $this->entityTypeManager->getStorage($entity_type);
-           $final_result =  end($results);
-            // Extract title and body from the final result
-            preg_match('/<h1>(.*?)<\/h1>/s', $final_result, $title_matches);
-            $title = $title_matches[1] ?? 'TITLE GO HERE';
+  public function executeAction(array $config, array &$context): string {
+    $content = $context['last_response'] ?? '';
 
-            // Remove the title from the body
-            $body = preg_replace('/<h1>.*?<\/h1>/s', '', $final_result, 1);
-            $entity = $storage->create([
-                'type' => $bundle,
-                'title' =>  $title,
-                'body' => [
-                    'value' => $body,
-                    'format' => 'full_html',
-                ],
-                // Add other necessary fields based on the entity type and bundle
-            ]);
+    // Decode the JSON content
+    $data = json_decode($content, true);
 
-            // Handle image if present
-            if (isset($context['image_data'])) {
-              $file = $this->saveImageAsFile($context['image_data']);
-              $media = $this->createMediaEntity($file);
-              $entity->set('field_media_image', $media);
-            }
-            $entity->save();
-            return "Created new {$entity_type} entity of type {$bundle} with ID: " . $entity->id();
-        } else {
-            return "Cannot create the article, see log for details.";
-        }
-
+    if (json_last_error() !== JSON_ERROR_NONE) {
+      throw new \Exception("Invalid JSON format: " . json_last_error_msg());
     }
 
-    private function saveImageAsFile($image_data) {
-      $directory = 'public://generated_images';
-
-      // Ensure the directory exists
-      $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
-
-      // Generate a unique filename
-      $filename = 'generated_image_' . uniqid() . '.jpg';
-      $uri = $directory . '/' . $filename;
-
-      // Decode base64 image data if necessary
-      if (preg_match('/^data:image\/(\w+);base64,/', $image_data, $type)) {
-        $image_data = substr($image_data, strpos($image_data, ',') + 1);
-        $image_data = base64_decode($image_data);
-
-        if ($image_data === false) {
-          throw new \Exception('Failed to decode image data');
-        }
-      } elseif (filter_var($image_data, FILTER_VALIDATE_URL)) {
-        // If it's a URL, download the image
-        $image_data = file_get_contents($image_data);
-        if ($image_data === false) {
-          throw new \Exception('Failed to download image from URL');
-        }
-      }
-
-      // Save the file using the modern method
-      try {
-        $file = $this->fileRepository->writeData($image_data, $uri, FileSystemInterface::EXISTS_REPLACE);
-      } catch (\Exception $e) {
-        throw new \Exception('Failed to save image file: ' . $e->getMessage());
-      }
-
-      return $file;
+    if (!isset($data['title']) || !isset($data['body'])) {
+      throw new \Exception("JSON must contain 'title' and 'body' fields");
     }
-    private function createMediaEntity($file) {
-      $media_storage = $this->entityTypeManager->getStorage('media');
 
-      // Create the media entity
-      $media = $media_storage->create([
-        'bundle' => 'image',
-        'uid' => \Drupal::currentUser()->id(),
-        'status' => 1,
-        'field_media_image' => [
-          'target_id' => $file->id(),
-          'alt' => 'Generated image',
-          'title' => 'Generated image',
-        ],
-      ]);
+    $title = $data['title'];
+    $body = $data['body'];
 
-      // Save the media entity
-      $media->save();
+    // Ensure title is not empty and not too long
+    $title = !empty($title) ? $title : 'Untitled Article';
+    $title = substr($title, 0, 255);
 
-      if (!$media->id()) {
-        throw new \Exception('Failed to create media entity');
-      }
+    $node_storage = $this->entityTypeManager->getStorage('node');
+    $node = $node_storage->create([
+      'type' => 'article',
+      'title' => $title,
+      'body' => [
+        'value' => $body,
+        'format' => 'full_html',
+      ],
+    ]);
+    $node->save();
 
-      return $media;
-    }
+    return "Created new article with ID: " . $node->id();
+  }
 }

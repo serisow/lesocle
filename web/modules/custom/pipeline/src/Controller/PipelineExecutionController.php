@@ -3,6 +3,7 @@ namespace Drupal\pipeline\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\pipeline\Plugin\ActionServiceManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -11,14 +12,17 @@ use Drupal\pipeline\Entity\PipelineInterface;
 class PipelineExecutionController extends ControllerBase {
 
   protected $entityTypeManager;
+  protected $actionServiceManager;
 
-  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, ActionServiceManager $action_service_manager) {
     $this->entityTypeManager = $entity_type_manager;
+    $this->actionServiceManager = $action_service_manager;
   }
 
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('plugin.manager.action_service')
     );
   }
 
@@ -38,47 +42,28 @@ class PipelineExecutionController extends ControllerBase {
         $config['data']['response'] = $result['output'];
         $step_type->setConfiguration($config);
 
-        if ($step_type->getPluginId() === 'action_step' && $config['data']['action_config'] === 'create_article_action') {
-          $this->createArticleEntity($result['output']);
+        if ($step_type->getPluginId() === 'action_step') {
+          $action_config_id = $config['data']['action_config'];
+          $action_config = $this->entityTypeManager->getStorage('action_config')->load($action_config_id);
+          if ($action_config) {
+            $action_service_id = $action_config->getActionService();
+            $action_service = $this->actionServiceManager->createInstance($action_service_id);
+            $context = ['last_response' => $result['output']];
+            try {
+              $action_result = $action_service->executeAction($action_config->toArray(), $context);
+              // You might want to log or store $action_result
+            }
+            catch (\Exception $e) {
+              // Log the error or handle it as appropriate
+              \Drupal::logger('pipeline')->error('Error executing action: @error', ['@error' => $e->getMessage()]);
+            }
+          }
         }
       }
     }
-
     $pipeline->save();
 
     return new JsonResponse(['message' => 'Execution results processed successfully']);
   }
 
-  protected function createArticleEntity($content) {
-    // Decode the JSON content
-    $data = json_decode($content, true);
-
-    if (json_last_error() !== JSON_ERROR_NONE) {
-      throw new \Exception("Invalid JSON format: " . json_last_error_msg());
-    }
-
-    if (!isset($data['title']) || !isset($data['body'])) {
-      throw new \Exception("JSON must contain 'title' and 'body' fields");
-    }
-
-    $title = $data['title'];
-    $body = $data['body'];
-
-    // Ensure title is not empty and not too long
-    $title = !empty($title) ? $title : 'Untitled Article';
-    $title = substr($title, 0, 255);
-
-    $node_storage = $this->entityTypeManager->getStorage('node');
-    $node = $node_storage->create([
-      'type' => 'article',
-      'title' => $title,
-      'body' => [
-        'value' => $body,
-        'format' => 'full_html',
-      ],
-    ]);
-    $node->save();
-
-    return $node->id();
-  }
 }

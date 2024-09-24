@@ -4,6 +4,7 @@ namespace Drupal\pipeline\Form;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\pipeline\Plugin\ActionServiceManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 class ActionConfigForm extends EntityForm {
   /**
@@ -14,13 +15,23 @@ class ActionConfigForm extends EntityForm {
   protected $entityTypeBundleInfo;
 
   /**
+   * The action service manager.
+   *
+   * @var \Drupal\pipeline\Plugin\ActionServiceManager
+   */
+  protected $actionServiceManager;
+
+  /**
    * Constructs a new ActionConfigForm.
    *
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
+   * @param \Drupal\pipeline\Plugin\ActionServiceManager $action_service_manager
+   *    The action service manager.
    */
-  public function __construct(EntityTypeBundleInfoInterface $entity_type_bundle_info) {
+  public function __construct(EntityTypeBundleInfoInterface $entity_type_bundle_info, ActionServiceManager $action_service_manager) {
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
+    $this->actionServiceManager = $action_service_manager;
   }
 
   /**
@@ -28,7 +39,8 @@ class ActionConfigForm extends EntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.bundle.info')
+      $container->get('entity_type.bundle.info'),
+      $container->get('plugin.manager.action_service')
     );
   }
 
@@ -55,6 +67,15 @@ class ActionConfigForm extends EntityForm {
       ],
       '#disabled' => !$action_config->isNew(),
     ];
+
+    $form['action_service'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Action Service'),
+      '#options' => $this->getActionServiceOptions(),
+      '#default_value' => $action_config->getActionService(),
+      '#required' => TRUE,
+    ];
+
 
     $form['action_type'] = [
       '#type' => 'select',
@@ -166,6 +187,17 @@ class ActionConfigForm extends EntityForm {
   }
 
   /**
+   * Get available action service options.
+   */
+  protected function getActionServiceOptions() {
+    $options = [];
+    foreach ($this->actionServiceManager->getDefinitions() as $plugin_id => $definition) {
+      $options[$plugin_id] = $definition['label'];
+    }
+    return $options;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
@@ -192,5 +224,6 @@ class ActionConfigForm extends EntityForm {
 
     $this->entity->setTargetEntityType($form_state->getValue('entity_type'));
     $this->entity->setEntityBundle($form_state->getValue('entity_bundle'));
+    $this->entity->setActionService($form_state->getValue('action_service'));
   }
 }

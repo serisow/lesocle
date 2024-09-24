@@ -36,6 +36,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "entity_bundle",
  *     "target_entity_type",
  *     "api_endpoint",
+ *     "action_service",
  *   }
  * )
  */
@@ -82,6 +83,13 @@ class ActionConfig extends ConfigEntityBase  implements ActionConfigInterface
    * @var string
    */
   protected $api_endpoint;
+
+  /**
+   * The Action Service plugin ID.
+   *
+   * @var string
+   */
+  protected $action_service;
 
   /**
    * {@inheritdoc}
@@ -144,6 +152,21 @@ class ActionConfig extends ConfigEntityBase  implements ActionConfigInterface
    */
   public function setApiEndpoint($api_endpoint) {
     $this->api_endpoint = $api_endpoint;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getActionService() {
+    return $this->action_service;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setActionService($action_service) {
+    $this->action_service = $action_service;
     return $this;
   }
 }
