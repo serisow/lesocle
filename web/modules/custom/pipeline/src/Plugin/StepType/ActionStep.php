@@ -65,21 +65,30 @@ class ActionStep extends ConfigurableStepTypeBase implements StepTypeExecutableI
     $action_config = $this->entityTypeManager->getStorage('action_config')->load($action_config_id);
 
     if (!$action_config) {
-        throw new \Exception("Action Configuration not found: " . $action_config_id);
+      throw new \Exception("Action Configuration not found: " . $action_config_id);
     }
 
-    $action_type = $action_config->get('action_type');
-    $action_service = $this->actionServiceManager->createInstance($action_type);
+    $action_service_id = $action_config->getActionService();
+    $action_service = $this->actionServiceManager->createInstance($action_service_id);
 
-    // Retrieve the last LLM step's response
-    //$last_response = $context['last_response'] ?? '';
-    $memory = $context['memory'] ?? [];
+    // Retrieve the results from previous steps
+    $results = $context['results'] ?? [];
 
-    // Add the last response to the action config
+    // Find the last non-empty response in the results
+    $last_response = '';
+    if (!empty($results)) {
+      $last_response = end($results);
+    }
+
+    // Ensure context has the last_response
+    $context['last_response'] = $last_response;
+
+    // Add the results and last response to the action config
     $action_config_array = $action_config->toArray();
-    //$action_config_array['last_response'] = $last_response;
-    $action_config_array['memory'] = $memory;
+    $action_config_array['results'] = $results;
+    $action_config_array['last_response'] = $last_response;
 
     return $action_service->executeAction($action_config_array, $context);
   }
+
 }

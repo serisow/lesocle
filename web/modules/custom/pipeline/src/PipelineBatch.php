@@ -29,11 +29,12 @@ class PipelineBatch {
         } elseif ($step_type instanceof ActionStep) {
           $action_config_id = $config['data']['action_config'] ?? '';
           $action_config = \Drupal::entityTypeManager()->getStorage('action_config')->load($action_config_id);
-          $action_type = $action_config ? $action_config->getActionType() : 'N/A';
-          $step_info = t('(Action: @action)', ['@action' => $action_type]);
+          $action_service = $action_config ? $action_config->getActionService() : 'N/A';
+          $step_info = t('(Action: @action)', ['@action' => $action_service]);
         }
 
         $result = $step_type->execute($context);
+
         // Store the result in memory
         $context['memory'][$step_type->getStepOutputKey()] = $result;
 

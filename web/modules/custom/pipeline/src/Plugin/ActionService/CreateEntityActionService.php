@@ -157,7 +157,8 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
    */
   public function executeAction(array $config, array &$context): string {
     $content = $context['last_response'] ?? '';
-
+    // Remove the ```json and ``` markers if they exist
+    $content = preg_replace('/^```json\s*|\s*```$/s', '', $content);
     // Decode the JSON content
     $data = json_decode($content, true);
 
