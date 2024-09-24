@@ -3,16 +3,10 @@ namespace Drupal\pipeline\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\pipeline\Plugin\ActionServiceManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+
 class ActionConfigForm extends EntityForm {
-  /**
-   * The entity type bundle info.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
-   */
-  protected $entityTypeBundleInfo;
 
   /**
    * The action service manager.
@@ -24,13 +18,10 @@ class ActionConfigForm extends EntityForm {
   /**
    * Constructs a new ActionConfigForm.
    *
-   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
-   *   The entity type bundle info.
    * @param \Drupal\pipeline\Plugin\ActionServiceManager $action_service_manager
    *    The action service manager.
    */
-  public function __construct(EntityTypeBundleInfoInterface $entity_type_bundle_info, ActionServiceManager $action_service_manager) {
-    $this->entityTypeBundleInfo = $entity_type_bundle_info;
+  public function __construct(ActionServiceManager $action_service_manager) {
     $this->actionServiceManager = $action_service_manager;
   }
 
@@ -39,7 +30,6 @@ class ActionConfigForm extends EntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.bundle.info'),
       $container->get('plugin.manager.action_service')
     );
   }
@@ -74,116 +64,39 @@ class ActionConfigForm extends EntityForm {
       '#options' => $this->getActionServiceOptions(),
       '#default_value' => $action_config->getActionService(),
       '#required' => TRUE,
-    ];
-
-
-    $form['action_type'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Action Type'),
-      '#options' => [
-        'create_entity' => $this->t('Create Entity'),
-        'update_entity' => $this->t('Update Entity'),
-        'delete_entity' => $this->t('Delete Entity'),
-        'call_api' => $this->t('Call External API'),
-      ],
-      '#default_value' => $action_config->getActionType(),
-      '#required' => TRUE,
       '#ajax' => [
-        'callback' => '::updateActionTypeFields',
-        'wrapper' => 'action-type-fields',
+        'callback' => '::updateActionServiceConfiguration',
+        'wrapper' => 'action-service-configuration',
       ],
     ];
 
-    $form['action_type_fields'] = [
+    $form['configuration'] = [
       '#type' => 'container',
-      '#attributes' => ['id' => 'action-type-fields'],
+      '#attributes' => ['id' => 'action-service-configuration'],
     ];
 
-    $action_type = $form_state->getValue('action_type') ?: $action_config->getActionType();
-
-    if (in_array($action_type, ['create_entity', 'update_entity', 'delete_entity'])) {
-      $form['action_type_fields']['entity_type'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Entity Type'),
-        '#options' => $this->getEntityTypeOptions(),
-        '#default_value' => $action_config->getTargetEntityType(),
-        '#required' => TRUE,
-        '#ajax' => [
-          'callback' => '::updateEntityBundleOptions',
-          'wrapper' => 'entity-bundle-wrapper',
-        ],
-      ];
-
-      $entity_bundle = $action_config->getEntityBundle();
-      $bundle_options = $this->getEntityBundleOptions($form_state);
-
-      $form['action_type_fields']['entity_bundle'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Entity Bundle'),
-        '#options' => $this->getEntityBundleOptions($form_state),
-        '#default_value' => $action_config->getEntityBundle(),
-        '#required' => TRUE,
-        '#prefix' => '<div id="entity-bundle-wrapper">',
-        '#suffix' => '</div>',
-      ];
-    }
-    elseif ($action_type == 'call_api') {
-      $form['action_type_fields']['api_endpoint'] = [
-        '#type' => 'url',
-        '#title' => $this->t('API Endpoint'),
-        '#default_value' => $action_config->getApiEndpoint(),
-        '#required' => TRUE,
-      ];
+    $action_service = $form_state->getValue('action_service') ?: $action_config->getActionService();
+    if ($action_service) {
+      $this->buildActionServiceConfigurationForm($form['configuration'], $form_state, $action_service);
     }
 
     return $form;
   }
 
   /**
-   * Ajax callback to update action type specific fields.
+   * Ajax callback to update action service configuration fields.
    */
-  public function updateActionTypeFields(array &$form, FormStateInterface $form_state) {
-    return $form['action_type_fields'];
+  public function updateActionServiceConfiguration(array &$form, FormStateInterface $form_state) {
+    return $form['configuration'];
   }
 
   /**
-   * Ajax callback to update entity bundle options.
+   * Builds the configuration form for the selected action service.
    */
-  public function updateEntityBundleOptions(array &$form, FormStateInterface $form_state) {
-    return $form['action_type_fields']['entity_bundle'];
-  }
-
-  /**
-   * Get available entity type options.
-   */
-  protected function getEntityTypeOptions() {
-    $options = [];
-    $entity_types = $this->entityTypeManager->getDefinitions();
-    foreach ($entity_types as $entity_type_id => $entity_type) {
-      $options[$entity_type_id] = $entity_type->getLabel();
-    }
-    return $options;
-  }
-
-  /**
-   * Get available entity bundle options.
-   */
-  protected function getEntityBundleOptions(FormStateInterface $form_state) {
-    $options = [];
-    $entity_type = $form_state->getValue(['action_type_fields', 'entity_type']);
-
-    // If entity_type is not in form_state, use the stored value
-    if (!$entity_type) {
-      $entity_type = $this->entity->getTargetEntityType();
-    }
-
-    if ($entity_type) {
-      $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type);
-      foreach ($bundles as $bundle_id => $bundle_info) {
-        $options[$bundle_id] = $bundle_info['label'];
-      }
-    }
-    return $options;
+  protected function buildActionServiceConfigurationForm(array &$element, FormStateInterface $form_state, $action_service) {
+    $action_service_plugin = $this->actionServiceManager->createInstance($action_service);
+    $configuration = $this->entity->getConfiguration();
+    $element += $action_service_plugin->buildConfigurationForm([], $form_state, $configuration);
   }
 
   /**
@@ -200,30 +113,29 @@ class ActionConfigForm extends EntityForm {
   /**
    * {@inheritdoc}
    */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
+    parent::submitForm($form, $form_state);
+
+    $action_service = $form_state->getValue('action_service');
+    $this->entity->setActionService($action_service);
+
+    $action_service_plugin = $this->actionServiceManager->createInstance($action_service);
+    $configuration = $action_service_plugin->submitConfigurationForm($form['configuration'], $form_state);
+    $this->entity->setConfiguration($configuration);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function save(array $form, FormStateInterface $form_state) {
     $action_config = $this->entity;
     $status = $action_config->save();
 
-    switch ($status) {
-      case SAVED_NEW:
-        $this->messenger()->addMessage($this->t('Created the %label Action Configuration.', [
-          '%label' => $action_config->label(),
-        ]));
-        break;
+    $message = $status == SAVED_NEW
+      ? $this->t('Created the %label Action Configuration.', ['%label' => $action_config->label()])
+      : $this->t('Saved the %label Action Configuration.', ['%label' => $action_config->label()]);
 
-      default:
-        $this->messenger()->addMessage($this->t('Saved the %label Action Configuration.', [
-          '%label' => $action_config->label(),
-        ]));
-    }
+    $this->messenger()->addMessage($message);
     $form_state->setRedirectUrl($action_config->toUrl('collection'));
-  }
-
-  public function submitForm(array &$form, FormStateInterface $form_state) {
-    parent::submitForm($form, $form_state);
-
-    $this->entity->setTargetEntityType($form_state->getValue('entity_type'));
-    $this->entity->setEntityBundle($form_state->getValue('entity_bundle'));
-    $this->entity->setActionService($form_state->getValue('action_service'));
   }
 }

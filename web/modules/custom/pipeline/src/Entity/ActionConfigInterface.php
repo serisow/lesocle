@@ -3,80 +3,41 @@ namespace Drupal\pipeline\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
 
-/**
- * Provides an interface for defining Action Config entities.
- */
 interface ActionConfigInterface extends ConfigEntityInterface {
 
   /**
-   * Gets the Action type.
+   * Gets the Action service.
    *
    * @return string
-   *   The Action type.
+   *   The Action service.
    */
-  public function getActionType();
+  public function getActionService();
 
   /**
-   * Sets the Action type.
+   * Sets the Action service.
    *
-   * @param string $action_type
-   *   The Action type.
+   * @param string $action_service
+   *   The Action service.
    *
    * @return $this
    */
-  public function setActionType($action_type);
+  public function setActionService($action_service);
 
   /**
-   * Get the target entity type.
+   * Gets the configuration.
    *
-   * @return string
+   * @return array
+   *   The configuration.
    */
-  public function getTargetEntityType();
+  public function getConfiguration();
 
   /**
-   * Set the target entity type.
+   * Sets the configuration.
    *
-   * @param string $target_entity_type
-   *   The target entity type.
+   * @param array $configuration
+   *   The configuration.
    *
    * @return $this
    */
-  public function setTargetEntityType($target_entity_type);
-
-  /**
-   * Gets the Entity bundle.
-   *
-   * @return string
-   *   The Entity bundle.
-   */
-  public function getEntityBundle();
-
-  /**
-   * Sets the Entity bundle.
-   *
-   * @param string $entity_bundle
-   *   The Entity bundle.
-   *
-   * @return $this
-   */
-  public function setEntityBundle($entity_bundle);
-
-  /**
-   * Gets the API endpoint.
-   *
-   * @return string
-   *   The API endpoint.
-   */
-  public function getApiEndpoint();
-
-  /**
-   * Sets the API endpoint.
-   *
-   * @param string $api_endpoint
-   *   The API endpoint.
-   *
-   * @return $this
-   */
-  public function setApiEndpoint($api_endpoint);
-
+  public function setConfiguration(array $configuration);
 }
