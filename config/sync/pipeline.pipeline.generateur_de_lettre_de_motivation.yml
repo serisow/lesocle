@@ -1,0 +1,94 @@
+uuid: f3f709d6-427f-4fbb-a43c-6583ea33f952
+langcode: en
+status: true
+dependencies: {  }
+id: generateur_de_lettre_de_motivation
+label: 'Generateur de lettre de motivation'
+instructions: 'Générer une lettre de motivation géniale.'
+created: 1726669830
+changed: 1726754782
+scheduled_time: 1727661600
+step_types:
+  3ce169b8-5bea-4470-b6ac-ba1ad472fc26:
+    id: llm_step
+    data:
+      step_description: 'Ma présentation'
+      step_output_key: step1
+      required_steps: ''
+      llm_config: gpt_4
+      prompt: "Je suis un développeur Drupal qui a une dizaine d'année d'expérience sur le CMS Drupal en commençant avec la version Drupal 6. Aujourd'hui je suis à la recherche d'un projet Drupal innovant sur lequel je pourrais apporté mon expérience et mon savoir faire.\r\nMa motivation et grande et je suis prés à relevé les défis au quels je ferai face."
+      response: |-
+        Que vous cherchiez des conseils sur une tâche spécifique ou que vous souhaitiez une collaboration à long terme, je suis ici pour vous aider. Votre expérience significative avec Drupal se traduit par une connaissance approfondie du CMS, ce qui serait extrêmement bénéfique pour toute organisation. J'encouragerais fortement, en fonction de vos intérêts individuels et de votre expertise, à chercher des projets qui nécessitent des compétences de développement Drupal avancées ou à la recherche de quelque chose d'innovant, par exemple l'intégration de Drupal avec les nouvelles technologies telles que l'IA, le machine learning ou les API tierces.
+        Ne soyez pas limité par la technologie Drupal, votre expérience vous permet d'apporter des innovations non seulement sur le plan technologique, mais aussi au niveau du processus, de l'UX ou de la stratégie de contenu.
+        Une caractéristique clé à mettre en avant est votre volonté de relever des défis. Cela montre que vous êtes un développeur résilient et adaptable, des qualités attrayantes pour tout employeur potentiel.
+        N'hésitez pas à me faire savoir si vous avez besoin d'aide pour trouver des projets, rédiger un CV, préparer un entretien ou tout autre aspect de votre recherche d'emploi. Je suis là pour vous aider.
+    weight: 0
+    uuid: 3ce169b8-5bea-4470-b6ac-ba1ad472fc26
+  04bea856-605d-43ab-8300-ffabc74ba60f:
+    id: llm_step
+    data:
+      step_description: 'Ajouter du punch'
+      step_output_key: step2
+      required_steps: "step1\r\n"
+      llm_config: calude_3_5_sonnet
+      prompt: "Vous êtes quelqu'un d'extrêmement fort dans l'art de saisir les esprits.\r\nVotre rôle est d'analyser le texte que je te fournirais ci-dessous d'en faire une lettre de motivation qui va toucher profondément la personne qui va la lire.\r\nGénéralement les lettre de motivation et les CV sont lus  par des femmes donc il faut y ajouter de l'émotions tout e étant très subtile.\r\nLa personne qui doit lire lettre doit sentir le professionnalisme du contenu mais aussi elle doit être touchée émotionnellement.\r\nÉviter les phrases longues et complexes.\r\nLe texte doit être naturel et ne semble pas générer par une IA.\r\nVoici le contenu initiale:\r\n{step1}"
+      response: |-
+        Chère Madame,
+
+        Permettez-moi de vous partager mon enthousiasme pour le poste que vous proposez. Mon parcours avec Drupal m'a offert bien plus qu'une simple expertise technique - il m'a appris à voir au-delà du code.
+
+        Chaque projet Drupal a été pour moi une aventure unique. J'ai appris à écouter les besoins cachés derrière chaque demande, à transformer des idées abstraites en expériences concrètes pour les utilisateurs. Cette approche m'a permis de tisser des liens forts avec mes collaborateurs et de créer des solutions qui touchent vraiment les gens.
+
+        Je suis convaincu que la technologie doit servir l'humain, pas l'inverse. C'est pourquoi j'aime explorer de nouvelles pistes, que ce soit l'IA, le machine learning ou d'autres innovations. Mon but ? Rendre la technologie plus chaleureuse, plus intuitive.
+
+        Les défis ne me font pas peur, bien au contraire. Ils m'inspirent et me poussent à me dépasser. J'y vois des opportunités d'apprendre et de grandir, tant sur le plan professionnel que personnel.
+
+        J'aimerais apporter cette énergie positive et cette volonté d'innover au sein de votre équipe. Ensemble, je suis convaincu que nous pourrions créer des expériences digitales qui marquent les esprits et touchent les cœurs.
+
+        Merci de m'avoir accordé votre attention. J'espère sincèrement avoir l'occasion d'échanger avec vous sur la façon dont je pourrais contribuer à vos projets.
+
+        Cordialement,
+
+        [Votre nom]
+    weight: 1
+    uuid: 04bea856-605d-43ab-8300-ffabc74ba60f
+  12ae61e3-bd4f-475f-8f93-88cb06cd4c14:
+    id: llm_step
+    data:
+      step_description: 'Formatter le texte'
+      step_output_key: step3
+      required_steps: "step2\r\n"
+      llm_config: gemini_1_5_flash
+      prompt: "Prends le te texte:\r\n{step2}\r\n\r\nPrépare par le pour qu'il soit bien adapté pour le body d'un article.\r\nFormate le en simple html contenu qui sera insérer dans un wysiwyg.\r\nIl faut aussi préparer un champs titre qui sera utiliser comme titre de l'article.\r\nLa structure doit ressembler à:<h1> Titre de l'article </h1>\r\n<body>\r\n content of the article ...\r\n</body>\r\nUtilise les balises html classiques pour formatter le texte de façon moderne et trés propre."
+      response: |
+        <h1> Passionné par Drupal et l'innovation, prêt à relever vos défis </h1>
+        <body>
+        <p>Chère Madame,</p>
+
+        <p>Permettez-moi de vous partager mon enthousiasme pour le poste que vous proposez. Mon parcours avec Drupal m'a offert bien plus qu'une simple expertise technique - il m'a appris à voir au-delà du code.</p>
+
+        <p>Chaque projet Drupal a été pour moi une aventure unique. J'ai appris à écouter les besoins cachés derrière chaque demande, à transformer des idées abstraites en expériences concrètes pour les utilisateurs. Cette approche m'a permis de tisser des liens forts avec mes collaborateurs et de créer des solutions qui touchent vraiment les gens.</p>
+
+        <p>Je suis convaincu que la technologie doit servir l'humain, pas l'inverse. C'est pourquoi j'aime explorer de nouvelles pistes, que ce soit l'IA, le machine learning ou d'autres innovations. Mon but ? Rendre la technologie plus chaleureuse, plus intuitive.</p>
+
+        <p>Les défis ne me font pas peur, bien au contraire. Ils m'inspirent et me poussent à me dépasser. J'y vois des opportunités d'apprendre et de grandir, tant sur le plan professionnel que personnel.</p>
+
+        <p>J'aimerais apporter cette énergie positive et cette volonté d'innover au sein de votre équipe. Ensemble, je suis convaincu que nous pourrions créer des expériences digitales qui marquent les esprits et touchent les cœurs.</p>
+
+        <p>Merci de m'avoir accordé votre attention. J'espère sincèrement avoir l'occasion d'échanger avec vous sur la façon dont je pourrais contribuer à vos projets.</p>
+
+        <p>Cordialement,</p>
+
+        <p>[Votre nom]</p>
+        </body> 
+    weight: 2
+    uuid: 12ae61e3-bd4f-475f-8f93-88cb06cd4c14
+  8cad38f5-f39b-4afd-a699-1939a6e6523c:
+    id: action_step
+    data:
+      step_description: "Générer l'article."
+      step_output_key: ''
+      required_steps: ''
+      action_config: create_article_action
+    weight: 3
+    uuid: 8cad38f5-f39b-4afd-a699-1939a6e6523c

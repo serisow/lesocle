@@ -10,3 +10,65 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 /*function pipeline_menu_links_discovered_alter(&$links) {
  unset($links['system.admin_content']);
 }*/
+
+use Drupal\Core\Url;
+
+/**
+ * Implements hook_toolbar().
+ */
+function pipeline_toolbar() {
+  $items['shortcuts'] = [
+    '#cache' => [
+      'contexts' => [
+        'user.permissions',
+      ],
+    ],
+  ];
+
+  $items['pipeline'] = [
+    '#type' => 'toolbar_item',
+    'tab' => [
+      '#type' => 'link',
+      '#title' => t('Pipeline'),
+      '#url' => Url::fromRoute('entity.pipeline.collection'),
+      '#attributes' => [
+        'title' => t('Pipeline management'),
+        'class' => ['toolbar-icon', 'toolbar-icon-pipeline'],
+      ],
+    ],
+    'tray' => [
+      '#heading' => t('Pipeline management'),
+      'content' => [
+        '#theme' => 'links__toolbar_pipeline',
+        '#links' => [
+          'add_pipeline' => [
+            'title' => t('Add Pipeline'),
+            'url' => Url::fromRoute('entity.pipeline.add_form'),
+          ],
+          'action_config' => [
+            'title' => t('Action Config'),
+            'url' => Url::fromRoute('entity.action_config.collection'),
+          ],
+          'llm_config' => [
+            'title' => t('LLM Configuration'),
+            'url' => Url::fromRoute('entity.llm_config.collection'),
+          ],
+        ],
+        '#attributes' => [
+          'class' => ['toolbar-menu'],
+        ],
+      ],
+    ],
+    '#weight' => -999,
+  ];
+
+  return $items;
+}
+
+
+/**
+ * Implements hook_page_attachments().
+ */
+function pipeline_page_attachments(array &$attachments) {
+  $attachments['#attached']['library'][] = 'pipeline/toolbar';
+}

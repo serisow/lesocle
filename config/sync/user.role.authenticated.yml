@@ -8,6 +8,7 @@ dependencies:
     - contact
     - file
     - filter
+    - media
     - search
     - shortcut
     - system
@@ -24,3 +25,4 @@ permissions:
   - 'delete own files'
   - 'search content'
   - 'use text format basic_html'
+  - 'view media'

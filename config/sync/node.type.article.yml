@@ -1,0 +1,18 @@
+uuid: 7c8b4469-976d-4f9a-8db4-31a2945c8932
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus:
+      - main
+    parent: 'main:'
+name: Article
+type: article
+description: 'Represent article post.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: true

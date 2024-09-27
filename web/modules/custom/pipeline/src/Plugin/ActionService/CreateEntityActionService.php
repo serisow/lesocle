@@ -188,6 +188,7 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
     ]);
     $node->save();
 
-    return "Created new article with ID: " . $node->id();
+    //return "Created new article with ID: " . $node->id();
+    return $content;
   }
 }
