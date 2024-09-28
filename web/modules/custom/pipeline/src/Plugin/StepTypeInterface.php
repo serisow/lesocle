@@ -93,4 +93,22 @@ interface StepTypeInterface extends ConfigurableInterface, PluginInspectionInter
    */
   public function isAjax(): bool ;
 
+  /**
+   * Gets the response of the step type.
+   *
+   * @return string
+   *   The response of the step type.
+   */
+  public function getResponse(): string;
+
+  /**
+   * Sets the response of the step type.
+   *
+   * @param string $response
+   *   The response to set.
+   *
+   * @return $this
+   */
+  public function setResponse(string $response);
+
 }

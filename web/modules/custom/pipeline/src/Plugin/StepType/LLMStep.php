@@ -36,12 +36,6 @@ class LLMStep extends AbstractLLMStepType {
       '#default_value' => $this->configuration['prompt'],
       '#required' => TRUE,
     ];
-    $form['response'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Response'),
-      '#default_value' => $this->configuration['response'],
-      '#disabled' => TRUE,
-    ];
     return $form;
   }
 
@@ -67,10 +61,5 @@ class LLMStep extends AbstractLLMStepType {
   public function execute(array &$context): string {
     return parent::execute($context);
   }
-  /**
-   * Ajax callback to update the response field.
-   */
-  public function updateResponseField(array &$form, FormStateInterface $form_state) {
-    return $form['data']['response'];
-  }
+
 }

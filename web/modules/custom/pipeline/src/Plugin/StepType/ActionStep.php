@@ -88,7 +88,9 @@ class ActionStep extends ConfigurableStepTypeBase implements StepTypeExecutableI
     $action_config_array['results'] = $results;
     $action_config_array['last_response'] = $last_response;
 
-    return $action_service->executeAction($action_config_array, $context);
+    $action_result = $action_service->executeAction($action_config_array, $context);
+    $this->configuration['response'] = $action_result;
+    return $action_result;
   }
 
 }

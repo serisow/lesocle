@@ -130,6 +130,8 @@ class GoogleSearchStep extends ConfigurableStepTypeBase implements StepTypeExecu
       'cx' => $cx,
       'q' => $combined_query,
       'num' => 5, // Default to 5 results
+      'dateRestrict' => 'y1', // Restrict to content from the last year
+      'sort' => 'date', // Sort by date, with the most recent first
     ];
 
     $url = 'https://www.googleapis.com/customsearch/v1?' . http_build_query($params);
@@ -139,15 +141,20 @@ class GoogleSearchStep extends ConfigurableStepTypeBase implements StepTypeExecu
       $data = json_decode($response->getBody(), TRUE);
 
       if (isset($data['items']) && !empty($data['items'])) {
-        $search_results = array_map(function ($item) {
-          return [
+        $enriched_results = [];
+
+        foreach ($data['items'] as $item) {
+          $enriched_result = [
             'title' => $item['title'],
             'link' => $item['link'],
             'snippet' => $item['snippet'],
+            'expanded_content' => $this->fetchExpandedContent($item['link']),
           ];
-        }, $data['items']);
+          $enriched_results[] = $enriched_result;
+        }
 
-        $result = json_encode($search_results);
+        $result = json_encode($enriched_results);
+        $this->configuration['response'] = $result;
       } else {
         $result = json_encode(['message' => 'No results found.']);
       }
@@ -161,6 +168,37 @@ class GoogleSearchStep extends ConfigurableStepTypeBase implements StepTypeExecu
     } catch (\Exception $e) {
       throw new \Exception("Error fetching search results: " . $e->getMessage());
     }
+  }
+
+  private function fetchExpandedContent($url) {
+    try {
+      $response = $this->httpClient->get($url);
+      $html = $response->getBody()->getContents();
+
+      // Use a library like QueryPath or Symfony DomCrawler for better HTML parsing
+      $dom = new \DOMDocument();
+      @$dom->loadHTML($html);
+      $xpath = new \DOMXPath($dom);
+
+      // Extract main content (this is a simple example, might need adjustment based on site structure)
+      $content_nodes = $xpath->query('//article | //div[@class="content"] | //div[@id="content"] | //main');
+      if ($content_nodes->length > 0) {
+        $content = $content_nodes->item(0)->textContent;
+        // Clean up the content
+        $content = preg_replace('/\s+/', ' ', $content);
+        $content = trim($content);
+        // Limit to about 1000 characters, but don't cut words
+        if (strlen($content) > 2000) {
+          $content = substr($content, 0, 2000);
+          $content = substr($content, 0, strrpos($content, ' ')) . '...';
+        }
+        return $content;
+      }
+    } catch (\Exception $e) {
+      // Log the error
+      return "Error fetching expanded content: " . $e->getMessage();
+    }
+    return "No expanded content available.";
   }
 
   /**

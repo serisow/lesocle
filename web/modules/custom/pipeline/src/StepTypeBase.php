@@ -41,6 +41,9 @@ abstract class StepTypeBase extends PluginBase implements StepTypeInterface, Con
 
   protected $step_description;
 
+  protected $response = '';
+
+
   /**
    * A logger instance.
    *
@@ -150,6 +153,21 @@ abstract class StepTypeBase extends PluginBase implements StepTypeInterface, Con
    */
   public function setStepDescription($description) {
     $this->step_description = $description;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getResponse(): string {
+    return $this->configuration['response'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setResponse(string $response) {
+    $this->response = $response;
     return $this;
   }
 
