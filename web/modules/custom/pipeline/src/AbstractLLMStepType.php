@@ -123,7 +123,6 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $response = $llm_service->callLLM($llm_config->toArray(), $prompt);
 
     $this->configuration['response'] = $response;
-    $context['memory'][$config['step_output_key']] = $response;
     // Check if the response is an image
     if ($service_id === 'openai_image') {
       $context['image_data'] = $response;

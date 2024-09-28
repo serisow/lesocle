@@ -15,9 +15,6 @@ class PipelineBatch {
 
     if ($step_type instanceof StepTypeExecutableInterface) {
       try {
-        if (!isset($context['memory'])) {
-          $context['memory'] = [];
-        }
         // Get the LLM Config associated with this step
         $config = $step_type->getConfiguration();
         $step_info = '';
@@ -50,11 +47,7 @@ class PipelineBatch {
             $step_info = '';
             break;
         }
-
         $result = $step_type->execute($context);
-
-        // Store the result in memory
-        $context['memory'][$step_type->getStepOutputKey()] = $result;
 
         // Also keep the results array for backwards compatibility
         $context['results'][$step_type->getStepOutputKey()] = $result;
