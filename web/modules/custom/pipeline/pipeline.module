@@ -54,8 +54,12 @@ function pipeline_toolbar() {
             'url' => Url::fromRoute('entity.llm_config.collection'),
           ],
           'pipeline_settings' => [
-            'title' => t('Google search'),
+            'title' => t('General settings'),
             'url' => Url::fromRoute('pipeline.settings'),
+          ],
+          'custom_google_search_settings' => [
+            'title' => t('Custom Google Search'),
+            'url' => Url::fromRoute('pipeline.google_settings'),
           ],
         ],
         '#attributes' => [
@@ -65,7 +69,6 @@ function pipeline_toolbar() {
     ],
     '#weight' => -999,
   ];
-
   return $items;
 }
 

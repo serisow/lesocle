@@ -99,9 +99,9 @@ class GoogleSearchStep extends ConfigurableStepTypeBase implements StepTypeExecu
    */
   public function execute(array &$context): string {
     $config = $this->getConfiguration()['data'];
-    $pipeline_config = $this->configFactory->get('pipeline.settings');
-    $api_key = $pipeline_config->get('google_custom_search_api_key');
-    $cx = $pipeline_config->get('google_custom_search_engine_id');
+    $google_config = $this->configFactory->get('pipeline.google_settings');
+    $api_key = $google_config->get('google_custom_search_api_key');
+    $cx = $google_config->get('google_custom_search_engine_id');
 
     if (!$api_key || !$cx) {
       throw new \Exception("Google Custom Search API key or Search Engine ID is not configured.");

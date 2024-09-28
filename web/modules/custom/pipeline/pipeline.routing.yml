@@ -254,3 +254,11 @@ pipeline.execution_result:
     #_access: 'TRUE'
   #options:
   #  _auth: ['basic_auth']
+
+pipeline.google_settings:
+  path: '/admin/config/pipeline/google-settings'
+  defaults:
+    _form: '\Drupal\pipeline\Form\GoogleSettingsForm'
+    _title: 'Google Search Settings'
+  requirements:
+    _permission: 'administer pipeline settings'
