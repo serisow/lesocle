@@ -17,30 +17,20 @@ class PipelineSettingsForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('pipeline.settings');
 
-    $form['frontend_base_url'] = [
-      '#type' => 'url',
-      '#title' => $this->t('Frontend Base URL'),
-      '#default_value' => $config->get('frontend_base_url'),
-      '#description' => $this->t('The base URL of the frontend React application (e.g., http://localhost:3000).'),
-      '#required' => TRUE,
-    ];
-
-    $form['openai_api_url'] = [
-      '#type' => 'url',
-      '#title' => $this->t('OpenAI API URL'),
-      '#default_value' => $config->get('openai_api_url'),
-      '#description' => $this->t('The OpenAI API URL.'),
-      '#required' => TRUE,
-    ];
-
-
-    $form['openai_api_key'] = [
+    $form['google_custom_search_api_key'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Open API Key'),
-      '#default_value' => $config->get('openai_api_key'),
-      '#description' => $this->t('The Open API Key from your OpenAPI account.'),
+      '#title' => $this->t('Google Custom Search API Key'),
+      '#default_value' => $config->get('google_custom_search_api_key'),
+      '#description' => $this->t('Enter your Google Custom Search API Key.'),
       '#required' => TRUE,
-      '#maxlength' => 255,
+    ];
+
+    $form['google_custom_search_engine_id'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Google Custom Search Engine ID'),
+      '#default_value' => $config->get('google_custom_search_engine_id'),
+      '#description' => $this->t('Enter your Google Custom Search Engine ID.'),
+      '#required' => TRUE,
     ];
 
     return parent::buildForm($form, $form_state);
@@ -48,9 +38,8 @@ class PipelineSettingsForm extends ConfigFormBase {
 
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->config('pipeline.settings')
-      ->set('frontend_base_url', $form_state->getValue('frontend_base_url'))
-      ->set('openai_api_url', $form_state->getValue('openai_api_url'))
-      ->set('openai_api_key', $form_state->getValue('openai_api_key'))
+      ->set('google_custom_search_api_key', $form_state->getValue('google_custom_search_api_key'))
+      ->set('google_custom_search_engine_id', $form_state->getValue('google_custom_search_engine_id'))
       ->save();
 
     parent::submitForm($form, $form_state);

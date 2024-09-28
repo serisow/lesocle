@@ -3,6 +3,7 @@ namespace Drupal\pipeline;
 
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\pipeline\Plugin\StepType\ActionStep;
+use Drupal\pipeline\Plugin\StepType\GoogleSearchStep;
 use Drupal\pipeline\Plugin\StepType\LLMStep;
 use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
 
@@ -21,16 +22,33 @@ class PipelineBatch {
         $config = $step_type->getConfiguration();
         $step_info = '';
 
-        if ($step_type instanceof LLMStep) {
-          $llm_config_id = $config['data']['llm_config'] ?? '';
-          $llm_config = \Drupal::entityTypeManager()->getStorage('llm_config')->load($llm_config_id);
-          $model_name = $llm_config ? $llm_config->getModelName() : 'N/A';
-          $step_info = t('(Model: @model)', ['@model' => $model_name]);
-        } elseif ($step_type instanceof ActionStep) {
-          $action_config_id = $config['data']['action_config'] ?? '';
-          $action_config = \Drupal::entityTypeManager()->getStorage('action_config')->load($action_config_id);
-          $action_service = $action_config ? $action_config->getActionService() : 'N/A';
-          $step_info = t('(Action: @action)', ['@action' => $action_service]);
+        switch (true) {
+          case $step_type instanceof LLMStep:
+            $llm_config_id = $config['data']['llm_config'] ?? '';
+            $llm_config = \Drupal::entityTypeManager()->getStorage('llm_config')->load($llm_config_id);
+            $model_name = $llm_config ? $llm_config->getModelName() : 'N/A';
+            $step_info = t('(Model: @model)', ['@model' => $model_name]);
+            break;
+
+          case $step_type instanceof ActionStep:
+            $action_config_id = $config['data']['action_config'] ?? '';
+            $action_config = \Drupal::entityTypeManager()->getStorage('action_config')->load($action_config_id);
+            $action_service = $action_config ? $action_config->getActionService() : 'N/A';
+            $step_info = t('(Action: @action)', ['@action' => $action_service]);
+            break;
+
+          case $step_type instanceof GoogleSearchStep:
+            $query = $config['data']['query'] ?? 'N/A';
+            $category = $config['data']['category'] ?? '';
+            $step_info = t('(Query: @query, Category: @category)', [
+              '@query' => $query,
+              '@category' => $category ?: 'N/A',
+            ]);
+            break;
+
+          default:
+            $step_info = '';
+            break;
         }
 
         $result = $step_type->execute($context);

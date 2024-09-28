@@ -53,6 +53,10 @@ function pipeline_toolbar() {
             'title' => t('LLM Configuration'),
             'url' => Url::fromRoute('entity.llm_config.collection'),
           ],
+          'pipeline_settings' => [
+            'title' => t('Google search'),
+            'url' => Url::fromRoute('pipeline.settings'),
+          ],
         ],
         '#attributes' => [
           'class' => ['toolbar-menu'],
