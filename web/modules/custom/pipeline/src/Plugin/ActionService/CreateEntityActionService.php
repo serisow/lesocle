@@ -4,11 +4,9 @@ namespace Drupal\pipeline\Plugin\ActionService;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
-use Drupal\file\FileRepositoryInterface;
 use Drupal\pipeline\Plugin\ActionServiceInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -157,8 +155,13 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
    */
   public function executeAction(array $config, array &$context): string {
     $content = $context['last_response'] ?? '';
-    // Remove the ```json and ``` markers if they exist
+
+    // Remove ```json prefix and ``` suffix if present
     $content = preg_replace('/^```json\s*|\s*```$/s', '', $content);
+
+    // Trim any whitespace
+    $content = trim($content);
+
     // Decode the JSON content
     $data = json_decode($content, true);
 
@@ -188,7 +191,6 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
     ]);
     $node->save();
 
-    //return "Created new article with ID: " . $node->id();
     return $content;
   }
 }

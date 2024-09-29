@@ -112,39 +112,65 @@ class PipelineApiController extends ControllerBase {
         'id' => $step_type->getUuid(),
         'type' => $step_type->getPluginId(),
         'weight' => $step_type->getWeight(),
+        'step_description' => $step_type->getStepDescription(),
+        'step_output_key' => $step_type->getStepOutputKey(),
+        'uuid' => $step_type->getUuid(),
       ];
 
       $configuration = $step_type->getConfiguration();
       if (isset($configuration['data'])) {
-        // Merge 'data' contents directly into the main configuration
-        $step_data = array_merge($step_data, $configuration['data']);
+        // Include required_steps
+        $step_data['required_steps'] = $configuration['data']['required_steps'] ?? '';
+
+        // Handle specific step types
+        switch ($step_data['type']) {
+          case 'llm_step':
+            $step_data['prompt'] = $configuration['data']['prompt'] ?? '';
+            $step_data['response'] = $configuration['data']['response'] ?? '';
+            $step_data['llm_config'] = $configuration['data']['llm_config'] ?? '';
+
+            if (isset($configuration['data']['llm_config'])) {
+              $llm_config = LLMConfig::load($configuration['data']['llm_config']);
+              if ($llm_config) {
+                $model_plugin = $this->modelManager->createInstanceFromModelName($llm_config->getModelName());
+                $step_data['llm_service'] = [
+                  'id' => $llm_config->id(),
+                  'label' => $llm_config->label(),
+                  'api_key' => $llm_config->getApiKey(),
+                  'model_name' => $llm_config->getModelName(),
+                  'api_url' => $llm_config->getApiUrl(),
+                  'parameters' => $llm_config->getParameters(),
+                  'service_name' => $model_plugin->getServiceId(),
+                ];
+              }
+            }
+            break;
+
+          case 'action_step':
+            $step_data['action_config'] = $configuration['data']['action_config'] ?? '';
+            break;
+
+          case 'google_search':
+            $step_data['google_search_config'] = [
+              'query' => $configuration['data']['query'] ?? '',
+              'category' => $configuration['data']['category'] ?? '',
+              'advanced_params' => $configuration['data']['advanced_params'] ?? [],
+            ];
+            break;
+        }
+
+        // Remove the 'data' key as we've extracted its contents
         unset($configuration['data']);
       }
 
       // Merge any remaining configuration
       $step_data = array_merge($step_data, $configuration);
 
-      if ($step_data['type'] === 'llm_step' && isset($step_data['llm_config'])) {
-        $llm_config = LLMConfig::load($step_data['llm_config']);
-        if ($llm_config) {
-          $model_plugin = $this->modelManager->createInstanceFromModelName($llm_config->getModelName());
-          $step_data['llm_service'] = [
-            'id' => $llm_config->id(),
-            'label' => $llm_config->label(),
-            'api_key' => $llm_config->getApiKey(),
-            'model_name' => $llm_config->getModelName(),
-            'api_url' => $llm_config->getApiUrl(),
-            'parameters' => $llm_config->getParameters(),
-            'service_name' => $model_plugin->getServiceId(),
-          ];
-        }
-      }
       $pipeline_data['steps'][] = $step_data;
     }
 
     return new JsonResponse($pipeline_data);
   }
-
   /**
    * Cleans the step configuration for API output.
    *

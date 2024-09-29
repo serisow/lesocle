@@ -59,8 +59,7 @@ class GoogleSearchStep extends ConfigurableStepTypeBase implements StepTypeExecu
   /**
    * {@inheritdoc}
    */
-  protected function additionalConfigurationForm(array $form, FormStateInterface $form_state)
-  {
+  protected function additionalConfigurationForm(array $form, FormStateInterface $form_state) {
     $form = parent::additionalConfigurationForm($form, $form_state);
 
     $form['query'] = [
@@ -78,17 +77,142 @@ class GoogleSearchStep extends ConfigurableStepTypeBase implements StepTypeExecu
       '#description' => $this->t('Enter a category to refine the search (optional).'),
     ];
 
+    // Advanced parameters in a collapsible fieldset
+    $form['advanced_params'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Advanced Parameters'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    ];
+
+    $form['advanced_params']['num_results'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Number of Results'),
+      '#default_value' => $this->configuration['advanced_params']['num_results'] ?? 10,
+      '#min' => 1,
+      '#max' => 10,
+      '#description' => $this->t('Number of search results to return (1-10).'),
+    ];
+
+    $form['advanced_params']['date_restrict'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Date Restriction'),
+      '#options' => [
+        '' => $this->t('No restriction'),
+        'd1' => $this->t('Past 24 hours'),
+        'w1' => $this->t('Past week'),
+        'm1' => $this->t('Past month'),
+        'y1' => $this->t('Past year'),
+      ],
+      '#default_value' => $this->configuration['advanced_params']['date_restrict'] ?? '',
+      '#description' => $this->t('Restrict results to a specific time frame.'),
+    ];
+
+    $form['advanced_params']['sort'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Sort Order'),
+      '#options' => [
+        '' => $this->t('Relevance'),
+        'date' => $this->t('Date'),
+      ],
+      '#default_value' => $this->configuration['advanced_params']['sort'] ?? '',
+      '#description' => $this->t('Sort results by relevance or date.'),
+    ];
+
+    $form['advanced_params']['language'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Language'),
+      '#options' => $this->getLanguageOptions(),
+      '#default_value' => $this->configuration['advanced_params']['language'] ?? '',
+      '#description' => $this->t('Restrict results to documents written in a specific language.'),
+    ];
+
+    $form['advanced_params']['country'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Country'),
+      '#options' => $this->getCountryOptions(),
+      '#default_value' => $this->configuration['advanced_params']['country'] ?? '',
+      '#description' => $this->t('Restrict results to a specific country.'),
+    ];
+
+    $form['advanced_params']['site_search'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Site Search'),
+      '#default_value' => $this->configuration['advanced_params']['site_search'] ?? '',
+      '#description' => $this->t('Restrict results to a specific site (e.g., example.com).'),
+    ];
+
+    $form['advanced_params']['file_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('File Type'),
+      '#options' => $this->getFileTypeOptions(),
+      '#default_value' => $this->configuration['advanced_params']['file_type'] ?? '',
+      '#description' => $this->t('Restrict results to a specific file type.'),
+    ];
+
+    $form['advanced_params']['safe_search'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Safe Search'),
+      '#options' => [
+        '' => $this->t('Off'),
+        'medium' => $this->t('Medium'),
+        'high' => $this->t('High'),
+      ],
+      '#default_value' => $this->configuration['advanced_params']['safe_search'] ?? '',
+      '#description' => $this->t('Filtering level for explicit content.'),
+    ];
+
     return $form;
   }
 
+  private function getLanguageOptions() {
+    return [
+      '' => $this->t('Any language'),
+      'lang_en' => $this->t('English'),
+      'lang_fr' => $this->t('French'),
+      'lang_de' => $this->t('German'),
+      'lang_es' => $this->t('Spanish'),
+      // Add more languages as needed
+    ];
+  }
+
+  private function getCountryOptions() {
+    return [
+      '' => $this->t('Any country'),
+      'countryUS' => $this->t('United States'),
+      'countryGB' => $this->t('United Kingdom'),
+      'countryFR' => $this->t('France'),
+      'countryDE' => $this->t('Germany'),
+      // Add more countries as needed
+    ];
+  }
+
+  private function getFileTypeOptions() {
+    return [
+      '' => $this->t('Any file type'),
+      'pdf' => $this->t('PDF'),
+      'doc' => $this->t('Word Document'),
+      'xls' => $this->t('Excel Spreadsheet'),
+      'ppt' => $this->t('PowerPoint'),
+      'jpg' => $this->t('JPEG Image'),
+      // Add more file types as needed
+    ];
+  }
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state)
-  {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
     $this->configuration['query'] = $form_state->getValue(['data', 'query']);
     $this->configuration['category'] = $form_state->getValue(['data', 'category']);
+    $this->configuration['num_results'] = $form_state->getValue(['data', 'advanced_params', 'num_results']);
+    $this->configuration['date_restrict'] = $form_state->getValue(['data', 'advanced_params', 'date_restrict']);
+    $this->configuration['sort'] = $form_state->getValue(['data', 'advanced_params', 'sort']);
+    $this->configuration['language'] = $form_state->getValue(['data', 'advanced_params', 'language']);
+    $this->configuration['country'] = $form_state->getValue(['data', 'advanced_params', 'country']);
+    $this->configuration['site_search'] = $form_state->getValue(['data', 'advanced_params', 'site_search']);
+    $this->configuration['file_type'] = $form_state->getValue(['data', 'advanced_params', 'file_type']);
+    $this->configuration['safe_search'] = $form_state->getValue(['data', 'advanced_params', 'safe_search']);
   }
 
   /**
@@ -129,10 +253,36 @@ class GoogleSearchStep extends ConfigurableStepTypeBase implements StepTypeExecu
       'key' => $api_key,
       'cx' => $cx,
       'q' => $combined_query,
-      'num' => 5, // Default to 5 results
-      'dateRestrict' => 'y1', // Restrict to content from the last year
-      'sort' => 'date', // Sort by date, with the most recent first
+      'num' => $config['num_results'],
     ];
+
+    if (!empty($this->configuration['date_restrict'])) {
+      $params['dateRestrict'] = $this->configuration['date_restrict'];
+    }
+
+    if (!empty($this->configuration['sort'])) {
+      $params['sort'] = $this->configuration['sort'];
+    }
+
+    if (!empty($this->configuration['language'])) {
+      $params['lr'] = $this->configuration['language'];
+    }
+
+    if (!empty($this->configuration['country'])) {
+      $params['cr'] = $this->configuration['country'];
+    }
+
+    if (!empty($this->configuration['site_search'])) {
+      $params['siteSearch'] = $this->configuration['site_search'];
+    }
+
+    if (!empty($this->configuration['file_type'])) {
+      $params['fileType'] = $this->configuration['file_type'];
+    }
+
+    if (!empty($this->configuration['safe_search'])) {
+      $params['safe'] = $this->configuration['safe_search'];
+    }
 
     $url = 'https://www.googleapis.com/customsearch/v1?' . http_build_query($params);
 
@@ -181,7 +331,7 @@ class GoogleSearchStep extends ConfigurableStepTypeBase implements StepTypeExecu
       $xpath = new \DOMXPath($dom);
 
       // Extract main content (this is a simple example, might need adjustment based on site structure)
-      $content_nodes = $xpath->query('//article | //div[@class="content"] | //div[@id="content"] | //main');
+      $content_nodes = $xpath->query('//article | //div[@class="content"] | //div[@id="content"] | //main | //div[@class="post"] | //div[@id="main"] | //div[@class="entry-content"] | //div[@class="post-content"] | //div[@class="blog-post"] | //div[@id="primary"] | //div[@id="main-content"] | //div[@class="text"] | //div[@class="text-content"] | //div[@id="body-content"] | //div[@class="post-article"]');
       if ($content_nodes->length > 0) {
         $content = $content_nodes->item(0)->textContent;
         // Clean up the content
