@@ -67,7 +67,7 @@ class GeminiService extends PluginBase implements LLMServiceInterface, Container
             'Content-Type' => 'application/json',
           ],
           'json' => $payload,
-          'timeout' => 120, // Increased timeout to 120 seconds
+          'timeout' => 4800, // Increased timeout to 120 seconds
         ]);
 
         $content = $response->getBody()->getContents();

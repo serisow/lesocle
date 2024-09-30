@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\pipeline\Plugin\ActionServiceInterface;
+use Drupal\pipeline\Service\MediaCreationService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -32,6 +33,13 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
   protected $entityTypeBundleInfo;
 
   /**
+   * The media creation service.
+   * @var \Drupal\pipeline\Service\MediaCreationService
+   */
+  protected $mediaCreationService;
+
+
+  /**
    * Constructs a CreateEntityActionService object.
    *
    * @param array $configuration
@@ -44,14 +52,18 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
    *   The entity type manager.
    * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
    *   The entity type bundle info.
+   * @param \Drupal\pipeline\Service\MediaCreationService $media_action_service
+   *   The media creation service.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition,
     EntityTypeManagerInterface $entity_type_manager,
-    EntityTypeBundleInfoInterface $entity_type_bundle_info
+    EntityTypeBundleInfoInterface $entity_type_bundle_info,
+    MediaCreationService $media_creation_service
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
+    $this->mediaCreationService = $media_creation_service;
   }
 
   /**
@@ -63,7 +75,8 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
       $plugin_id,
       $plugin_definition,
       $container->get('entity_type.manager'),
-      $container->get('entity_type.bundle.info')
+      $container->get('entity_type.bundle.info'),
+      $container->get('pipeline.media_creation_service')
     );
   }
 

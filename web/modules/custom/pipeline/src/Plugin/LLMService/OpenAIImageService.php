@@ -1,62 +1,46 @@
 <?php
-
-
 namespace Drupal\pipeline\Plugin\LLMService;
-
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\File\FileExists;
+use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
+use Drupal\file\FileInterface;
+use Drupal\file\FileRepositoryInterface;
 use Drupal\pipeline\Plugin\LLMServiceInterface;
-use GuzzleHttp\ClientInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use GuzzleHttp\Exception\RequestException;
+use Psr\Http\Client\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
-/**
- * @LLMService(
- *   id = "openai_image",
- *   label = @Translation("OpenAI Image Service")
- * )
- */
 class OpenAIImageService extends PluginBase implements LLMServiceInterface, ContainerFactoryPluginInterface
 {
-  /**
-   * The HTTP client.
-   *
-   * @var \GuzzleHttp\ClientInterface
-   */
-  protected $httpClient;
+  protected $fileRepository;
 
   /**
-   * The logger factory.
+   * The file system service.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   * @var \Drupal\Core\File\FileSystemInterface
    */
-  protected $loggerFactory;
+  protected $fileSystem;
 
-  /**
-   * Constructs a new OpenAIImageService object.
-   *
-   * @param array $configuration
-   *   A configuration array containing information about the plugin instance.
-   * @param string $plugin_id
-   *   The plugin_id for the plugin instance.
-   * @param mixed $plugin_definition
-   *   The plugin implementation definition.
-   * @param \GuzzleHttp\ClientInterface $http_client
-   *   The HTTP client.
-   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
-   *   The logger factory.
-   */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, ClientInterface $http_client, LoggerChannelFactoryInterface $logger_factory)
-  {
+  protected $entityTypeManager;
+
+  public function __construct(array $configuration, $plugin_id, $plugin_definition,
+    ClientInterface $http_client,
+    LoggerChannelFactoryInterface $logger_factory,
+    FileRepositoryInterface $file_repository,
+    FileSystemInterface $file_system,
+    EntityTypeManagerInterface $entity_type_manager
+  ){
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->httpClient = $http_client;
     $this->loggerFactory = $logger_factory;
+    $this->fileRepository = $file_repository;
+    $this->fileSystem = $file_system;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
-  /**
-   * {@inheritdoc}
-   */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition)
   {
     return new static(
@@ -64,25 +48,16 @@ class OpenAIImageService extends PluginBase implements LLMServiceInterface, Cont
       $plugin_id,
       $plugin_definition,
       $container->get('http_client'),
-      $container->get('logger.factory')
+      $container->get('logger.factory'),
+      $container->get('file.repository'),
+      $container->get('file_system'),
+      $container->get('entity_type.manager')
     );
   }
 
-  /**
-   * Calls the OpenAI Image API.
-   *
-   * @param array $config
-   *   The configuration array containing API details.
-   * @param string $prompt
-   *   The prompt to generate an image from.
-   *
-   * @return string
-   *   The URL of the generated image.
-   *
-   * @throws \Exception
-   */
   public function callOpenAIImage(array $config, string $prompt): string
   {
+    $prompt = "Create a modern, simple illustration representing the concept of Agentic AI Workflows.";
     $maxRetries = 3;
     $retryDelay = 5;
 
@@ -100,14 +75,15 @@ class OpenAIImageService extends PluginBase implements LLMServiceInterface, Cont
             'size' => $config['image_size'] ?? '1024x1024',
             'response_format' => 'url',
           ],
-          'timeout' => 480, // Increased timeout
+          'timeout' => 4800, // Increased timeout
         ]);
 
         $content = $response->getBody()->getContents();
         $data = json_decode($content, TRUE);
 
         if (isset($data['data'][0]['url'])) {
-          return $data['data'][0]['url'];
+          $imageUrl = $data['data'][0]['url'];
+          return $this->downloadImage($imageUrl);
         } else {
           throw new \Exception('Unexpected response format from OpenAI Image API.');
         }
@@ -123,11 +99,57 @@ class OpenAIImageService extends PluginBase implements LLMServiceInterface, Cont
     throw new \Exception('Failed to call OpenAI Image API after exhausting all retry attempts.');
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function callLLM(array $config, string $prompt): string
-  {
+  protected function downloadImage($url): string {
+    try {
+      $response = $this->httpClient->get($url);
+      $content = $response->getBody()->getContents();
+
+      $directory = 'public://generated_images';
+      $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
+
+      $filename = 'dalle_' . time() . '.png';
+      $uri = $directory . '/' . $filename;
+
+      $file = $this->fileRepository->writeData(
+        $content,
+        "$directory/$filename",
+        FileExists::Replace
+      );
+
+      if ($file) {
+        $media_info =  [
+          'file_id' => $file->id(),
+          'uri' => $file->getFileUri(),
+          'filename' => $file->getFilename(),
+          'mime' => $file->getMimeType(),
+        ];
+        return json_encode($media_info);
+      } else {
+        throw new \Exception('Failed to save the image file.');
+      }
+    } catch (\Exception $e) {
+      $this->loggerFactory->get('pipeline')->error('Error downloading image: @error', ['@error' => $e->getMessage()]);
+      return $this->getFallbackImageInfo();
+    }
+  }
+
+  protected function getFallbackImageInfo(): string {
+    $fallback_file = $this->entityTypeManager->getStorage('file')->loadByProperties(['uri' => 'public://default_ai_workflow_image.png']);
+    $fallback_file = reset($fallback_file);
+
+    if (!$fallback_file) {
+      throw new \Exception('Fallback image not found.');
+    }
+
+    return json_encode( [
+      'file_id' => $fallback_file->id(),
+      'uri' => $fallback_file->getFileUri(),
+      'filename' => $fallback_file->getFilename(),
+      'mime' => $fallback_file->getMimeType(),
+    ]);
+  }
+
+  public function callLLM(array $config, string $prompt): string {
     return $this->callOpenAIImage($config, $prompt);
   }
 }

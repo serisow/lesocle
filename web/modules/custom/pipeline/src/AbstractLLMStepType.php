@@ -123,9 +123,14 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $response = $llm_service->callLLM($llm_config->toArray(), $prompt);
 
     $this->configuration['response'] = $response;
-    // Check if the response is an image
+    // Check if the response is an image (JSON string containing url and file_uri)
     if ($service_id === 'openai_image') {
-      $context['image_data'] = $response;
+      $imageData = json_decode($response, TRUE);
+      if (json_last_error() === JSON_ERROR_NONE && isset($imageData['url']) && isset($imageData['file_uri'])) {
+        $context['image_data'] = $imageData;
+      } else {
+        throw new \Exception('Invalid image data returned from OpenAI Image service');
+      }
     } else {
       $context['last_response'] = $response;
     }
