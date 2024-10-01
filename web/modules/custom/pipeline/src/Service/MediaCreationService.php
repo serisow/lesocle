@@ -1,16 +1,32 @@
 <?php
 namespace Drupal\pipeline\Service;
 
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\file\FileInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
-class MediaCreationService {
+class MediaCreationService implements ContainerInjectionInterface {
+  /**
+   * The entity_type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
+  /**
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   */
   public function __construct(EntityTypeManagerInterface $entity_type_manager) {
     $this->entityTypeManager = $entity_type_manager;
   }
 
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('entity_type.manager')
+    );
+  }
   public function createImageMedia(array $image_info): ?int {
     try {
       $file = $this->entityTypeManager->getStorage('file')->load($image_info['file_id']);
@@ -35,4 +51,6 @@ class MediaCreationService {
       return null;
     }
   }
+
+
 }

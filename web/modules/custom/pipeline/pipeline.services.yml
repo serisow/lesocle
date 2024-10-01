@@ -18,4 +18,5 @@ services:
   pipeline.media_creation_service:
     class: Drupal\pipeline\Service\MediaCreationService
     arguments:
-      - entity_type.manager
+      - '@entity_type.manager'
+

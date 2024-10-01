@@ -168,6 +168,10 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
    */
   public function executeAction(array $config, array &$context): string {
     $content = $context['last_response'] ?? '';
+    $image_data = $context['results']['image_data'] ?? null;
+    if ($image_data) {
+      $image_info = json_decode($image_data, true);
+    }
 
     // Remove ```json prefix and ``` suffix if present
     $content = preg_replace('/^```json\s*|\s*```$/s', '', $content);
@@ -186,6 +190,12 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
       throw new \Exception("JSON must contain 'title' and 'body' fields");
     }
 
+    // Create media entity if image info is available
+    $media_id = null;
+    if ($image_info) {
+      $media_id = $this->mediaCreationService->createImageMedia($image_info);
+    }
+
     $title = $data['title'];
     $body = $data['body'];
 
@@ -202,8 +212,18 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
         'format' => 'full_html',
       ],
     ]);
+
+    // Add the media to the article if available
+    if ($media_id) {
+      $node->field_media_image = ['target_id' => $media_id];
+    }
+
     $node->save();
 
-    return $content;
+    return json_encode([
+      'nid' => $node->id(),
+      'title' => $node->getTitle(),
+      'media_id' => $media_id,
+    ]);
   }
 }

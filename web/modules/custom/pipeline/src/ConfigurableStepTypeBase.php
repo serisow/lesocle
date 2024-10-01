@@ -127,4 +127,14 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
    *   The current state of the form.
    */
   protected function additionalSubmitConfigurationForm(array &$form, FormStateInterface $form_state) {}
+
+  public function getRequiredSteps(array $config) {
+    $required_steps = [];
+    if (is_string($config['required_steps'])) {
+      $required_steps = [trim($config['required_steps'])];
+    } elseif(is_array($config['required_steps'])) {
+      $required_steps = $config['required_steps'];
+    }
+    return $required_steps;
+  }
 }

@@ -13,6 +13,12 @@ use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Client\ClientInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+/**
+ * @LLMService(
+ *   id = "openai_image",
+ *   label = @Translation("OpenAI Image Service")
+ * )
+ */
 class OpenAIImageService extends PluginBase implements LLMServiceInterface, ContainerFactoryPluginInterface
 {
   protected $fileRepository;
@@ -57,7 +63,6 @@ class OpenAIImageService extends PluginBase implements LLMServiceInterface, Cont
 
   public function callOpenAIImage(array $config, string $prompt): string
   {
-    $prompt = "Create a modern, simple illustration representing the concept of Agentic AI Workflows.";
     $maxRetries = 3;
     $retryDelay = 5;
 
@@ -69,13 +74,12 @@ class OpenAIImageService extends PluginBase implements LLMServiceInterface, Cont
             'Content-Type' => 'application/json',
           ],
           'json' => [
-            'model' => $config['model_name'],
             'prompt' => $prompt,
             'n' => 1,
             'size' => $config['image_size'] ?? '1024x1024',
             'response_format' => 'url',
           ],
-          'timeout' => 4800, // Increased timeout
+          'timeout' => 120, // Increased timeout
         ]);
 
         $content = $response->getBody()->getContents();
@@ -88,13 +92,27 @@ class OpenAIImageService extends PluginBase implements LLMServiceInterface, Cont
           throw new \Exception('Unexpected response format from OpenAI Image API.');
         }
       } catch (RequestException $e) {
-        if ($attempt === $maxRetries) {
-          $this->loggerFactory->get('pipeline')->error('Error calling OpenAI Image API after ' . $maxRetries . ' attempts: @error', ['@error' => $e->getMessage()]);
-          throw new \Exception('Failed to call OpenAI Image API after multiple attempts: ' . $e->getMessage());
+        $response = $e->getResponse();
+        $statusCode = $response ? $response->getStatusCode() : null;
+        $body = $response ? $response->getBody()->getContents() : '';
+
+        // Log detailed error
+        $this->loggerFactory->get('pipeline')->error('OpenAI Image API error: @status @body', [
+          '@status' => $statusCode,
+          '@body' => $body,
+        ]);
+
+        // Determine if we should retry
+        $shouldRetry = $statusCode >= 500 || $e->getCode() === 0; // 5xx or network error
+        if ($attempt === $maxRetries || !$shouldRetry) {
+          throw new \Exception('Failed to call OpenAI Image API: ' . $e->getMessage());
         }
-        $this->loggerFactory->get('pipeline')->warning('Attempt ' . $attempt . ' failed. Retrying in ' . $retryDelay . ' seconds...');
+
+        // Log and wait before retrying
+        $this->loggerFactory->get('pipeline')->warning('Attempt ' . $attempt . ' failed with status ' . $statusCode . '. Retrying in ' . $retryDelay . ' seconds...');
         sleep($retryDelay);
       }
+
     }
     throw new \Exception('Failed to call OpenAI Image API after exhausting all retry attempts.');
   }

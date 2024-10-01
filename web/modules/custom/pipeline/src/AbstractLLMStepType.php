@@ -89,13 +89,7 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     $prompt = $config['prompt'];
 
     // Get required previous results
-    if (is_string($config['required_steps'])) {
-      $required_steps = [trim($config['required_steps'])];
-    } elseif(is_array($config['required_steps'])) {
-      $required_steps = $config['required_steps'];
-    } else {
-      $required_steps = [];
-    }
+    $required_steps = $this->getRequiredSteps($config);
     $previous_results = $this->getPreviousResults($context, $required_steps);
 
     // Replace placeholders in the prompt
@@ -126,7 +120,7 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
     // Check if the response is an image (JSON string containing url and file_uri)
     if ($service_id === 'openai_image') {
       $imageData = json_decode($response, TRUE);
-      if (json_last_error() === JSON_ERROR_NONE && isset($imageData['url']) && isset($imageData['file_uri'])) {
+      if (json_last_error() === JSON_ERROR_NONE && isset($imageData['uri']) && isset($imageData['file_id'])) {
         $context['image_data'] = $imageData;
       } else {
         throw new \Exception('Invalid image data returned from OpenAI Image service');
