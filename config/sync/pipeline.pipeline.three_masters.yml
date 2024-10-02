@@ -6,8 +6,8 @@ id: three_masters
 label: 'Three Masters'
 instructions: 'Compose awakening story.'
 created: 1726528415
-changed: 1727216421
-scheduled_time: 1727482798
+changed: 1727550194
+scheduled_time: 1727655598
 step_types:
   b3b9509c-ecb9-4cf2-bc2f-dca33b95bbfa:
     id: llm_step
@@ -149,5 +149,6 @@ step_types:
       step_output_key: ''
       required_steps: ''
       action_config: create_article_action
+      response: ''
     weight: 3
     uuid: d5c55659-682e-489a-bc03-2069e1b89e4b

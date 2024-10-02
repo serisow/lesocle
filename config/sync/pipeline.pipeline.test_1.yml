@@ -6,8 +6,8 @@ id: test_1
 label: 'Search product to sell from France to Senegal'
 instructions: 'This i a test'
 created: 1726571943
-changed: 1727083368
-scheduled_time: 1727482724
+changed: 1727550175
+scheduled_time: 1727655524
 step_types:
   f4e8f974-2fcd-44f8-8f98-cfda657e4c61:
     id: llm_step
@@ -174,5 +174,6 @@ step_types:
       step_output_key: ''
       required_steps: ''
       action_config: create_article_action
+      response: ''
     weight: 3
     uuid: 4ccc8d8c-c66a-4a54-8537-ae28503b1318

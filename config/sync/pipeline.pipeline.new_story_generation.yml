@@ -6,8 +6,8 @@ id: new_story_generation
 label: 'New Story generation'
 instructions: 'Experimenting with the new way'
 created: 1726339301
-changed: 1727083353
-scheduled_time: 1727482568
+changed: 1727550161
+scheduled_time: 1727655368
 step_types:
   46a33874-6106-4ac0-b2cc-8de080e31d8a:
     id: llm_step
@@ -131,5 +131,6 @@ step_types:
       step_output_key: step3
       action_config: create_article_action
       required_steps: ''
+      response: ''
     weight: 3
     uuid: 8dc9619e-41cb-4df2-8ecb-0c890e0f187e

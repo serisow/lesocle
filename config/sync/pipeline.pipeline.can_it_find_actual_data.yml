@@ -6,8 +6,8 @@ id: can_it_find_actual_data
 label: 'Can it find actual data'
 instructions: Test
 created: 1726692921
-changed: 1727218066
-scheduled_time: 1726514433
+changed: 1727647075
+scheduled_time: 1727724033
 step_types:
   3ce17913-b032-4365-842c-65a86e278e9e:
     id: llm_step
@@ -15,29 +15,31 @@ step_types:
       step_description: 'AI agent definition'
       step_output_key: step1
       required_steps: ''
-      llm_config: gemini_1_5_pro_002
+      llm_config: claude_3_opus
       prompt: 'Elaborate the top 3 things which define an AI agents.'
-      response: |
-        The top 3 things that define an AI agent are:
+      response: |-
+        The top three things that define an AI agent are:
 
-        1. **Autonomous Goal-Directed Behavior:** This is the core essence of an AI agent.  It means the agent operates independently, pursuing specific goals without constant human intervention.  This involves several key aspects:
+        1. Perception and Sensing:
+           - An AI agent must have the ability to perceive and gather information from its environment.
+           - It should be equipped with sensors or input mechanisms that allow it to receive data about the state of the world around it.
+           - Examples of perception include computer vision for visual input, speech recognition for auditory input, and various sensors for physical measurements.
+           - The agent uses this perceived information to build an understanding of its environment and make informed decisions.
 
-            * **Goal Orientation:** The agent has a defined objective or set of objectives it aims to achieve.  These could be simple, like navigating a maze, or complex, like managing a supply chain.
-            * **Decision Making:**  The agent can perceive its environment and make decisions about actions to take that move it closer to its goals. This involves choosing from a range of possible actions based on the perceived state of the environment and the agent's internal knowledge.
-            * **Self-Correction & Learning (often, but not always):**  More sophisticated agents can adapt their behavior based on feedback from the environment. They learn from past experiences and adjust their strategies to improve their performance over time. This isn't strictly *required* to be an agent (e.g., a simple rule-based agent), but it's a common and important feature of many AI agents.
+        2. Decision-Making and Reasoning:
+           - An AI agent must possess the capability to make decisions and reason based on the information it perceives and its underlying goals or objectives.
+           - It should have a decision-making framework or algorithm that enables it to evaluate different courses of action and select the most appropriate one.
+           - This decision-making process may involve various techniques such as rule-based systems, decision trees, probabilistic reasoning, or machine learning algorithms.
+           - The agent's reasoning capability allows it to draw inferences, solve problems, and adapt its behavior based on the available information and its desired outcomes.
 
-        2. **Environmental Interaction through Sensors and Actuators:** AI agents are not isolated entities; they exist within and interact with an environment. This interaction is facilitated by:
+        3. Autonomy and Goal-Directed Behavior:
+           - An AI agent should exhibit a degree of autonomy, meaning it can operate independently without constant human intervention.
+           - It should have the ability to set its own goals or receive goals from its designers or users.
+           - The agent should be able to plan and execute actions that align with its goals, taking into account the constraints and opportunities presented by its environment.
+           - Autonomy allows the agent to make decisions, solve problems, and adapt its behavior in pursuit of its objectives without requiring step-by-step human guidance.
+           - The agent's actions should be directed towards achieving its goals efficiently and effectively.
 
-            * **Sensors:** These allow the agent to perceive its environment. Sensors can take many forms depending on the context, including cameras for visual input, microphones for audio input, temperature sensors, GPS location sensors, and even abstract data streams like stock market prices.
-            * **Actuators:** These enable the agent to take actions that affect the environment. Examples include motors for movement, robotic arms for manipulation, displays for outputting information, and network interfaces for communicating with other systems.
-
-        3. **Internal Representation of Knowledge and State (often, but not always):**  While simpler agents might operate purely on reactive rules, more sophisticated agents often maintain some form of internal representation. This allows for more complex behavior and planning:
-
-            * **World Model:** This can be a simplified or abstract representation of the environment, allowing the agent to reason about the consequences of its actions before executing them. This can range from simple lookup tables to complex simulations.
-            * **Internal State:** This represents the agent's own internal condition, including things like its current goals, beliefs about the world, and past experiences.  This internal state informs the agent's decision-making process.  Similar to learning, this is common but not strictly *required* (e.g., a purely reactive agent might not have an explicit internal state).
-
-
-        These three elements work together to create an AI agent capable of acting autonomously and intelligently within its environment.  The complexity and sophistication of each element can vary significantly depending on the specific application and the agent's design.
+        These three aspects—perception and sensing, decision-making and reasoning, and autonomy and goal-directed behavior—form the core characteristics of an AI agent. They enable the agent to interact with its environment, process information, make intelligent decisions, and act autonomously to achieve its objectives. The specific implementation and sophistication of these aspects may vary depending on the complexity and purpose of the AI agent.
     weight: -10
     uuid: 3ce17913-b032-4365-842c-65a86e278e9e
   fd91efe9-05cb-4850-b26f-aa2dc75e7c41:
@@ -50,8 +52,8 @@ step_types:
       response: |-
         ```json
         {
-          "title": "Les 3 éléments clés d'un agent d'IA",
-          "body": "<h1>Les 3 éléments clés d'un agent d'IA</h1><ol><li><strong>Comportement autonome orienté vers un but :</strong> C'est l'essence même d'un agent d'IA. Cela signifie que l'agent fonctionne de manière indépendante, poursuivant des objectifs spécifiques sans intervention humaine constante. Cela implique plusieurs aspects clés :<ul><li><strong>Orientation vers un but :</strong> L'agent a un objectif défini ou un ensemble d'objectifs qu'il vise à atteindre. Ceux-ci peuvent être simples, comme naviguer dans un labyrinthe, ou complexes, comme gérer une chaîne d'approvisionnement.</li><li><strong>Prise de décision :</strong> L'agent peut percevoir son environnement et prendre des décisions concernant les actions à entreprendre pour se rapprocher de ses objectifs. Cela implique de choisir parmi une gamme d'actions possibles en fonction de l'état perçu de l'environnement et des connaissances internes de l'agent.</li><li><strong>Auto-correction et apprentissage (souvent, mais pas toujours) :</strong> Les agents plus sophistiqués peuvent adapter leur comportement en fonction des retours d'information de l'environnement. Ils apprennent de leurs expériences passées et ajustent leurs stratégies pour améliorer leurs performances au fil du temps. Ce n'est pas strictement <em>requis</em> pour être un agent (par exemple, un simple agent basé sur des règles), mais c'est une caractéristique courante et importante de nombreux agents d'IA.</li></ul></li><li><strong>Interaction avec l'environnement via des capteurs et des actionneurs :</strong> Les agents d'IA ne sont pas des entités isolées ; ils existent dans un environnement et interagissent avec lui. Cette interaction est facilitée par :<ul><li><strong>Capteurs :</strong> Ceux-ci permettent à l'agent de percevoir son environnement. Les capteurs peuvent prendre de nombreuses formes selon le contexte, notamment des caméras pour l'entrée visuelle, des microphones pour l'entrée audio, des capteurs de température, des capteurs de localisation GPS et même des flux de données abstraits comme les cours boursiers.</li><li><strong>Actionneurs :</strong> Ceux-ci permettent à l'agent d'effectuer des actions qui affectent l'environnement. Les exemples incluent des moteurs pour le mouvement, des bras robotiques pour la manipulation, des écrans pour l'affichage d'informations et des interfaces réseau pour la communication avec d'autres systèmes.</li></ul></li><li><strong>Représentation interne des connaissances et de l'état (souvent, mais pas toujours) :</strong> Alors que les agents plus simples peuvent fonctionner uniquement sur des règles réactives, les agents plus sophistiqués maintiennent souvent une forme de représentation interne. Cela permet un comportement et une planification plus complexes :<ul><li><strong>Modèle du monde :</strong> Il peut s'agir d'une représentation simplifiée ou abstraite de l'environnement, permettant à l'agent de raisonner sur les conséquences de ses actions avant de les exécuter. Cela peut aller de simples tables de consultation à des simulations complexes.</li><li><strong>État interne :</strong> Cela représente la condition interne propre à l'agent, y compris des éléments tels que ses objectifs actuels, ses croyances sur le monde et ses expériences passées. Cet état interne éclaire le processus de prise de décision de l'agent. Semblable à l'apprentissage, ceci est courant mais pas strictement <em>requis</em> (par exemple, un agent purement réactif peut ne pas avoir d'état interne explicite).</li></ul></li></ol><p>Ces trois éléments fonctionnent ensemble pour créer un agent d'IA capable d'agir de manière autonome et intelligente au sein de son environnement. La complexité et la sophistication de chaque élément peuvent varier considérablement en fonction de l'application spécifique et de la conception de l'agent.</p><style>h1 {  text-align: center;  color: #333;}ol {  list-style-type: decimal;  padding-left: 20px;}ul {  list-style-type: disc;  padding-left: 40px;}strong {  font-weight: bold;}em {  font-style: italic;}</style>"
+          "title": "Les Trois Piliers d'un Agent d'Intelligence Artificielle",
+          "body": "<h1>Les Trois Piliers d'un Agent d'Intelligence Artificielle</h1><style>body { font-family: sans-serif; } h2 { color: #333; } strong { font-weight: bold; }</style><section><h2>Perception et captation</h2><p>Un agent IA doit percevoir son environnement. Il doit collecter des informations. Il a besoin de capteurs. Des mécanismes d'entrée lui fournissent des données. Ces données concernent l'état du monde.</p><p>La vision par ordinateur est un exemple. La reconnaissance vocale aussi. Divers capteurs physiques également.</p><p>L'agent utilise ces informations. Il construit une compréhension de son environnement. Il prend des décisions éclairées.</p></section><section><h2>Prise de décision et raisonnement</h2><p>Un agent IA doit prendre des décisions. Il doit raisonner. Il se base sur les informations perçues. Il tient compte de ses objectifs.</p><p>Il doit avoir un cadre de décision. Un algorithme lui permet d'évaluer les actions. Il choisit l'action la plus appropriée.</p><p>Plusieurs techniques sont possibles. Systèmes à base de règles. Arbres de décision. Raisonnement probabiliste. Algorithmes de Machine Learning.</p><p>L'agent peut déduire. Il peut résoudre des problèmes. Il adapte son comportement. Il utilise les informations disponibles. Il vise les résultats souhaités.</p></section><section><h2>Autonomie et comportement orienté vers un but</h2><p>Un agent IA doit être autonome. Il doit pouvoir opérer seul. Sans intervention humaine constante. Il doit pouvoir se fixer des objectifs. Ou recevoir des objectifs. De ses concepteurs ou des utilisateurs.</p><p>L'agent doit planifier. Il doit exécuter des actions. Ces actions doivent être alignées sur ses objectifs. Il doit tenir compte des contraintes. Et des opportunités de son environnement.</p><p>L'autonomie permet à l'agent de décider. De résoudre des problèmes. D'adapter son comportement. Il poursuit ses objectifs. Sans instructions humaines étape par étape.</p><p>Les actions de l'agent doivent être efficaces. Elles doivent atteindre ses objectifs.</p></section><section><h2>Conclusion</h2><p>Ces trois aspects sont essentiels. Perception et captation. Prise de décision et raisonnement. Autonomie et comportement orienté vers un but. Ils définissent un agent IA. Ils permettent à l'agent d'interagir. Avec son environnement. De traiter l'information. De prendre des décisions intelligentes. D'agir de manière autonome. Pour atteindre ses objectifs.</p><p>L'implémentation varie. La sophistication aussi. Selon la complexité de l'agent. Et son objectif.</p></section>"
         }
         ```
     weight: -7
@@ -63,28 +65,77 @@ step_types:
       step_output_key: step2
       required_steps: "step1\r\n"
       llm_config: gemini_1_5_pro
-      prompt: "You task is to translate the following texte in french with very high fidelity.\r\nTexte to translate:\r\n{step1}"
+      prompt: "You task is to translate the following texte in french with very high fidelity.\r\nUse the style of John Carmack.\r\nDon't make long sentences.\r\nDont put bullets points.\r\nAvoid the texte to look like AI generated texte.\r\nTexte to translate:\r\n{step1}"
       response: |
-        ## Les 3 éléments clés qui définissent un agent d'IA sont :
+        Trois éléments définissent un agent IA.
 
-        1. **Comportement autonome orienté vers un but :** C'est l'essence même d'un agent d'IA. Cela signifie que l'agent fonctionne de manière indépendante, poursuivant des objectifs spécifiques sans intervention humaine constante. Cela implique plusieurs aspects clés :
+        **Perception et captation.** 
+        Un agent IA doit percevoir son environnement. 
+        Il doit collecter des informations.
+        Il a besoin de capteurs. 
+        Des mécanismes d'entrée lui fournissent des données. 
+        Ces données concernent l'état du monde.
+        La vision par ordinateur est un exemple. 
+        La reconnaissance vocale aussi.
+        Divers capteurs physiques également.
+        L'agent utilise ces informations. 
+        Il construit une compréhension de son environnement.
+        Il prend des décisions éclairées.
 
-            * **Orientation vers un but :** L'agent a un objectif défini ou un ensemble d'objectifs qu'il vise à atteindre. Ceux-ci peuvent être simples, comme naviguer dans un labyrinthe, ou complexes, comme gérer une chaîne d'approvisionnement.
-            * **Prise de décision :** L'agent peut percevoir son environnement et prendre des décisions concernant les actions à entreprendre pour se rapprocher de ses objectifs. Cela implique de choisir parmi une gamme d'actions possibles en fonction de l'état perçu de l'environnement et des connaissances internes de l'agent.
-            * **Auto-correction et apprentissage (souvent, mais pas toujours) :** Les agents plus sophistiqués peuvent adapter leur comportement en fonction des retours d'information de l'environnement. Ils apprennent de leurs expériences passées et ajustent leurs stratégies pour améliorer leurs performances au fil du temps. Ce n'est pas strictement *requis* pour être un agent (par exemple, un simple agent basé sur des règles), mais c'est une caractéristique courante et importante de nombreux agents d'IA.
+        **Prise de décision et raisonnement.**
+        Un agent IA doit prendre des décisions.
+        Il doit raisonner.
+        Il se base sur les informations perçues. 
+        Il tient compte de ses objectifs.
+        Il doit avoir un cadre de décision.
+        Un algorithme lui permet d'évaluer les actions.
+        Il choisit l'action la plus appropriée.
+        Plusieurs techniques sont possibles. 
+        Systèmes à base de règles.
+        Arbres de décision.
+        Raisonnement probabiliste.
+        Algorithmes de Machine Learning.
+        L'agent peut déduire. 
+        Il peut résoudre des problèmes. 
+        Il adapte son comportement.
+        Il utilise les informations disponibles. 
+        Il vise les résultats souhaités.
 
-        2. **Interaction avec l'environnement via des capteurs et des actionneurs :** Les agents d'IA ne sont pas des entités isolées ; ils existent dans un environnement et interagissent avec lui. Cette interaction est facilitée par :
+        **Autonomie et comportement orienté vers un but.**
+        Un agent IA doit être autonome. 
+        Il doit pouvoir opérer seul. 
+        Sans intervention humaine constante.
+        Il doit pouvoir se fixer des objectifs.
+        Ou recevoir des objectifs. 
+        De ses concepteurs ou des utilisateurs.
+        L'agent doit planifier.
+        Il doit exécuter des actions. 
+        Ces actions doivent être alignées sur ses objectifs.
+        Il doit tenir compte des contraintes.
+        Et des opportunités de son environnement.
+        L'autonomie permet à l'agent de décider.
+        De résoudre des problèmes.
+        D'adapter son comportement.
+        Il poursuit ses objectifs. 
+        Sans instructions humaines étape par étape.
+        Les actions de l'agent doivent être efficaces. 
+        Elles doivent atteindre ses objectifs.
 
-            * **Capteurs :** Ceux-ci permettent à l'agent de percevoir son environnement. Les capteurs peuvent prendre de nombreuses formes selon le contexte, notamment des caméras pour l'entrée visuelle, des microphones pour l'entrée audio, des capteurs de température, des capteurs de localisation GPS et même des flux de données abstraits comme les cours boursiers.
-            * **Actionneurs :** Ceux-ci permettent à l'agent d'effectuer des actions qui affectent l'environnement. Les exemples incluent des moteurs pour le mouvement, des bras robotiques pour la manipulation, des écrans pour l'affichage d'informations et des interfaces réseau pour la communication avec d'autres systèmes.
-
-        3. **Représentation interne des connaissances et de l'état (souvent, mais pas toujours) :** Alors que les agents plus simples peuvent fonctionner uniquement sur des règles réactives, les agents plus sophistiqués maintiennent souvent une forme de représentation interne. Cela permet un comportement et une planification plus complexes :
-
-            * **Modèle du monde :** Il peut s'agir d'une représentation simplifiée ou abstraite de l'environnement, permettant à l'agent de raisonner sur les conséquences de ses actions avant de les exécuter. Cela peut aller de simples tables de consultation à des simulations complexes.
-            * **État interne :** Cela représente la condition interne propre à l'agent, y compris des éléments tels que ses objectifs actuels, ses croyances sur le monde et ses expériences passées. Cet état interne éclaire le processus de prise de décision de l'agent. Semblable à l'apprentissage, ceci est courant mais pas strictement *requis* (par exemple, un agent purement réactif peut ne pas avoir d'état interne explicite).
-
-
-        Ces trois éléments fonctionnent ensemble pour créer un agent d'IA capable d'agir de manière autonome et intelligente au sein de son environnement. La complexité et la sophistication de chaque élément peuvent varier considérablement en fonction de l'application spécifique et de la conception de l'agent. 
+        Ces trois aspects sont essentiels. 
+        Perception et captation.
+        Prise de décision et raisonnement.
+        Autonomie et comportement orienté vers un but.
+        Ils définissent un agent IA.
+        Ils permettent à l'agent d'interagir. 
+        Avec son environnement.
+        De traiter l'information. 
+        De prendre des décisions intelligentes. 
+        D'agir de manière autonome.
+        Pour atteindre ses objectifs.
+        L'implémentation varie.
+        La sophistication aussi. 
+        Selon la complexité de l'agent.
+        Et son objectif. 
     weight: -9
     uuid: 5ae1bd54-5655-4cdf-8c25-56088648e232
   e3b7205b-1482-48a4-80ef-7ef90ffecc8a:
@@ -98,9 +149,37 @@ step_types:
       response: |-
         ```json
         {
-          "title": "Les 3 éléments clés d'un agent d'IA",
-          "body": "<h1>Les 3 éléments clés d'un agent d'IA</h1><ol><li><strong>Comportement autonome orienté vers un but :</strong> C'est l'essence même d'un agent d'IA. Cela signifie que l'agent fonctionne de manière indépendante, poursuivant des objectifs spécifiques sans intervention humaine constante. Cela implique plusieurs aspects clés :<ul><li><strong>Orientation vers un but :</strong> L'agent a un objectif défini ou un ensemble d'objectifs qu'il vise à atteindre. Ceux-ci peuvent être simples, comme naviguer dans un labyrinthe, ou complexes, comme gérer une chaîne d'approvisionnement.</li><li><strong>Prise de décision :</strong> L'agent peut percevoir son environnement et prendre des décisions concernant les actions à entreprendre pour se rapprocher de ses objectifs. Cela implique de choisir parmi une gamme d'actions possibles en fonction de l'état perçu de l'environnement et des connaissances internes de l'agent.</li><li><strong>Auto-correction et apprentissage (souvent, mais pas toujours) :</strong> Les agents plus sophistiqués peuvent adapter leur comportement en fonction des retours d'information de l'environnement. Ils apprennent de leurs expériences passées et ajustent leurs stratégies pour améliorer leurs performances au fil du temps. Ce n'est pas strictement <em>requis</em> pour être un agent (par exemple, un simple agent basé sur des règles), mais c'est une caractéristique courante et importante de nombreux agents d'IA.</li></ul></li><li><strong>Interaction avec l'environnement via des capteurs et des actionneurs :</strong> Les agents d'IA ne sont pas des entités isolées ; ils existent dans un environnement et interagissent avec lui. Cette interaction est facilitée par :<ul><li><strong>Capteurs :</strong> Ceux-ci permettent à l'agent de percevoir son environnement. Les capteurs peuvent prendre de nombreuses formes selon le contexte, notamment des caméras pour l'entrée visuelle, des microphones pour l'entrée audio, des capteurs de température, des capteurs de localisation GPS et même des flux de données abstraits comme les cours boursiers.</li><li><strong>Actionneurs :</strong> Ceux-ci permettent à l'agent d'effectuer des actions qui affectent l'environnement. Les exemples incluent des moteurs pour le mouvement, des bras robotiques pour la manipulation, des écrans pour l'affichage d'informations et des interfaces réseau pour la communication avec d'autres systèmes.</li></ul></li><li><strong>Représentation interne des connaissances et de l'état (souvent, mais pas toujours) :</strong> Alors que les agents plus simples peuvent fonctionner uniquement sur des règles réactives, les agents plus sophistiqués maintiennent souvent une forme de représentation interne. Cela permet un comportement et une planification plus complexes :<ul><li><strong>Modèle du monde :</strong> Il peut s'agir d'une représentation simplifiée ou abstraite de l'environnement, permettant à l'agent de raisonner sur les conséquences de ses actions avant de les exécuter. Cela peut aller de simples tables de consultation à des simulations complexes.</li><li><strong>État interne :</strong> Cela représente la condition interne propre à l'agent, y compris des éléments tels que ses objectifs actuels, ses croyances sur le monde et ses expériences passées. Cet état interne éclaire le processus de prise de décision de l'agent. Semblable à l'apprentissage, ceci est courant mais pas strictement <em>requis</em> (par exemple, un agent purement réactif peut ne pas avoir d'état interne explicite).</li></ul></li></ol><p>Ces trois éléments fonctionnent ensemble pour créer un agent d'IA capable d'agir de manière autonome et intelligente au sein de son environnement. La complexité et la sophistication de chaque élément peuvent varier considérablement en fonction de l'application spécifique et de la conception de l'agent.</p><style>h1 {  text-align: center;  color: #333;}ol {  list-style-type: decimal;  padding-left: 20px;}ul {  list-style-type: disc;  padding-left: 40px;}strong {  font-weight: bold;}em {  font-style: italic;}</style>"
+          "title": "Les Trois Piliers d'un Agent d'Intelligence Artificielle",
+          "body": "<h1>Les Trois Piliers d'un Agent d'Intelligence Artificielle</h1><style>body { font-family: sans-serif; } h2 { color: #333; } strong { font-weight: bold; }</style><section><h2>Perception et captation</h2><p>Un agent IA doit percevoir son environnement. Il doit collecter des informations. Il a besoin de capteurs. Des mécanismes d'entrée lui fournissent des données. Ces données concernent l'état du monde.</p><p>La vision par ordinateur est un exemple. La reconnaissance vocale aussi. Divers capteurs physiques également.</p><p>L'agent utilise ces informations. Il construit une compréhension de son environnement. Il prend des décisions éclairées.</p></section><section><h2>Prise de décision et raisonnement</h2><p>Un agent IA doit prendre des décisions. Il doit raisonner. Il se base sur les informations perçues. Il tient compte de ses objectifs.</p><p>Il doit avoir un cadre de décision. Un algorithme lui permet d'évaluer les actions. Il choisit l'action la plus appropriée.</p><p>Plusieurs techniques sont possibles. Systèmes à base de règles. Arbres de décision. Raisonnement probabiliste. Algorithmes de Machine Learning.</p><p>L'agent peut déduire. Il peut résoudre des problèmes. Il adapte son comportement. Il utilise les informations disponibles. Il vise les résultats souhaités.</p></section><section><h2>Autonomie et comportement orienté vers un but</h2><p>Un agent IA doit être autonome. Il doit pouvoir opérer seul. Sans intervention humaine constante. Il doit pouvoir se fixer des objectifs. Ou recevoir des objectifs. De ses concepteurs ou des utilisateurs.</p><p>L'agent doit planifier. Il doit exécuter des actions. Ces actions doivent être alignées sur ses objectifs. Il doit tenir compte des contraintes. Et des opportunités de son environnement.</p><p>L'autonomie permet à l'agent de décider. De résoudre des problèmes. D'adapter son comportement. Il poursuit ses objectifs. Sans instructions humaines étape par étape.</p><p>Les actions de l'agent doivent être efficaces. Elles doivent atteindre ses objectifs.</p></section><section><h2>Conclusion</h2><p>Ces trois aspects sont essentiels. Perception et captation. Prise de décision et raisonnement. Autonomie et comportement orienté vers un but. Ils définissent un agent IA. Ils permettent à l'agent d'interagir. Avec son environnement. De traiter l'information. De prendre des décisions intelligentes. D'agir de manière autonome. Pour atteindre ses objectifs.</p><p>L'implémentation varie. La sophistication aussi. Selon la complexité de l'agent. Et son objectif.</p></section>"
         }
         ```
     weight: -8
     uuid: e3b7205b-1482-48a4-80ef-7ef90ffecc8a
+  68474bff-ff86-45d4-a6ee-45f6ce5f3f07:
+    id: llm_step
+    data:
+      step_description: Verification
+      step_output_key: step5
+      required_steps: "step4\r\n"
+      llm_config: gpt_4o_mini
+      prompt: "Is the following texte generated by AI, what percentage would you give it and explain why?:\r\n\r\n{step4}"
+      response: |-
+        Determining the likelihood that a text was generated by AI involves analyzing various factors, including the coherence of the content, structure, style, repetitiveness, and use of jargon. 
+
+        In the case of the provided text, titled "Les Trois Piliers d'un Agent d'Intelligence Artificielle," I would estimate a likelihood of 70% that it was generated by AI. Here’s a breakdown of the reasoning behind this estimation:
+
+        1. **Structured Format**: The text has a clear and structured format with headings, sections, and paragraphs that is common in AI-generated content. This level of organization suggests a systematic approach often seen in AI writing.
+
+        2. **Use of Technical Language**: The text employs specific terminology related to AI (e.g., "perception," "prisse de décision," "autonomie"). While this does indicate knowledge of the subject, the explanations are somewhat basic and lack deeper insights or examples, which can sometimes reflect AI generation rather than a human expert's nuanced understanding.
+
+        3. **Repetitive Patterns**: Certain phrases and concepts are repeated throughout the text, which is a characteristic of AI writing that often seeks to emphasize key points but can lead to redundancy.
+
+        4. **Coherence and Clarity**: The text is coherent and clearly explains the main ideas. However, it somewhat lacks the depth or critical engagement you might expect from a human writer familiar with the nuances of AI. 
+
+        5. **Neutral Tone**: The writing style maintains a neutral, informative tone without personal anecdotes or advanced arguments, which is another common trait of AI-generated text.
+
+        6. **Proper Language Use**: While the text is grammatically correct and follows the conventions of the French language, it lacks the stylistic flair or idiosyncrasies that human writers often inject into their work.
+
+        In conclusion, while the text could feasibly have been composed by a human given the technical nature of the content, its structured format, repetitive patterns, and lack of depth lead me to believe there's a high likelihood it was generated by AI. Therefore, I would assign a 70% probability to it being AI-generated.
+    weight: 4
+    uuid: 68474bff-ff86-45d4-a6ee-45f6ce5f3f07

@@ -1,0 +1,28 @@
+uuid: 4cf3d4ae-cf3b-4bb9-842e-d516c7eb485f
+langcode: en
+status: true
+dependencies:
+  module:
+    - imageapi_optimize_binaries
+name: standard_quality
+label: 'Standard Quality'
+processors:
+  f1f9526c-80ea-407d-a4f1-dd4c54cf5eb8:
+    id: jpegoptim
+    data:
+      manual_executable_path: ''
+      progressive: null
+      quality: 80
+      size: null
+    weight: 1
+    uuid: f1f9526c-80ea-407d-a4f1-dd4c54cf5eb8
+  adfa34f3-ed0b-4468-96a2-3680cf953fd9:
+    id: pngquant
+    data:
+      manual_executable_path: ''
+      speed: 3
+      quality:
+        min: 90
+        max: 99
+    weight: 2
+    uuid: adfa34f3-ed0b-4468-96a2-3680cf953fd9

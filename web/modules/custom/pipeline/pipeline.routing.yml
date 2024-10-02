@@ -262,12 +262,3 @@ pipeline.google_settings:
     _title: 'Google Search Settings'
   requirements:
     _permission: 'administer pipeline settings'
-
-
-pipeline.dalle_form:
-  path: '/dalle-form'
-  defaults:
-    _controller: '\Drupal\pipeline\Controller\DalleController::buildForm'
-    _title: 'DALL·E Image Generator'
-  requirements:
-    _permission: 'access content'

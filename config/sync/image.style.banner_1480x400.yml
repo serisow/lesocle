@@ -1,0 +1,18 @@
+uuid: 372d4155-dcbd-4670-aa3f-52db06e3be15
+langcode: fr
+status: true
+dependencies:
+  module:
+    - focal_point
+name: banner_1480x400
+label: 'Banner 1480x400'
+effects:
+  317aa88f-aaee-4b0b-8e23-9443fb2fecac:
+    uuid: 317aa88f-aaee-4b0b-8e23-9443fb2fecac
+    id: focal_point_scale_and_crop
+    weight: 1
+    data:
+      width: 1480
+      height: 400
+      crop_type: focal_point
+pipeline: max_quality

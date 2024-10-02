@@ -1,0 +1,28 @@
+uuid: 9292c8b3-d09a-4a1c-b421-ed66c20b910d
+langcode: en
+status: true
+dependencies:
+  module:
+    - imageapi_optimize_binaries
+name: high_quality
+label: 'High Quality'
+processors:
+  43ac63d1-df48-4a06-a24a-b4c1f6f8e1ca:
+    id: jpegoptim
+    data:
+      manual_executable_path: ''
+      progressive: null
+      quality: 98
+      size: null
+    weight: 1
+    uuid: 43ac63d1-df48-4a06-a24a-b4c1f6f8e1ca
+  d7c7862e-555b-4694-9688-44352a9d759b:
+    id: pngquant
+    data:
+      manual_executable_path: ''
+      speed: 3
+      quality:
+        min: 90
+        max: 99
+    weight: 2
+    uuid: d7c7862e-555b-4694-9688-44352a9d759b
