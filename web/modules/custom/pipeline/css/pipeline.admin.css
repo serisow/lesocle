@@ -181,3 +181,23 @@
   margin-top: 0;
   margin-bottom: 0;
 }
+
+/* Pipeline filter form list builder */
+.pipeline-filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  /*gap: 0.5rem;*/
+}
+
+.pipeline-filter-form .form-item, .pipeline-filter-form .form-actions {
+  flex: 1 1 auto;
+  min-width: 200px;
+}
+
+@media (max-width: 600px) {
+  .pipeline-filter-form {
+    flex-direction: column;
+  }
+}

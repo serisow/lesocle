@@ -7,8 +7,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Url;
-use Drupal\pipeline\Entity\Pipeline;
-use Drupal\pipeline\Entity\PipelineInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -24,16 +22,6 @@ class PipelineListBuilder extends ConfigEntityListBuilder {
    */
   protected $formBuilder;
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type,
-      $container->get('entity_type.manager')->getStorage($entity_type->id()),
-      $container->get('form_builder')
-    );
-  }
 
   /**
    * Constructs a new EntityListBuilder object.
@@ -47,6 +35,17 @@ class PipelineListBuilder extends ConfigEntityListBuilder {
     $this->storage = $storage;
     $this->entityType = $entity_type;
     $this->formBuilder = $form_builder;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
+    return new static(
+      $entity_type,
+      $container->get('entity_type.manager')->getStorage($entity_type->id()),
+      $container->get('form_builder'),
+    );
   }
 
   /**
@@ -97,11 +96,72 @@ class PipelineListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function render() {
-    $build = parent::render();
-    $build['table']['#empty'] = $this->t('There are currently no pipelines.', [
-      ':url' => Url::fromRoute('entity.pipeline.add_form')->toString(),
-    ]);
+    $build = [];
+
+    // Build the filter form.
+    $form = $this->formBuilder->getForm('Drupal\pipeline\Form\PipelineFilterForm');
+    $build['filter_form'] = $form;
+
+    // Add the parent render array (the table).
+    $build += parent::render();
+
+    $build['table']['#empty'] = $this->t('There are currently no pipelines.');
+
     return $build;
+  }
+
+  public function load() {
+    // Load all pipeline entities.
+    $entity_ids = $this->getStorage()->getQuery()
+      ->sort($this->entityType->getKey('id'))
+      ->execute();
+
+    // Load the entities.
+    $entities = $this->storage->loadMultiple($entity_ids);
+
+    // Get filter values from the request.
+    $title_filter = \Drupal::request()->query->get('title');
+    $status_filter = \Drupal::request()->query->get('status');
+    $langcode_filter = \Drupal::request()->query->get('langcode');
+
+    // Filter the entities in PHP.
+    $filtered_entities = [];
+    /** @var \Drupal\pipeline\Entity\PipelineInterface $entity */
+    foreach ($entities as $entity_id => $entity) {
+      $match = TRUE;
+
+      // Filter by title.
+      if (!empty($title_filter)) {
+        if (stripos($entity->label(), $title_filter) === FALSE) {
+          $match = FALSE;
+        }
+      }
+
+      // Filter by status.
+      if ($status_filter !== NULL && $status_filter !== '') {
+        // Ensure the status is cast to the correct type.
+        $status = $entity->status() ? '1' : '0';
+        if ($status !== $status_filter) {
+          $match = FALSE;
+        }
+      }
+
+      // Filter by language.
+      if ($langcode_filter !== NULL && $langcode_filter !== '') {
+        if ($entity->language()->getId() !== $langcode_filter) {
+          $match = FALSE;
+        }
+      }
+
+      if ($match) {
+        $filtered_entities[$entity_id] = $entity;
+      }
+    }
+
+    // Optional: Sort entities by label if needed.
+    uasort($filtered_entities, [$this->entityType->getClass(), 'sort']);
+
+    return $filtered_entities;
   }
 
 }
