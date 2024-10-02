@@ -21,6 +21,7 @@
         "drupal/core-composer-scaffold": "^11.0",
         "drupal/core-project-message": "^11.0",
         "drupal/core-recommended": "^11.0",
+        "drupal/entity_clone": "^2.1@beta",
         "drupal/focal_point": "^2.1",
         "drupal/gin": "^3.0@RC",
         "drupal/gin_toolbar": "^1.0@beta",
