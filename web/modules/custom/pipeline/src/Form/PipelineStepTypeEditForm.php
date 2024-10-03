@@ -47,9 +47,6 @@ class PipelineStepTypeEditForm extends PipelineStepTypeFormBase {
     $form['#attributes']['data-dialog-form'] = 'true';
     return $form;
   }
-  protected function prepareStepType(?string $step_type_id) {
-    return $this->pipeline->getStepType($step_type_id);
-  }
 
   public function ajaxSubmit(array &$form, FormStateInterface $form_state) {
     // The form is already processed in the controller, so we just need to return NULL

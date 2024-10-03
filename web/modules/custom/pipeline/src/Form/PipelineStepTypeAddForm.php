@@ -117,17 +117,4 @@ class PipelineStepTypeAddForm extends PipelineStepTypeFormBase {
     return NULL;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function prepareStepType(?string $step_type_id) {
-    if (!$step_type_id) {
-      return NULL;
-    }
-    $step_type = $this->stepTypeManager->createInstance($step_type_id);
-    // Set the initial weight so this step type comes last.
-    $step_type->setWeight(count($this->pipeline->getStepTypes()));
-    return $step_type;
-  }
-
 }
