@@ -1,0 +1,22 @@
+uuid: 098c0274-70de-4054-8763-9daab98e01a8
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - lesocle
+_core:
+  default_config_hash: sGDGUp_Qe7GqdY86XIMHM0Ypq_hr4TERrM9cdaWRHoU
+id: lesocle_messages
+theme: lesocle
+region: header
+weight: -3
+provider: null
+plugin: system_messages_block
+settings:
+  id: system_messages_block
+  label: 'Status messages'
+  label_display: '0'
+  provider: system
+visibility: {  }

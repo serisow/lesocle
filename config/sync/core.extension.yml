@@ -46,6 +46,7 @@ module:
   redis: 0
   responsive_image: 0
   search: 0
+  serialization: 0
   shortcut: 0
   smtp: 0
   symfony_mailer: 0
@@ -64,4 +65,6 @@ theme:
   olivero: 0
   claro: 0
   gin: 0
+  radix: 0
+  lesocle: 0
 profile: standard

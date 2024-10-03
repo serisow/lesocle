@@ -4,9 +4,9 @@ status: true
 dependencies: {  }
 id: test_clone
 label: 'Test clone'
-instructions: 'We are testing cloning entity'
+instructions: 'We are testing cloning entity.'
 created: 1727863191
-changed: 1727865971
+changed: 1727891290
 scheduled_time: 1728477586
 step_types:
   3204dd79-1a66-4891-bf98-937120b58417:

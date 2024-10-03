@@ -1,0 +1,27 @@
+uuid: 6e9b813d-2c19-4dfb-9e4c-04dcb4750c2c
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.main
+  module:
+    - system
+  theme:
+    - lesocle
+_core:
+  default_config_hash: rjS6bE4WZ3sIm7tJYDC49E2YXF4ybX_qkqkOskHFoLI
+id: lesocle_main_menu
+theme: lesocle
+region: navbar_left
+weight: -5
+provider: null
+plugin: 'system_menu_block:main'
+settings:
+  id: 'system_menu_block:main'
+  label: 'Main navigation'
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: 2
+  expand_all_items: false
+visibility: {  }

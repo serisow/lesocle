@@ -1,0 +1,20 @@
+uuid: 53dec60e-b3ea-4a67-aebe-ef65985fc29d
+langcode: en
+status: true
+dependencies:
+  theme:
+    - lesocle
+_core:
+  default_config_hash: jdn45ZQv0Pm29mPMjZuYnLW8hEfIPIlDdQLifk-iclk
+id: lesocle_local_actions
+theme: lesocle
+region: header
+weight: -4
+provider: null
+plugin: local_actions_block
+settings:
+  id: local_actions_block
+  label: 'Primary admin actions'
+  label_display: '0'
+  provider: core
+visibility: {  }

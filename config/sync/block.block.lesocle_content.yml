@@ -1,0 +1,22 @@
+uuid: 73843683-6dfb-4180-9a89-83df2629fc8c
+langcode: en
+status: true
+dependencies:
+  module:
+    - system
+  theme:
+    - lesocle
+_core:
+  default_config_hash: itqBOJ26cSVDbS5Qe6kickqcZNQSIx09Fotk66qafgg
+id: lesocle_content
+theme: lesocle
+region: content
+weight: -5
+provider: null
+plugin: system_main_block
+settings:
+  id: system_main_block
+  label: 'Main page content'
+  label_display: '0'
+  provider: system
+visibility: {  }

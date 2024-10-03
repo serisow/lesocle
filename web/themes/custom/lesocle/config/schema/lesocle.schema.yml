@@ -1,0 +1,5 @@
+# Schema for the configuration files of the lesocle theme.
+
+lesocle.settings:
+  type: theme_settings
+  label: 'lesocle settings'

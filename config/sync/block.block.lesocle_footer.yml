@@ -1,0 +1,27 @@
+uuid: 8a7fe381-6ba1-4dc5-a954-7db4083de98b
+langcode: en
+status: true
+dependencies:
+  config:
+    - system.menu.footer
+  module:
+    - system
+  theme:
+    - lesocle
+_core:
+  default_config_hash: Pbya_HpZM1FVRwlyV5uUwpoFFA-IBxj7Bo-PDCUGGCQ
+id: lesocle_footer
+theme: lesocle
+region: footer
+weight: -5
+provider: null
+plugin: 'system_menu_block:footer'
+settings:
+  id: 'system_menu_block:footer'
+  label: 'Footer menu'
+  label_display: '0'
+  provider: system
+  level: 1
+  depth: 0
+  expand_all_items: false
+visibility: {  }

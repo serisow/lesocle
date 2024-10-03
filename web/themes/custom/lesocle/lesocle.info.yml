@@ -1,0 +1,40 @@
+name: lesocle
+description: ''
+screenshot: screenshot.png
+'alt text': 'lesocle theme screenshot'
+core_version_requirement: ^11
+engine: twig
+type: theme
+'base theme': radix
+starterkit: true
+dependencies:
+  - 'drupal:serialization'
+'interface translation project': lesocle
+'interface translation server pattern': themes/custom/lesocle/translations/%language.po
+regions:
+  navbar_branding: 'Navbar branding'
+  navbar_left: 'Navbar left'
+  navbar_right: 'Navbar right'
+  header: Header
+  content: Content
+  page_bottom: 'Page bottom'
+  footer: Footer
+libraries:
+  - lesocle/style
+ckeditor5-stylesheets:
+  - build/css/main.style.css
+libraries-extend:
+  core/drupal.ajax:
+    - lesocle/drupal.ajax
+  core/drupal.checkbox:
+    - lesocle/drupal.checkbox
+  core/drupal.message:
+    - lesocle/drupal.message
+  core/drupal.progress:
+    - lesocle/drupal.progress
+  clientside_validation_jquery/cv.jquery.validate:
+    - lesocle/jquery.validate
+version: 1.0.0
+project: radix
+datestamp: 1726748819
+generator: 'radix_starterkit:6.0.0-rc5'
