@@ -186,18 +186,86 @@
 .pipeline-filter-form {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: center;
-  /*gap: 0.5rem;*/
+  align-items: flex-end;
+  justify-content: space-around;
+  margin-bottom: 1rem;
+  gap: 1rem;
 }
 
-.pipeline-filter-form .form-item, .pipeline-filter-form .form-actions {
-  flex: 1 1 auto;
-  min-width: 200px;
+.pipeline-filter-form .form-item {
+  flex: 1 1 200px;
+  margin: 0;
 }
 
-@media (max-width: 600px) {
+.pipeline-filter-form .form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: -5px;
+}
+
+.pipeline-filter-form input[type="text"],
+.pipeline-filter-form select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.pipeline-filter-form .button {
+  padding: 0.5rem 1rem;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pipeline-filter-form .button--reset {
+  background-color: #6c757d;
+}
+
+@media (max-width: 768px) {
   .pipeline-filter-form {
     flex-direction: column;
   }
+
+  .pipeline-filter-form .form-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* Table styling */
+.pipeline-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.pipeline-list-table th,
+.pipeline-list-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.pipeline-list-table th {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.pipeline-list-table tr:hover {
+  background-color: #f1f3f5;
+}
+
+/* Add Pipeline button */
+.button--add-pipeline {
+  float: right;
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }

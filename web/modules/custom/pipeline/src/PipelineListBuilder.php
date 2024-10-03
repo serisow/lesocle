@@ -105,7 +105,24 @@ class PipelineListBuilder extends ConfigEntityListBuilder {
     // Add the parent render array (the table).
     $build += parent::render();
 
-    $build['table']['#empty'] = $this->t('There are currently no pipelines.');
+    // Build the table
+    $build['table'] = [
+      '#type' => 'table',
+      '#header' => $this->buildHeader(),
+      '#rows' => [],
+      '#empty' => $this->t('There are no pipelines yet.'),
+      '#attributes' => [
+        'class' => ['pipeline-list-table'],
+      ],
+    ];
+
+    foreach ($this->load() as $entity) {
+      if ($row = $this->buildRow($entity)) {
+        $build['table']['#rows'][$entity->id()] = $row;
+      }
+    }
+
+    $build['#attached']['library'][] = 'pipeline/admin';
 
     return $build;
   }
@@ -113,7 +130,7 @@ class PipelineListBuilder extends ConfigEntityListBuilder {
   public function load() {
     // Load all pipeline entities.
     $entity_ids = $this->getStorage()->getQuery()
-      ->sort($this->entityType->getKey('id'))
+      ->sort('changed', 'DESC')  // Sort by the 'changed' field in descending order
       ->execute();
 
     // Load the entities.
@@ -157,9 +174,6 @@ class PipelineListBuilder extends ConfigEntityListBuilder {
         $filtered_entities[$entity_id] = $entity;
       }
     }
-
-    // Optional: Sort entities by label if needed.
-    uasort($filtered_entities, [$this->entityType->getClass(), 'sort']);
 
     return $filtered_entities;
   }

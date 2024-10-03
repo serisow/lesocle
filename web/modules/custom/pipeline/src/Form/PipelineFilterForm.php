@@ -72,19 +72,23 @@ class PipelineFilterForm extends FormBase {
       '#default_value' => $this->getRequest()->query->get('langcode'),
     ];
 
+
     $form['actions'] = [
       '#type' => 'actions',
+      '#attributes' => ['class' => ['form-actions']],
     ];
 
     $form['actions']['filter'] = [
       '#type' => 'submit',
       '#value' => $this->t('Filter'),
+      '#attributes' => ['class' => ['button', 'button--primary']],
     ];
 
     $form['actions']['reset'] = [
       '#type' => 'submit',
       '#value' => $this->t('Reset'),
       '#submit' => ['::resetForm'],
+      '#attributes' => ['class' => ['button', 'button--reset']],
     ];
 
     return $form;
