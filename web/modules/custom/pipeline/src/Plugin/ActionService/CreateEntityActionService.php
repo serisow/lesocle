@@ -173,6 +173,11 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
       $image_info = json_decode($image_data, true);
     }
 
+    // SEO metadata.
+    $seo_optimized = $context['results']['seo_optimized'];
+    $seo_content = preg_replace('/^```json\s*|\s*```$/s', '', $context['results']['seo_optimized']);
+    $seo_content = json_decode(trim($seo_content), true);
+
     // Remove ```json prefix and ``` suffix if present
     $content = preg_replace('/^```json\s*|\s*```$/s', '', $content);
 
@@ -206,10 +211,11 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
     $node_storage = $this->entityTypeManager->getStorage('node');
     $node = $node_storage->create([
       'type' => 'article',
-      'title' => $title,
+      'title' =>  $seo_content['title'] ?? $title,
       'body' => [
         'value' => $body,
         'format' => 'full_html',
+        'summary' => $seo_content['summary'] ?? '',
       ],
     ]);
 

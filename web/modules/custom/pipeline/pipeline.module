@@ -41,6 +41,10 @@ function pipeline_toolbar() {
       'content' => [
         '#theme' => 'links__toolbar_pipeline',
         '#links' => [
+          'pipelines' => [
+            'title' => t('Pipeline List'),
+            'url' => Url::fromRoute('entity.pipeline.collection'),
+          ],
           'add_pipeline' => [
             'title' => t('Add Pipeline'),
             'url' => Url::fromRoute('entity.pipeline.add_form'),
@@ -67,7 +71,7 @@ function pipeline_toolbar() {
         ],
       ],
     ],
-    '#weight' => -999,
+    '#weight' => 1000,
   ];
   return $items;
 }

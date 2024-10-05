@@ -28,6 +28,7 @@
         "drupal/imageapi_optimize": "^4.1@beta",
         "drupal/imageapi_optimize_binaries": "^1.1@beta",
         "drupal/mailsystem": "^4.5",
+        "drupal/metatag": "^2.0",
         "drupal/radix": "^6.0@beta",
         "drupal/redis": "^1.8",
         "drupal/smtp": "^1.4",
