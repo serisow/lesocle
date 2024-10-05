@@ -1,0 +1,11 @@
+uuid: da08da01-499c-4e42-ac0c-2e6ef86cd3ef
+langcode: en
+status: true
+dependencies:
+  module:
+    - media
+id: media.thumbnail_responsive
+label: 'Thumbnail responsive'
+description: ''
+targetEntityType: media
+cache: true

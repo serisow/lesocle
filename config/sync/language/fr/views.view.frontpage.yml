@@ -9,8 +9,6 @@ display:
           tags:
             next: 'Suivant ›'
             previous: '‹ Précédent'
-            first: '« Premier'
-            last: 'Dernier »'
           expose:
             items_per_page_label: 'Éléments par page'
             items_per_page_options_all_label: '- Tout -'

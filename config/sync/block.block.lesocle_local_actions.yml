@@ -9,7 +9,7 @@ _core:
 id: lesocle_local_actions
 theme: lesocle
 region: header
-weight: -4
+weight: -2
 provider: null
 plugin: local_actions_block
 settings:

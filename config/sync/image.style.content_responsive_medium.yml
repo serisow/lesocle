@@ -1,0 +1,16 @@
+uuid: 4d481ab3-9cf9-4b82-8a80-4b07a07dfb4d
+langcode: en
+status: true
+dependencies: {  }
+name: content_responsive_medium
+label: 'Content Responsive Medium(720x540)'
+effects:
+  98c16c69-ca29-43a3-90ad-9e8510de95d7:
+    uuid: 98c16c69-ca29-43a3-90ad-9e8510de95d7
+    id: image_scale_and_crop
+    weight: 2
+    data:
+      width: 720
+      height: 540
+      anchor: center-center
+pipeline: __default__

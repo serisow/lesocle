@@ -1,17 +1,44 @@
 <?php
 
-
+use Drupal\Core\Url;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+/**
+ * Implements hook_mail().
+ */
+function pipeline_mail($key, &$message, $params) {
+  switch ($key) {
+    case 'new_article_notification':
+      $template = [
+        '#theme' => 'pipeline_new_article_notification',
+        '#title' => $params['title'],
+        '#view_url' => $params['view_url'],
+        '#edit_url' => $params['edit_url'],
+      ];
+      $html = \Drupal::service('renderer')->renderRoot($template);
+      $message['subject'] = $params['subject'];
+      $message['body'] = [Markup::create($html)];
+      $message['headers']['Content-Type'] = 'text/html; charset=UTF-8';
+      break;
+  }
+}
 
 /**
- * Implements hook_menu_links_discovered_alter().
+ * Implements hook_theme().
  */
-/*function pipeline_menu_links_discovered_alter(&$links) {
- unset($links['system.admin_content']);
-}*/
+function pipeline_theme() {
+  return [
+    'pipeline_new_article_notification' => [
+      'variables' => [
+        'title' => NULL,
+        'view_url' => NULL,
+        'edit_url' => NULL,
+      ],
+      'template' => 'pipeline-new-article-notification',
+    ],
+  ];
+}
 
-use Drupal\Core\Url;
 
 /**
  * Implements hook_toolbar().
@@ -29,7 +56,7 @@ function pipeline_toolbar() {
     '#type' => 'toolbar_item',
     'tab' => [
       '#type' => 'link',
-      '#title' => t('Pipeline'),
+      '#title' => t('Pipeline Management'),
       '#url' => Url::fromRoute('entity.pipeline.collection'),
       '#attributes' => [
         'title' => t('Pipeline management'),
@@ -42,7 +69,7 @@ function pipeline_toolbar() {
         '#theme' => 'links__toolbar_pipeline',
         '#links' => [
           'pipelines' => [
-            'title' => t('Pipeline List'),
+            'title' => t('All pipelines'),
             'url' => Url::fromRoute('entity.pipeline.collection'),
           ],
           'add_pipeline' => [

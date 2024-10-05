@@ -1,0 +1,16 @@
+uuid: c88ee401-30f2-4366-a062-8e5e9ec19fa8
+langcode: en
+status: true
+dependencies: {  }
+name: hero_responsive
+label: 'Hero Responsive Small(600x169)'
+effects:
+  5d1d944f-d344-4c4f-9ff7-5635d6ac507e:
+    uuid: 5d1d944f-d344-4c4f-9ff7-5635d6ac507e
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 600
+      height: 169
+      anchor: center-center
+pipeline: __default__

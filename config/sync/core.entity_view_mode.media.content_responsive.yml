@@ -1,0 +1,11 @@
+uuid: 720f217e-d9ba-4658-96e6-3306b9510450
+langcode: en
+status: true
+dependencies:
+  module:
+    - media
+id: media.content_responsive
+label: 'Content responsive'
+description: ''
+targetEntityType: media
+cache: true

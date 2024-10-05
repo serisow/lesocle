@@ -1,0 +1,11 @@
+uuid: c8611cfe-4eb9-42ad-8da2-0f28f3803f5a
+langcode: en
+status: true
+dependencies:
+  module:
+    - media
+id: media.hero_responsive
+label: 'Hero responsive'
+description: ''
+targetEntityType: media
+cache: true

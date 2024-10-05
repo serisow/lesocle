@@ -1,0 +1,25 @@
+uuid: fab66044-ca60-4acd-bbdd-b1d2ef6f1432
+langcode: en
+status: true
+dependencies:
+  content:
+    - 'block_content:banner:8268f893-0ceb-4439-949a-f0a16ccaa010'
+  module:
+    - block_content
+  theme:
+    - lesocle
+id: lesocle_defaultbanner
+theme: lesocle
+region: header
+weight: -3
+provider: null
+plugin: 'block_content:8268f893-0ceb-4439-949a-f0a16ccaa010'
+settings:
+  id: 'block_content:8268f893-0ceb-4439-949a-f0a16ccaa010'
+  label: 'Default banner'
+  label_display: '0'
+  provider: block_content
+  status: true
+  info: ''
+  view_mode: full
+visibility: {  }

@@ -1,0 +1,16 @@
+uuid: 40f406c1-a28d-4372-a042-e7c83890f62d
+langcode: en
+status: true
+dependencies: {  }
+name: teaser_responsive_large
+label: 'Teaser Responsive Large(800x450)'
+effects:
+  0a2ddf91-0189-4a92-952e-6390e3209328:
+    uuid: 0a2ddf91-0189-4a92-952e-6390e3209328
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 800
+      height: 450
+      anchor: center-center
+pipeline: __default__

@@ -1,0 +1,16 @@
+uuid: 86beceed-d769-4f60-b1aa-4db1ac0b18fc
+langcode: en
+status: true
+dependencies: {  }
+name: banner_responsive_small
+label: 'Banner Responsive Small (600x169)'
+effects:
+  f2a2d0b7-915d-47c6-84d5-bb545d87614b:
+    uuid: f2a2d0b7-915d-47c6-84d5-bb545d87614b
+    id: image_scale_and_crop
+    weight: 2
+    data:
+      width: 600
+      height: 169
+      anchor: center-center
+pipeline: __default__

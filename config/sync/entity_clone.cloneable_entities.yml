@@ -43,3 +43,4 @@ cloneable_entities:
   - entity_form_mode
   - entity_form_display
   - date_format
+  - metatag_defaults

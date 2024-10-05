@@ -9,7 +9,7 @@ _core:
 id: lesocle_page_title
 theme: lesocle
 region: header
-weight: -2
+weight: 0
 provider: null
 plugin: page_title_block
 settings:

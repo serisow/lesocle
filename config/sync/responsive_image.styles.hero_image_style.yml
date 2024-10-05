@@ -1,0 +1,45 @@
+uuid: 3c467c57-0f28-4b2a-8ab0-8a59c6affff9
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.hero_responsive
+    - image.style.hero_responsive_large
+    - image.style.hero_responsive_medium
+  theme:
+    - lesocle
+id: hero_image_style
+label: 'Hero responsive style'
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: hero_responsive_large
+    breakpoint_id: default.xxl
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: hero_responsive_large
+    breakpoint_id: default.xl
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: hero_responsive_large
+    breakpoint_id: default.lg
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: hero_responsive_medium
+    breakpoint_id: default.md
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: hero_responsive
+    breakpoint_id: default.sm
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: hero_responsive
+    breakpoint_id: default.xs
+    multiplier: 1x
+breakpoint_group: lesocle
+fallback_image_style: hero_responsive_medium

@@ -1,0 +1,41 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Article Notification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      margin: 10px 5px;
+      background-color: #3498db;
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>New Article Created</h1>
+  <p>A new article has been created with the title: <strong>{{ title }}</strong></p>
+  <p>You can view or edit the article using the links below:</p>
+  <a href="{{ view_url }}" class="button">View Article</a>
+  <a href="{{ edit_url }}" class="button">Edit Article</a>
+</div>
+</body>
+</html>

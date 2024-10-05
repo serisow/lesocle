@@ -1,0 +1,11 @@
+uuid: fde2888c-210d-4cb7-b887-55ac621e063b
+langcode: en
+status: true
+dependencies:
+  module:
+    - media
+id: media.banner_responsive
+label: 'Banner responsive'
+description: ''
+targetEntityType: media
+cache: true

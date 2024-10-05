@@ -1,0 +1,16 @@
+uuid: 4765e7bc-04c9-4d37-a1e2-4c5190dc8b0a
+langcode: en
+status: true
+dependencies: {  }
+name: banner_responsive_medium
+label: 'Banner Responsive Medium (1000x281)'
+effects:
+  1cee861e-1244-4dd1-b414-bc186de4c25d:
+    uuid: 1cee861e-1244-4dd1-b414-bc186de4c25d
+    id: image_scale_and_crop
+    weight: 1
+    data:
+      width: 1000
+      height: 281
+      anchor: center-center
+pipeline: __default__

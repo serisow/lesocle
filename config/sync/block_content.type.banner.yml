@@ -1,0 +1,8 @@
+uuid: b020b595-0c9e-4167-8bfb-965d0da92b9e
+langcode: en
+status: true
+dependencies: {  }
+id: banner
+label: Banner
+revision: false
+description: null

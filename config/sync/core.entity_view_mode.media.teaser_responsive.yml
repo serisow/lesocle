@@ -1,0 +1,11 @@
+uuid: 25d91946-76c0-4143-9355-3a6d59264c49
+langcode: en
+status: true
+dependencies:
+  module:
+    - media
+id: media.teaser_responsive
+label: 'Teaser responsive'
+description: ''
+targetEntityType: media
+cache: true

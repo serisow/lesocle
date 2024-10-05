@@ -1,0 +1,45 @@
+uuid: 25a7b408-966d-4652-8c70-458aefc46b62
+langcode: en
+status: true
+dependencies:
+  config:
+    - image.style.teaser_responsive_large
+    - image.style.teaser_responsive_medium
+    - image.style.teaser_responsive_small
+  theme:
+    - lesocle
+id: teaser_responsive_style
+label: 'Teaser responsive style'
+image_style_mappings:
+  -
+    image_mapping_type: image_style
+    image_mapping: teaser_responsive_large
+    breakpoint_id: default.xxl
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: teaser_responsive_large
+    breakpoint_id: default.xl
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: teaser_responsive_large
+    breakpoint_id: default.lg
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: teaser_responsive_medium
+    breakpoint_id: default.md
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: teaser_responsive_small
+    breakpoint_id: default.sm
+    multiplier: 1x
+  -
+    image_mapping_type: image_style
+    image_mapping: teaser_responsive_small
+    breakpoint_id: default.xs
+    multiplier: 1x
+breakpoint_group: lesocle
+fallback_image_style: teaser_responsive_medium

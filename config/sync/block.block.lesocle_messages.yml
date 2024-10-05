@@ -11,7 +11,7 @@ _core:
 id: lesocle_messages
 theme: lesocle
 region: header
-weight: -3
+weight: -1
 provider: null
 plugin: system_messages_block
 settings:

@@ -1,0 +1,16 @@
+uuid: 4ffc363b-01b8-4b6c-91b5-bebde7ea2001
+langcode: en
+status: true
+dependencies: {  }
+name: thumbnail_responsive
+label: 'Thumbnail Responsive(150x150)'
+effects:
+  74f78bbb-e11a-42f8-9aee-5d0ee73b6950:
+    uuid: 74f78bbb-e11a-42f8-9aee-5d0ee73b6950
+    id: image_scale
+    weight: 1
+    data:
+      width: 150
+      height: 150
+      upscale: false
+pipeline: __default__
