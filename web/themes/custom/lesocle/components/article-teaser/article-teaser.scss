@@ -1,0 +1,25 @@
+@import "../../src/scss/init";
+
+h2.heading-class { // Replace `heading-class` with the actual class applied by Radix, if any.
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #0056b3; // Adjust to your theme's primary color.
+  margin-bottom: 0.5em;
+
+  // Target the <span> element containing the title text
+  span {
+    color: #0056b3; // Apply the color you want for the title text
+    text-decoration: none; // Remove any underline if needed
+  }
+
+  // Additional hover effect for the title if it is linked
+  a {
+    color: inherit; // Use the same color as the parent
+    text-decoration: none;
+
+    &:hover {
+      color: #003d80; // Darken the color on hover for visual effect
+      text-decoration: underline;
+    }
+  }
+}

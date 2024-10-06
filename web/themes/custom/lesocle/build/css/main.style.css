@@ -12574,4 +12574,216 @@ textarea.form-control-lg {
   opacity: 0.25;
 }
 
+:root {
+  --background-color: #f0f2f5;
+  --card-background: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --accent-color: #3498db;
+  --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-primary);
+}
+
+/* Article container */
+.node--article--full {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Title styling */
+.page-title {
+  padding: 10px 20px;
+  font-size: 2em;
+  line-height: 1.2;
+  text-align: center;
+}
+
+/* Ensure the title spans full width on smaller screens */
+@media (max-width: 840px) {
+  .page-title {
+    margin-left: -20px;
+    margin-right: -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+/* Main content area */
+.node__content {
+  margin-top: 30px;
+}
+
+/* Responsive image */
+.field--name-field-media-image img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+/* Article header */
+.node--article--full h1, .node--article--full .h1 {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  color: #2c3e50;
+}
+
+/* Author and date information */
+.node--article--full footer {
+  margin-bottom: 30px;
+  font-size: 0.9em;
+  color: #7f8c8d;
+}
+
+/* Article body text */
+.field--name-body {
+  margin-bottom: 40px;
+}
+
+/* Headings within the article */
+.field--name-body h2, .field--name-body .h2 {
+  font-size: 1.8em;
+  margin-top: 40px;
+  margin-bottom: 20px;
+  color: #34495e;
+}
+
+.field--name-body h3, .field--name-body .h3 {
+  font-size: 1.4em;
+  margin-top: 30px;
+  margin-bottom: 15px;
+  color: var(--text-secondary);
+}
+
+/* Paragraphs */
+.field--name-body p {
+  margin-bottom: 20px;
+}
+
+/* Lists */
+.field--name-body ol,
+.field--name-body ul {
+  margin-bottom: 20px;
+  padding-left: 30px;
+}
+
+/* Links */
+.field--name-body a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+.field--name-body a:hover {
+  text-decoration: underline;
+}
+
+/* Horizontal rule */
+.field--name-body hr {
+  margin: 40px 0;
+  border: none;
+  border-top: 1px solid #ecf0f1;
+}
+
+/* References section */
+.field--name-body h3:last-of-type, .field--name-body .h3:last-of-type {
+  margin-top: 40px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .node--article--full {
+    padding: 15px;
+  }
+  .node--article--full h1, .node--article--full .h1 {
+    font-size: 2em;
+  }
+  .field--name-body h2, .field--name-body .h2 {
+    font-size: 1.6em;
+  }
+  .field--name-body h3, .field--name-body .h3 {
+    font-size: 1.3em;
+  }
+}
+/* Grid container */
+.views-view-responsive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+/* Card styling */
+.views-view-responsive-grid__item-inner {
+  background-color: var(--card-background);
+  border-radius: 8px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease-in-out, -webkit-transform 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, -webkit-transform 0.3s ease-in-out;
+  padding: 20px;
+}
+
+.views-view-responsive-grid__item-inner:hover {
+  -webkit-transform: translateY(-5px);
+          transform: translateY(-5px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Article content */
+.node--article--teaser {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Image styling */
+.field--name-field-media-image img {
+  width: 100%;
+  height: auto;
+  -o-object-fit: cover;
+     object-fit: cover;
+  aspect-ratio: 16/9;
+}
+
+/* Title styling */
+.node--article--teaser h2, .node--article--teaser .h2 {
+  font-size: 1.4em;
+  margin: 15px 20px 10px;
+  line-height: 1.3;
+}
+
+.node--article--teaser h2 a, .node--article--teaser .h2 a {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.node--article--teaser h2 a:hover, .node--article--teaser .h2 a:hover {
+  color: var(--accent-color);
+}
+
+/* Body text styling */
+.field--name-body {
+  padding: 0 20px 20px;
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .views-view-responsive-grid {
+    grid-template-columns: 1fr;
+  }
+  .node--article--teaser h2, .node--article--teaser .h2 {
+    font-size: 1.2em;
+  }
+}
+
 /*# sourceMappingURL=main.style.css.map*/
