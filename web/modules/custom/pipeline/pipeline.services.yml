@@ -20,3 +20,11 @@ services:
     arguments:
       - '@entity_type.manager'
 
+  pipeline.image_download_service:
+    class: Drupal\pipeline\Service\ImageDownloadService
+    arguments:
+      - '@http_client'
+      - '@file_system'
+      - '@file.repository'
+      - '@entity_type.manager'
+      - '@logger.factory'

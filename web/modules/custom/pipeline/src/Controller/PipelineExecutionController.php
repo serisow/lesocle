@@ -4,6 +4,7 @@ namespace Drupal\pipeline\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\pipeline\Plugin\ActionServiceManager;
+use Drupal\pipeline\Service\ImageDownloadService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,15 +15,25 @@ class PipelineExecutionController extends ControllerBase {
   protected $entityTypeManager;
   protected $actionServiceManager;
 
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ActionServiceManager $action_service_manager) {
+  /**
+   * @var \Drupal\pipeline\Service\ImageDownloadService
+   */
+  protected $imageDownloadService;
+
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    ActionServiceManager $action_service_manager,
+    ImageDownloadService $image_download_service) {
     $this->entityTypeManager = $entity_type_manager;
     $this->actionServiceManager = $action_service_manager;
+    $this->imageDownloadService = $image_download_service;
   }
 
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager'),
-      $container->get('plugin.manager.action_service')
+      $container->get('plugin.manager.action_service'),
+      $container->get('pipeline.image_download_service')
     );
   }
 
