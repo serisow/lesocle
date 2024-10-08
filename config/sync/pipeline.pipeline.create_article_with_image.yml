@@ -6,7 +6,7 @@ id: create_article_with_image
 label: 'Create article on  Artificial Intelligence'
 instructions: 'Testing the creation of article and image.'
 created: 1727772486
-changed: 1728079134
+changed: 1728377438
 scheduled_time: 1728075600
 step_types:
   1189ca36-ab04-4af9-a6ed-b6d50d8e67d5:
