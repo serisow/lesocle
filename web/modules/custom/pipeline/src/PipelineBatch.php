@@ -49,9 +49,6 @@ class PipelineBatch {
         }
         $result = $step_type->execute($context);
 
-        // Also keep the results array for backwards compatibility
-        $context['results'][$step_type->getStepOutputKey()] = $result;
-
         $context['message'] = t('Processed step: @step @info', [
           '@step' => $step_type->getStepDescription(),
           '@info' => $step_info,
@@ -70,7 +67,7 @@ class PipelineBatch {
     if ($success) {
       $message = t('Pipeline executed successfully.');
       foreach ($results as $step => $result) {
-        \Drupal::messenger()->addMessage(t('Step @index result: @result', ['@index' => $step, '@result' => $result]));
+        \Drupal::messenger()->addMessage(t('Step @index result: Success!', ['@index' => $step]));
       }
     } else {
       $message = t('Pipeline execution failed.');

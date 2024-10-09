@@ -167,19 +167,21 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
    * {@inheritdoc}
    */
   public function executeAction(array $config, array &$context): string {
-    $content = $context['last_response'] ?? '';
-    $image_data = $context['results']['image_data'] ?? null;
-    if ($image_data) {
-      $image_info = json_decode($image_data, true);
+    // Find the article content
+    $article_content = null;
+    foreach ($context['results'] as $step) {
+      if ($step['output_type'] === 'article_content') {
+        $article_content = $step['data'];
+        break;
+      }
     }
 
-    // SEO metadata.
-    $seo_optimized = $context['results']['seo_optimized'];
-    $seo_content = preg_replace('/^```json\s*|\s*```$/s', '', $context['results']['seo_optimized']);
-    $seo_content = json_decode(trim($seo_content), true);
+    if (!$article_content) {
+      throw new \Exception("Article content not found in the context.");
+    }
 
     // Remove ```json prefix and ``` suffix if present
-    $content = preg_replace('/^```json\s*|\s*```$/s', '', $content);
+    $content = preg_replace('/^```json\s*|\s*```$/s', '', $article_content);
 
     // Trim any whitespace
     $content = trim($content);
@@ -195,10 +197,31 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
       throw new \Exception("JSON must contain 'title' and 'body' fields");
     }
 
+    // Find the featured image data
+    $image_data = null;
+    foreach ($context['results'] as $step) {
+      if ($step['output_type'] === 'featured_image') {
+        $image_data = $step['data'];
+        break;
+      }
+    }
+
     // Create media entity if image info is available
     $media_id = null;
-    if ($image_info) {
-      $media_id = $this->mediaCreationService->createImageMedia($image_info);
+    if ($image_data) {
+      $image_info = json_decode($image_data, true);
+      if ($image_info) {
+        $media_id = $this->mediaCreationService->createImageMedia($image_info);
+      }
+    }
+
+    // Find SEO metadata
+    $seo_content = null;
+    foreach ($context['results'] as $step) {
+      if ($step['output_type'] === 'seo_metadata') {
+        $seo_content = json_decode($step['data'], true);
+        break;
+      }
     }
 
     $title = $data['title'];
@@ -211,7 +234,7 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
     $node_storage = $this->entityTypeManager->getStorage('node');
     $node = $node_storage->create([
       'type' => 'article',
-      'title' =>  $seo_content['title'] ?? $title,
+      'title' => $seo_content['title'] ?? $title,
       'body' => [
         'value' => $body,
         'format' => 'full_html',

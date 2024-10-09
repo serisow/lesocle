@@ -1,7 +1,10 @@
 <?php
 namespace Drupal\pipeline;
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form\SubformStateInterface;
 
 /**
  * Provides a base class for configurable step types.
@@ -21,6 +24,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
     return [
         'step_description' => '',
         'step_output_key' => '',
+        'output_type' => '',
         'required_steps' => '',
         'response' => ''
       ] + $this->additionalDefaultConfiguration();
@@ -30,6 +34,10 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    if ($form_state instanceof SubformStateInterface) {
+      $form_state = $form_state->getCompleteFormState();
+    }
+
     $step_description = '';
     if ($form_state->has('step_description')) {
       $step_description = $form_state->get('step_description');
@@ -46,23 +54,36 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       '#rows' => 2,
       '#weight' => -5
     ];
-    $form['step_output_key'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Output Key'),
-      '#description' => $this->t('The key under which this step\'s output will be stored in the pipeline context.'),
-      '#default_value' => $this->configuration['step_output_key'],
-      '#required' => FALSE,
-      '#weight' => 1
-    ];
+
     $form['required_steps'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Required Steps'),
-      '#description' => $this->t('Enter one step output key per line. These are the steps from which we expect results.'),
+      '#description' => $this->t('List the output keys of preceding steps that this step depends on, one per line. This step will have access to the results of these steps when executing.'),
       '#default_value' => is_array($this->configuration['required_steps'])
         ? implode("\r\n", $this->configuration['required_steps'])
         : $this->configuration['required_steps'],
       '#required' => FALSE,
-      '#weight' => 2
+      '#weight' => 0
+    ];
+
+    $form['step_output_key'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Output Key'),
+      '#description' => $this->t('Enter a unique identifier for this step\'s output. Other steps can use this key to reference this output.'),
+      '#default_value' => $this->configuration['step_output_key'],
+      '#required' => FALSE,
+      '#weight' => 1
+    ];
+
+    $form['output_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Output Type'),
+      '#description' => $this->t('Specify the type of content this step will produce. This helps other steps and actions identify and use this output correctly.
+       <strong>Generic Content is the default and suitable for most steps, especially those producing intermediate results.</strong>'),
+      '#options' => $this->getOutputTypeOptions(),
+      '#default_value' => $this->configuration['output_type'] ?? 'generic_content',
+      '#required' => TRUE,
+      '#weight' => 2,
     ];
 
     $form['response'] = [
@@ -70,7 +91,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       '#title' => $this->t('Response'),
       '#default_value' => $this->configuration['response'],
       '#disabled' => TRUE,
-      '#weight' => 3
+      '#weight' => 4
     ];
     return $this->additionalConfigurationForm($form, $form_state);
   }
@@ -84,9 +105,12 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
   /**
    * {@inheritdoc}
    */
+
+
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     $this->configuration['step_description'] = $form_state->getValue('step_description');
     $this->configuration['step_output_key'] = $form_state->getValue('step_output_key');
+    $this->configuration['output_type'] = $form_state->getValue('output_type');
     $this->configuration['response'] = $form_state->getValue('response');
     $required_steps = $form_state->getValue(['data', 'required_steps']);
     $this->configuration['required_steps'] = array_filter(explode("\r\n", $required_steps));
@@ -136,5 +160,18 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       $required_steps = $config['required_steps'];
     }
     return $required_steps;
+  }
+
+
+  protected function getOutputTypeOptions() {
+    return [
+      // Generic content do not have particular handling, it purpose is to be put in the context
+      // in order to accessed by later steps.
+      'generic_content' => $this->t('Generic Content'),
+      'article_content' => $this->t('Article Content'),
+      'featured_image' => $this->t('Featured Image'),
+      'seo_metadata' => $this->t('SEO Metadata'),
+      // Add more options as needed
+    ];
   }
 }

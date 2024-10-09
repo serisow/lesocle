@@ -11,11 +11,11 @@ use Drupal\Core\Mail\MailManagerInterface;
 
 /**
  * @ActionService(
- *   id = "new_article_action",
- *   label = @Translation("New Article Created Notification")
+ *   id = "article_created_email_notifier",
+ *   label = @Translation("Article Created Email Notifier")
  * )
  */
-class NewArticleActionService extends PluginBase implements ActionServiceInterface, ContainerFactoryPluginInterface
+class ArticleCreatedEmailNotifierService extends PluginBase implements ActionServiceInterface, ContainerFactoryPluginInterface
 {
 
   /**

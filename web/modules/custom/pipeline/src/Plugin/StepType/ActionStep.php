@@ -81,7 +81,7 @@ class ActionStep extends ConfigurableStepTypeBase implements StepTypeExecutableI
     }
 
     // Ensure context has the last_response
-    $context['last_response'] = $last_response;
+    $context['last_response'] = $last_response; // @SSOW: To be removed
 
     // Add the results and last response to the action config
     $action_config_array = $action_config->toArray();
@@ -90,6 +90,11 @@ class ActionStep extends ConfigurableStepTypeBase implements StepTypeExecutableI
 
     $action_result = $action_service->executeAction($action_config_array, $context);
     $this->configuration['response'] = $action_result;
+    $context['results'][$this->getStepOutputKey()] = [
+      'output_type' => $this->configuration['output_type'],
+      'service' => $action_service_id,
+      'data'   => $action_result
+    ];
     return $action_result;
   }
 

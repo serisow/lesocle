@@ -305,14 +305,19 @@ class GoogleSearchStep extends ConfigurableStepTypeBase implements StepTypeExecu
 
         $result = json_encode($enriched_results);
         $this->configuration['response'] = $result;
+        $context['results'][$this->getStepOutputKey()] = [
+          'output_type' => $this->configuration['output_type'],
+          'service' => 'google_search',
+          'data' => $result,
+        ];
       } else {
         $result = json_encode(['message' => 'No results found.']);
       }
 
       // Store the result in the context
-      if ($config['step_output_key']) {
+      /*if ($config['step_output_key']) {
         $context['results'][$config['step_output_key']] = $result;
-      }
+      }*/
 
       return $result;
     } catch (\Exception $e) {
