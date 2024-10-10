@@ -114,6 +114,7 @@ class PipelineApiController extends ControllerBase {
         'weight' => $step_type->getWeight(),
         'step_description' => $step_type->getStepDescription(),
         'step_output_key' => $step_type->getStepOutputKey(),
+        'output_type' => $step_type->getStepOutputType(),
         'uuid' => $step_type->getUuid(),
       ];
 

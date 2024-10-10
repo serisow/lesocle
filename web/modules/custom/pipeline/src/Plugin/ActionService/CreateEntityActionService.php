@@ -197,6 +197,12 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
       throw new \Exception("JSON must contain 'title' and 'body' fields");
     }
 
+    // Remove the first H1 tag and its contents from the body
+    $data['body'] = preg_replace('/<h1>.*?<\/h1>/s', '', $data['body'], 1);
+
+    // Trim any leading whitespace that might remain after removing the H1
+    $data['body'] = ltrim($data['body']);
+
     // Find the featured image data
     $image_data = null;
     foreach ($context['results'] as $step) {
@@ -219,7 +225,15 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
     $seo_content = null;
     foreach ($context['results'] as $step) {
       if ($step['output_type'] === 'seo_metadata') {
-        $seo_content = json_decode($step['data'], true);
+        $seo_data = preg_replace('/^```json\s*|\s*```$/s', '', $step['data']);
+        $seo_content = json_decode(trim($seo_data), true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+          throw new \Exception("Invalid JSON format: " . json_last_error_msg());
+        }
+
+        if (!isset($seo_content['title']) || !isset($seo_content['summary'])) {
+          throw new \Exception("JSON must contain 'title' and 'summary' fields");
+        }
         break;
       }
     }

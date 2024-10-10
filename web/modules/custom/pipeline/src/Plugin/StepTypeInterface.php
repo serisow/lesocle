@@ -80,6 +80,14 @@ interface StepTypeInterface extends ConfigurableInterface, PluginInspectionInter
   public function getStepOutputKey() : string;
 
   /**
+   * Returns the step output type of the step type.
+   *
+   * @return string
+   *  The step type output type.
+   */
+  public function getStepOutputType() : string;
+
+  /**
    * Returns the prompt of the step type.
    *
    * @return string

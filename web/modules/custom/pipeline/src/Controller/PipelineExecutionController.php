@@ -37,6 +37,7 @@ class PipelineExecutionController extends ControllerBase {
     );
   }
 
+
   public function receiveExecutionResult(Request $request, PipelineInterface $pipeline) {
     $data = json_decode($request->getContent(), TRUE);
 
@@ -45,12 +46,24 @@ class PipelineExecutionController extends ControllerBase {
     }
 
     $step_results = $data['step_results'] ?? [];
+    // Sort step_results by weight
+    uasort($step_results, function($a, $b) {
+      return $a['weight'] <=> $b['weight'];
+    });
+
+    $context = ['results' => $step_results];
 
     foreach ($step_results as $step_uuid => $result) {
       $step_type = $pipeline->getStepType($step_uuid);
       if ($step_type) {
+        // Handle featured image
+        if ($result['output_type'] === 'featured_image') {
+          $image_data = $this->imageDownloadService->downloadImage($result['data']);
+          $result['data'] = $image_data;
+          $context['results'][$step_uuid]['data'] = $image_data;
+        }
         $config = $step_type->getConfiguration();
-        $config['data']['response'] = $result['output'];
+        $config['data']['response'] = $result['data'];
         $step_type->setConfiguration($config);
 
         if ($step_type->getPluginId() === 'action_step') {
@@ -59,7 +72,6 @@ class PipelineExecutionController extends ControllerBase {
           if ($action_config) {
             $action_service_id = $action_config->getActionService();
             $action_service = $this->actionServiceManager->createInstance($action_service_id);
-            $context = ['last_response' => $result['output']];
             try {
               $action_result = $action_service->executeAction($action_config->toArray(), $context);
               // You might want to log or store $action_result
