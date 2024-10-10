@@ -1,0 +1,17 @@
+entity.pipeline_run.canonical:
+  route_name: entity.pipeline_run.canonical
+  base_route: entity.pipeline_run.canonical
+  title: 'View'
+
+
+entity.pipeline_run.delete_form:
+  route_name: entity.pipeline_run.delete_form
+  base_route: entity.pipeline_run.canonical
+  title: 'Delete'
+  weight: 11
+
+entity.pipeline_run.collection:
+  title: 'Pipeline Run'
+  route_name: entity.pipeline_run.collection
+  base_route: system.admin_content
+  weight: 11

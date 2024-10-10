@@ -1,0 +1,39 @@
+entity.pipeline_run.collection:
+  path: '/admin/content/pipeline_runs'
+  defaults:
+    _entity_list: 'pipeline_run'
+    _title: 'Pipeline Runs'
+  requirements:
+    _permission: 'view pipeline runs'
+
+#entity.pipeline_run.add_form:
+#  path: '/admin/content/pipeline_run/add'
+#  defaults:
+#    _entity_form: 'pipeline_run.add'
+#    _title: 'Add Pipeline Run'
+#  requirements:
+#    _permission: 'create pipeline run'
+
+entity.pipeline_run.canonical:
+  path: '/pipeline_run/{pipeline_run}'
+  defaults:
+    _entity_view: 'pipeline_run'
+    _title: 'Pipeline Run'
+  requirements:
+    _entity_access: 'pipeline_run.view'
+
+#entity.pipeline_run.edit_form:
+#  path: '/admin/content/pipeline_run/{pipeline_run}/edit'
+#  defaults:
+#    _entity_form: 'pipeline_run.edit'
+#    _title: 'Edit Pipeline run'
+#  requirements:
+#    _entity_access: 'pipeline_run.update'
+
+entity.pipeline_run.delete_form:
+  path: '/admin/content/pipeline_run/{pipeline_run}/delete'
+  defaults:
+    _entity_form: 'pipeline_run.delete'
+    _title: 'Delete Pipeline Run'
+  requirements:
+    _entity_access: 'pipeline_run.delete'

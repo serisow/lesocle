@@ -1,0 +1,11 @@
+view pipeline runs:
+  title: 'View pipeline runs'
+  description: 'Allow users to view pipeline run entities'
+
+delete pipeline runs:
+  title: 'Delete pipeline runs'
+  description: 'Allow users to delete pipeline run entities'
+
+administer pipeline runs:
+  title: 'Administer pipeline runs'
+  description: 'Allow users to administer pipeline run entities'

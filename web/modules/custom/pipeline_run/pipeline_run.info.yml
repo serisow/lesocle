@@ -1,0 +1,7 @@
+name: 'Pipeline Run'
+type: module
+description: 'Represent the result of a a pipeline execution.'
+package: Custom
+core_version_requirement: ^10 || ^11
+dependencies:
+  - pipeline:pipeline

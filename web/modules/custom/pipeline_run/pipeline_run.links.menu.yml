@@ -1,0 +1,11 @@
+entity.pipeline_run.collection:
+  title: 'Pipeline runs'
+  description: 'List of Pipeline runs'
+  route_name: entity.pipeline_run.collection
+  parent: system.admin_content
+
+entity.pipeline_run.settings:
+  title: 'Pipeline run Settings'
+  description: 'Configure Pipeline run entity'
+  route_name: entity.pipeline_run.settings
+  parent: system.admin_content

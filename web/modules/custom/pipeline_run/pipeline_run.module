@@ -1,0 +1,34 @@
+<?php
+
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_entity_type_alter().
+ */
+function pipeline_run_entity_type_alter(array &$entity_types) {
+  /** @var $entity_types \Drupal\Core\Entity\EntityTypeInterface[] */
+  if (isset($entity_types['pipeline_run'])) {
+    $entity_types['pipeline_run']->setFormClass('add', NULL);
+    $entity_types['pipeline_run']->setFormClass('edit', NULL);
+
+    // Remove the 'add-form' and 'edit-form' link templates
+    $link_templates = $entity_types['pipeline_run']->getLinkTemplates();
+    unset($link_templates['add-form']);
+    unset($link_templates['edit-form']);
+
+    // Set the updated link templates
+    foreach ($link_templates as $key => $path) {
+      $entity_types['pipeline_run']->setLinkTemplate($key, $path);
+    }
+  }
+}
+
+/**
+ * Implements hook_entity_operation_alter().
+ */
+function pipeline_run_entity_operation_alter(array &$operations, EntityInterface $entity) {
+  if ($entity->getEntityTypeId() == 'pipeline_run') {
+    // Remove the clone operation
+    unset($operations['clone']);
+  }
+}
