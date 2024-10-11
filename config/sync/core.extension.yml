@@ -44,6 +44,7 @@ module:
   path: 0
   path_alias: 0
   pipeline: 0
+  pipeline_run: 0
   redis: 0
   responsive_image: 0
   search: 0

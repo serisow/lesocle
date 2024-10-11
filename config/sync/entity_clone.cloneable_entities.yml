@@ -44,3 +44,5 @@ cloneable_entities:
   - entity_form_display
   - date_format
   - metatag_defaults
+  - pipeline_run
+  - pipeline_step_run

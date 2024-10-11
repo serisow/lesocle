@@ -180,19 +180,31 @@ class PipelineEditForm extends PipelineFormBase {
 
   public function executePipeline(array &$form, FormStateInterface $form_state) {
     $pipeline = $this->entity;
+
+    // Create PipelineRun entity
+    $pipeline_run = \Drupal::entityTypeManager()->getStorage('pipeline_run')->create([
+      'pipeline_id' => $pipeline->id(),
+      'status' => 'running',
+      'start_time' => \Drupal::time()->getCurrentTime(),
+      'created_by' => \Drupal::currentUser()->id(),
+      'triggered_by' => 'manual',
+    ]);
+    $pipeline_run->save();
+
     $batch = [
       'title' => $this->t('Executing Pipeline'),
       'operations' => [],
       'finished' => '\Drupal\pipeline\PipelineBatch::finishBatch',
+      'progressive' => TRUE,
     ];
 
     foreach ($pipeline->getStepTypes() as $step_type) {
       $batch['operations'][] = [
         '\Drupal\pipeline\PipelineBatch::processStep',
-        [$pipeline->id(), $step_type->getUuid()],
+        [$pipeline->id(), $step_type->getUuid(), $pipeline_run->id()],
       ];
     }
-
+    $batch['context']['pipeline_run_id'] = $pipeline_run->id();
     batch_set($batch);
   }
   public function validateAddStepType(array &$form, FormStateInterface $form_state) {
