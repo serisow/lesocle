@@ -103,17 +103,27 @@ class PipelineRun extends ContentEntityBase {
         'weight' => 3,
       ]);
 
+    $fields['step_results'] = BaseFieldDefinition::create('text_long')
+      ->setLabel(t('Step Results'))
+      ->setDescription(t('Serialized data of pipeline step results'))
+      ->setDefaultValue('')
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'type' => 'text_default',
+        'weight' => 4,
+      ]);
+
     $fields['error_message'] = BaseFieldDefinition::create('text_long')
       ->setLabel(t('Error Message'))
       ->setDescription(t('The error message if the pipeline run failed.'))
       ->setDisplayOptions('form', [
         'type' => 'text_textarea',
-        'weight' => 4,
+        'weight' => 5,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'text_default',
-        'weight' => 4,
+        'weight' => 5,
       ]);
 
     $fields['created_by'] = BaseFieldDefinition::create('entity_reference')
@@ -122,12 +132,12 @@ class PipelineRun extends ContentEntityBase {
       ->setSetting('target_type', 'user')
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 5,
+        'weight' => 6,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'author',
-        'weight' => 5,
+        'weight' => 6,
       ]);
 
     $fields['context_data'] = BaseFieldDefinition::create('text_long')
@@ -135,12 +145,12 @@ class PipelineRun extends ContentEntityBase {
       ->setDescription(t('The context data passed between steps during execution.'))
       ->setDisplayOptions('form', [
         'type' => 'text_textarea',
-        'weight' => 6,
+        'weight' => 7,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'text_default',
-        'weight' => 6,
+        'weight' => 7,
       ]);
 
     $fields['triggered_by'] = BaseFieldDefinition::create('list_string')
@@ -161,23 +171,6 @@ class PipelineRun extends ContentEntityBase {
         'label' => 'inline',
         'type' => 'list_default',
         'weight' => 7,
-      ]);
-
-    $fields['log_file'] = BaseFieldDefinition::create('file')
-      ->setLabel(t('Log File'))
-      ->setDescription(t('Reference to a detailed log file for this run.'))
-      ->setSettings([
-        'file_directory' => 'pipeline_run_logs',
-        'file_extensions' => 'log txt',
-      ])
-      ->setDisplayOptions('form', [
-        'type' => 'file',
-        'weight' => 9,
-      ])
-      ->setDisplayOptions('view', [
-        'label' => 'inline',
-        'type' => 'file',
-        'weight' => 9,
       ]);
 
     return $fields;
@@ -221,6 +214,14 @@ class PipelineRun extends ContentEntityBase {
     return $this;
   }
 
+  public function getStepResults() {
+    return $this->get('step_results')->value;
+  }
+
+  public function setStepResults($step_results) {
+    $this->set('step_results', $step_results);
+    return $this;
+  }
   public function getErrorMessage() {
     return $this->get('error_message')->value;
   }
@@ -261,12 +262,4 @@ class PipelineRun extends ContentEntityBase {
     return $this->get('version')->value;
   }
 
-  public function getLogFile() {
-    return $this->get('log_file')->entity;
-  }
-
-  public function setLogFile($file) {
-    $this->set('log_file', $file);
-    return $this;
-  }
 }

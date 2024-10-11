@@ -51,16 +51,44 @@ class PipelineExecutionController extends ControllerBase {
       return $a['weight'] <=> $b['weight'];
     });
 
+    // Create PipelineRun entity
+    $pipeline_run = $this->entityTypeManager->getStorage('pipeline_run')->create([
+      'pipeline_id' => $pipeline->id(),
+      'status' => 'completed', // Assuming the Go service completes the pipeline
+      'start_time' => $data['start_time'] ?? \Drupal::time()->getCurrentTime(),
+      'end_time' => $data['end_time'] ?? \Drupal::time()->getCurrentTime(),
+      'created_by' => \Drupal::currentUser()->id(),
+      'triggered_by' => 'api',
+    ]);
+    $pipeline_run->save();
+
     $context = ['results' => $step_results];
 
     foreach ($step_results as $step_uuid => $result) {
       $step_type = $pipeline->getStepType($step_uuid);
       if ($step_type) {
+        // Create PipelineStepRun entity
+        $step_run = $this->entityTypeManager->getStorage('pipeline_step_run')->create([
+          'pipeline_run_id' => $pipeline_run->id(),
+          'step_uuid' => $step_uuid,
+          'status' => $result['status'] ?? 'completed',
+          'start_time' => $result['start_time'] ?? \Drupal::time()->getCurrentTime(),
+          'end_time' => $result['end_time'] ?? \Drupal::time()->getCurrentTime(),
+          'step_type' => $step_type->getPluginId(),
+          'sequence' => $step_type->getWeight(),
+          'output' => $result['data'],
+          'error_message' => $result['error_message'] ?? '',
+        ]);
+        $step_run->save();
+
         // Handle featured image
         if ($result['output_type'] === 'featured_image') {
           $image_data = $this->imageDownloadService->downloadImage($result['data']);
           $result['data'] = $image_data;
           $context['results'][$step_uuid]['data'] = $image_data;
+          $step_run->set('output', $image_data);
+          $step_run->set('status', 'success');
+          $step_run->save();
         }
         $config = $step_type->getConfiguration();
         $config['data']['response'] = $result['data'];
@@ -74,11 +102,23 @@ class PipelineExecutionController extends ControllerBase {
             $action_service = $this->actionServiceManager->createInstance($action_service_id);
             try {
               $action_result = $action_service->executeAction($action_config->toArray(), $context);
-              // You might want to log or store $action_result
+              // Update the step run with the action result
+              $step_run->set('output', $action_result);
+              $step_run->set('status', 'success');
+              $step_run->save();
+
             }
             catch (\Exception $e) {
               // Log the error or handle it as appropriate
               \Drupal::logger('pipeline')->error('Error executing action: @error', ['@error' => $e->getMessage()]);
+              $step_run->set('status', 'failed');
+              $step_run->set('error_message', $e->getMessage());
+              $step_run->save();
+
+              // Update PipelineRun status if a step fails
+              $pipeline_run->set('status', 'failed');
+              $pipeline_run->set('error_message', 'Error in step: ' . $step_type->getPluginId());
+              $pipeline_run->save();
             }
           }
         }
