@@ -262,4 +262,20 @@ class PipelineRun extends ContentEntityBase {
     return $this->get('version')->value;
   }
 
+  /**
+   * Get the duration of the pipeline run in seconds.
+   *
+   * @return int|null
+   *   The duration in seconds, or null if start_time or end_time is not set.
+   */
+  public function getDuration() {
+    $start_time = $this->get('start_time')->value;
+    $end_time = $this->get('end_time')->value;
+
+    if ($start_time && $end_time) {
+      return $end_time - $start_time;
+    }
+
+    return null;
+  }
 }

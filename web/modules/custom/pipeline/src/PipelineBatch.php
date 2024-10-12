@@ -18,19 +18,21 @@ class PipelineBatch {
     if ($step_type instanceof StepTypeExecutableInterface) {
       $step_result = [
         'step_uuid' => $step_uuid,
+        'step_description' => $step_type->getStepDescription(),
         'status' => 'running',
         'start_time' => \Drupal::time()->getCurrentTime(),
         'step_type' => $step_type->getPluginId(),
         'sequence' => $step_type->getWeight(),
       ];
 
+      $start_time = microtime(true);
       try {
         $config = $step_type->getConfiguration();
         $step_info = self::getStepInfo($step_type, $config);
 
         $result = $step_type->execute($context);
         $step_result['status'] = 'success';
-        $step_result['output'] = $result;
+        $step_result['data'] = $result;
 
         $context['message'] = t('Processed step: @step @info', [
           '@step' => $step_type->getStepDescription(),
@@ -50,6 +52,8 @@ class PipelineBatch {
       }
 
       $step_result['end_time'] = \Drupal::time()->getCurrentTime();
+      $step_result['duration'] = $step_result['end_time'] - $step_result['start_time'];
+
 
       // Update step_results field
       $step_results = json_decode($pipeline_run->get('step_results')->value, TRUE) ?: [];
@@ -103,16 +107,13 @@ class PipelineBatch {
 
   public static function finishBatch($success, $results, $operations) {
     \Drupal::logger('pipeline')->notice('finishBatch method called. Success: @success', ['@success' => $success ? 'true' : 'false']);
-
     $pipeline_run_id = \Drupal::state()->get('pipeline.current_run_id');
-
     if (!$pipeline_run_id) {
       \Drupal::logger('pipeline')->error('Pipeline run ID not found in state.');
       return;
     }
 
     $pipeline_run = \Drupal::entityTypeManager()->getStorage('pipeline_run')->load($pipeline_run_id);
-
     if (!$pipeline_run) {
       \Drupal::logger('pipeline')->error('Pipeline run with ID @id not found.', ['@id' => $pipeline_run_id]);
       return;
@@ -127,6 +128,7 @@ class PipelineBatch {
     }
 
     $pipeline_run->set('end_time', \Drupal::time()->getCurrentTime());
+
     $pipeline_run->save();
 
     // Clear the state after we're done

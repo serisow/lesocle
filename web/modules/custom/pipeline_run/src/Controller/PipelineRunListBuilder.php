@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RedirectDestinationInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -30,6 +31,14 @@ class PipelineRunListBuilder extends EntityListBuilder {
   protected $redirectDestination;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+
+  /**
    * Constructs a new PipelineRunListBuilder object.
    *
    * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
@@ -40,16 +49,20 @@ class PipelineRunListBuilder extends EntityListBuilder {
    *   The date formatter service.
    * @param \Drupal\Core\Routing\RedirectDestinationInterface $redirect_destination
    *   The redirect destination service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    */
   public function __construct(
     EntityTypeInterface $entity_type,
     EntityStorageInterface $storage,
     DateFormatterInterface $date_formatter,
-    RedirectDestinationInterface $redirect_destination
+    RedirectDestinationInterface $redirect_destination,
+    EntityTypeManagerInterface $entity_type_manager
   ) {
     parent::__construct($entity_type, $storage);
     $this->dateFormatter = $date_formatter;
     $this->redirectDestination = $redirect_destination;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -60,7 +73,8 @@ class PipelineRunListBuilder extends EntityListBuilder {
       $entity_type,
       $container->get('entity_type.manager')->getStorage($entity_type->id()),
       $container->get('date.formatter'),
-      $container->get('redirect.destination')
+      $container->get('redirect.destination'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -68,11 +82,11 @@ class PipelineRunListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildHeader() {
-    $header['id'] = $this->t('ID');
     $header['pipeline'] = $this->t('Pipeline');
     $header['status'] = $this->t('Status');
     $header['start_time'] = $this->t('Start Time');
     $header['end_time'] = $this->t('End Time');
+    $header['duration'] = $this->t('Duration');
     $header['created_by'] = $this->t('Created By');
     $header['triggered_by'] = $this->t('Triggered By');
     return $header + parent::buildHeader();
@@ -83,11 +97,12 @@ class PipelineRunListBuilder extends EntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     /** @var \Drupal\pipeline_run\Entity\PipelineRun $entity */
-    $row['id'] = $entity->id();
-    $row['pipeline'] = $entity->getPipelineId() ? $entity->getPipelineId() : $this->t('N/A');
+    $pipeline = $this->entityTypeManager->getStorage('pipeline')->load($entity->getPipelineId());
+    $row['pipeline'] = $pipeline ? $pipeline->label() : $this->t('N/A');
     $row['status'] = $entity->getStatus();
     $row['start_time'] = $this->dateFormatter->format($entity->getStartTime(), 'short');
     $row['end_time'] = $entity->getEndTime() ? $this->dateFormatter->format($entity->getEndTime(), 'short') : $this->t('N/A');
+    $row['duration'] = $entity->getDuration() ? $this->formatDuration($entity->getDuration()) : $this->t('N/A');
     $row['created_by'] = $entity->getCreatedBy() ? $entity->getCreatedBy()->getDisplayName() : $this->t('N/A');
     $row['triggered_by'] = $entity->getTriggeredBy();
     return $row + parent::buildRow($entity);
@@ -119,6 +134,51 @@ class PipelineRunListBuilder extends EntityListBuilder {
     // Remove the 'Add Pipeline Run' action button
     unset($build['table']['#header']['operations']);
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function load() {
+    $entity_ids = $this->getEntityIds();
+    return $this->storage->loadMultiple($entity_ids);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEntityIds() {
+    $query = $this->getStorage()->getQuery()
+      ->accessCheck()
+      ->sort('end_time', 'DESC');
+
+    // Only add the pager if a limit is specified.
+    if ($this->limit) {
+      $query->pager($this->limit);
+    }
+
+    return $query->execute();
+  }
+
+  /**
+   * Format duration in a human-readable format.
+   *
+   * @param int $seconds
+   *   Duration in seconds.
+   *
+   * @return string
+   *   Formatted duration string.
+   */
+  protected function formatDuration($seconds) {
+    if ($seconds < 60) {
+      return $this->t('@seconds sec', ['@seconds' => $seconds]);
+    }
+    $minutes = floor($seconds / 60);
+    $remaining_seconds = $seconds % 60;
+    return $this->t('@minutes min @seconds sec', [
+      '@minutes' => $minutes,
+      '@seconds' => $remaining_seconds,
+    ]);
   }
 
 }
