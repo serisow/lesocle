@@ -1,0 +1,45 @@
+<style>
+  pre code.json {
+    display: block;
+    background-color: #f4f4f4;
+    border: 1px solid #ddd;
+    padding: 10px;
+    max-height: 300px;
+    overflow: auto;
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+</style>
+
+<h2>{{ 'Steps for Pipeline Run @id'|t({'@id': pipeline_run.label}) }}</h2>
+
+<table>
+  <thead>
+  <tr>
+    <th>{{ 'Step'|t }}</th>
+    <th>{{ 'Description'|t }}</th>
+    <th>{{ 'Status'|t }}</th>
+    <th>{{ 'Duration'|t }}</th>
+    <th>{{ 'Data'|t }}</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for step_uuid, step in steps %}
+    <tr>
+      <td>{{ step.step_type }}</td>
+      <td>{{ step.step_description }}</td>
+      <td>{{ step.status }}</td>
+      <td>{{ step.duration }} {{ 'seconds'|t }}</td>
+      <td>
+        <details>
+          <summary>{{ 'View Data'|t }}</summary>
+          <pre><code class="json">{{ step.data|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }}</code></pre>
+        </details>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>

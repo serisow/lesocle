@@ -6,14 +6,6 @@ entity.pipeline_run.collection:
   requirements:
     _permission: 'view pipeline runs'
 
-#entity.pipeline_run.add_form:
-#  path: '/admin/content/pipeline_run/add'
-#  defaults:
-#    _entity_form: 'pipeline_run.add'
-#    _title: 'Add Pipeline Run'
-#  requirements:
-#    _permission: 'create pipeline run'
-
 entity.pipeline_run.canonical:
   path: '/pipeline_run/{pipeline_run}'
   defaults:
@@ -22,14 +14,6 @@ entity.pipeline_run.canonical:
   requirements:
     _entity_access: 'pipeline_run.view'
 
-#entity.pipeline_run.edit_form:
-#  path: '/admin/content/pipeline_run/{pipeline_run}/edit'
-#  defaults:
-#    _entity_form: 'pipeline_run.edit'
-#    _title: 'Edit Pipeline run'
-#  requirements:
-#    _entity_access: 'pipeline_run.update'
-
 entity.pipeline_run.delete_form:
   path: '/admin/content/pipeline_run/{pipeline_run}/delete'
   defaults:
@@ -37,3 +21,15 @@ entity.pipeline_run.delete_form:
     _title: 'Delete Pipeline Run'
   requirements:
     _entity_access: 'pipeline_run.delete'
+
+entity.pipeline_run.steps:
+  path: '/admin/pipeline-run/{pipeline_run}/steps'
+  defaults:
+    _controller: '\Drupal\pipeline_run\Controller\PipelineRunStepsController::viewSteps'
+    _title: 'Pipeline Run Steps'
+  requirements:
+    _permission: 'view pipeline runs'
+  options:
+    parameters:
+      pipeline:
+        type: entity:pipeline_run

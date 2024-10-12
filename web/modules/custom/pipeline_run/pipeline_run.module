@@ -32,3 +32,14 @@ function pipeline_run_entity_operation_alter(array &$operations, EntityInterface
     unset($operations['clone']);
   }
 }
+
+function pipeline_run_theme($existing, $type, $theme, $path) {
+  return [
+    'pipeline_run_steps' => [
+      'variables' => [
+        'pipeline_run' => NULL,
+        'steps' => NULL,
+      ],
+    ],
+  ];
+}
