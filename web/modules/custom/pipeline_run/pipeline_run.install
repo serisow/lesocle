@@ -1,0 +1,78 @@
+<?php
+use Drupal\Core\Field\BaseFieldDefinition;
+
+/**
+ * Add duration field to PipelineRun entity.
+ */
+
+/**
+ * Add duration field to PipelineRun entity.
+ */
+function pipeline_run_update_9002(&$sandbox) {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_storage_definition = BaseFieldDefinition::create('integer')
+    ->setLabel(t('Duration'))
+    ->setDescription(t('The duration of the pipeline run in seconds.'))
+    ->setDefaultValue(0)
+    ->setDisplayOptions('view', [
+      'label' => 'inline',
+      'type' => 'number_integer',
+      'weight' => 4,
+    ])
+    ->setDisplayConfigurable('form', TRUE)
+    ->setDisplayConfigurable('view', TRUE);
+
+  $entity_definition_update_manager->installFieldStorageDefinition(
+    'duration',
+    'pipeline_run',
+    'pipeline_run',
+    $field_storage_definition
+  );
+  return t('Duration field has been added to the PipelineRun entity.');
+}
+
+/**
+ * Update existing PipelineRun entities to populate the duration field.
+ */
+function pipeline_run_update_9003(&$sandbox) {
+  $entity_type_manager = \Drupal::entityTypeManager();
+  $pipeline_run_storage = $entity_type_manager->getStorage('pipeline_run');
+
+  if (!isset($sandbox['progress'])) {
+    $query = $pipeline_run_storage->getQuery();
+    $query->accessCheck();
+    $sandbox['total'] = $query->count()->execute();
+    $sandbox['progress'] = 0;
+    $sandbox['current_id'] = 0;
+  }
+
+  $query = $pipeline_run_storage->getQuery();
+  $query->accessCheck()
+    ->condition('id', $sandbox['current_id'], '>')
+    ->range(0, 50)
+    ->sort('id');
+  $result = $query->execute();
+
+  if (empty($result)) {
+    $sandbox['#finished'] = 1;
+    return t('All existing PipelineRun entities have been updated with duration values.');
+  }
+
+  $pipeline_runs = $pipeline_run_storage->loadMultiple($result);
+
+  foreach ($pipeline_runs as $pipeline_run) {
+    $start_time = $pipeline_run->get('start_time')->value;
+    $end_time = $pipeline_run->get('end_time')->value;
+
+    if ($start_time && $end_time) {
+      $duration = $end_time - $start_time;
+      $pipeline_run->set('duration', $duration);
+      $pipeline_run->save();
+    }
+
+    $sandbox['progress']++;
+    $sandbox['current_id'] = $pipeline_run->id();
+  }
+
+  $sandbox['#finished'] = $sandbox['progress'] / $sandbox['total'];
+}

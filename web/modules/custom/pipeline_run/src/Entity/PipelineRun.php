@@ -2,6 +2,7 @@
 namespace Drupal\pipeline_run\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 
@@ -103,6 +104,18 @@ class PipelineRun extends ContentEntityBase {
         'weight' => 3,
       ]);
 
+    $fields['duration'] = BaseFieldDefinition::create('integer')
+      ->setLabel(t('Duration'))
+      ->setDescription(t('The duration of the pipeline run in seconds.'))
+      ->setDefaultValue(0)
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'number_integer',
+        'weight' => 4,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', TRUE);
+
     $fields['step_results'] = BaseFieldDefinition::create('text_long')
       ->setLabel(t('Step Results'))
       ->setDescription(t('Serialized data of pipeline step results'))
@@ -110,7 +123,7 @@ class PipelineRun extends ContentEntityBase {
       ->setDisplayOptions('view', [
         'label' => 'hidden',
         'type' => 'text_default',
-        'weight' => 4,
+        'weight' => 5,
       ]);
 
     $fields['error_message'] = BaseFieldDefinition::create('text_long')
@@ -118,12 +131,12 @@ class PipelineRun extends ContentEntityBase {
       ->setDescription(t('The error message if the pipeline run failed.'))
       ->setDisplayOptions('form', [
         'type' => 'text_textarea',
-        'weight' => 5,
+        'weight' => 6,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'text_default',
-        'weight' => 5,
+        'weight' => 6,
       ]);
 
     $fields['created_by'] = BaseFieldDefinition::create('entity_reference')
@@ -132,12 +145,12 @@ class PipelineRun extends ContentEntityBase {
       ->setSetting('target_type', 'user')
       ->setDisplayOptions('form', [
         'type' => 'entity_reference_autocomplete',
-        'weight' => 6,
+        'weight' => 7,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'author',
-        'weight' => 6,
+        'weight' => 7,
       ]);
 
     $fields['context_data'] = BaseFieldDefinition::create('text_long')
@@ -145,12 +158,12 @@ class PipelineRun extends ContentEntityBase {
       ->setDescription(t('The context data passed between steps during execution.'))
       ->setDisplayOptions('form', [
         'type' => 'text_textarea',
-        'weight' => 7,
+        'weight' => 8,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'text_default',
-        'weight' => 7,
+        'weight' => 8,
       ]);
 
     $fields['triggered_by'] = BaseFieldDefinition::create('list_string')
@@ -165,12 +178,12 @@ class PipelineRun extends ContentEntityBase {
       ->setDefaultValue('manual')
       ->setDisplayOptions('form', [
         'type' => 'options_select',
-        'weight' => 7,
+        'weight' => 9,
       ])
       ->setDisplayOptions('view', [
         'label' => 'inline',
         'type' => 'list_default',
-        'weight' => 7,
+        'weight' => 9,
       ]);
 
     return $fields;
@@ -211,6 +224,15 @@ class PipelineRun extends ContentEntityBase {
 
   public function setEndTime($end_time) {
     $this->set('end_time', $end_time);
+    return $this;
+  }
+
+  public function getDuration() {
+    return $this->get('duration')->value;
+  }
+
+  public function setDuration($duration) {
+    $this->set('duration', $duration);
     return $this;
   }
 
@@ -263,19 +285,17 @@ class PipelineRun extends ContentEntityBase {
   }
 
   /**
-   * Get the duration of the pipeline run in seconds.
-   *
-   * @return int|null
-   *   The duration in seconds, or null if start_time or end_time is not set.
+   * {@inheritdoc}
    */
-  public function getDuration() {
+  public function preSave(EntityStorageInterface $storage) {
+    parent::preSave($storage);
+
     $start_time = $this->get('start_time')->value;
     $end_time = $this->get('end_time')->value;
 
     if ($start_time && $end_time) {
-      return $end_time - $start_time;
+      $duration = $end_time - $start_time;
+      $this->set('duration', $duration);
     }
-
-    return null;
   }
 }

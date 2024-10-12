@@ -172,6 +172,14 @@ class PipelineEditForm extends PipelineFormBase {
         ];
         $step_number++;
       }
+    }  elseif ($route_name == 'entity.pipeline.edit_runs') { // TAB for list execution result
+      // Runs tab
+      $form['runs'] = [
+        '#type' => 'view',
+        '#name' => 'pipeline_runs',
+        '#display_id' => 'embed_1',
+        '#arguments' => [$this->entity->id()],
+      ];
     }
 
     $form['#attributes']['data-action-url'] = $this->entity->toUrl('edit-form')->toString();

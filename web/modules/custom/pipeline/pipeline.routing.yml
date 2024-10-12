@@ -262,3 +262,13 @@ pipeline.google_settings:
     _title: 'Google Search Settings'
   requirements:
     _permission: 'administer pipeline settings'
+
+entity.pipeline.edit_runs:
+  path: '/admin/structure/pipelines/{pipeline}/runs'
+  defaults:
+    _form: '\Drupal\pipeline\Form\PipelineRunsForm'
+    _title_callback: '\Drupal\pipeline\Form\PipelineRunsForm::getTitle'
+  requirements:
+    _permission: 'administer pipelines'
+  options:
+    _admin_route: TRUE

@@ -45,3 +45,9 @@ action_config.delete:
   route_name: entity.action_config.delete_form
   title: 'Delete'
   base_route: entity.action_config.canonical
+
+entity.pipeline.edit_runs:
+  route_name: entity.pipeline.edit_runs
+  title: 'Execution history'
+  base_route: entity.pipeline.edit_form
+  weight: 20
