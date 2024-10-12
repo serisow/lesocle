@@ -19,8 +19,9 @@
 <table>
   <thead>
   <tr>
-    <th>{{ 'Step'|t }}</th>
     <th>{{ 'Description'|t }}</th>
+    <th>{{ 'Step Type'|t }}</th>
+    <th>{{ 'Additional Info'|t }}</th>
     <th>{{ 'Status'|t }}</th>
     <th>{{ 'Duration'|t }}</th>
     <th>{{ 'Data'|t }}</th>
@@ -29,8 +30,9 @@
   <tbody>
   {% for step_uuid, step in steps %}
     <tr>
-      <td>{{ step.step_type }}</td>
       <td>{{ step.step_description }}</td>
+      <td>{{ step.step_type }}</td>
+      <td>{{ step.additional_info }}</td>
       <td>{{ step.status }}</td>
       <td>{{ step.duration }} {{ 'seconds'|t }}</td>
       <td>

@@ -78,7 +78,7 @@ class PipelineExecutionController extends ControllerBase {
           'status' => $result['status'] ?? 'completed',
           'start_time' => $start_time,
           'end_time' => $end_time,
-          'duration' => $duration,
+          'duration' => $end_time - $start_time,
           'step_type' => $step_type->getPluginId(),
           'sequence' => $step_type->getWeight(),
           'data' => $result['data'],

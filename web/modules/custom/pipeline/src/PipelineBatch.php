@@ -31,7 +31,7 @@ class PipelineBatch {
         $step_info = self::getStepInfo($step_type, $config);
 
         $result = $step_type->execute($context);
-        $step_result['status'] = 'success';
+        $step_result['status'] = 'completed';
         $step_result['data'] = $result;
 
         $context['message'] = t('Processed step: @step @info', [
