@@ -6,9 +6,12 @@ dependencies:
     - taxonomy.vocabulary.tags
   module:
     - contextual
+    - entity_clone
     - file
     - node
     - path
+    - pipeline
+    - pipeline_run
     - system
     - taxonomy
     - toolbar
@@ -23,8 +26,17 @@ permissions:
   - 'access content overview'
   - 'access contextual links'
   - 'access files overview'
+  - 'access pipeline api'
   - 'access toolbar'
+  - 'administer action config'
+  - 'administer pipeline runs'
+  - 'administer pipeline settings'
+  - 'administer pipelines'
+  - 'administer prompt templates'
   - 'administer url aliases'
+  - 'clone llm_config entity'
+  - 'clone pipeline entity'
+  - 'clone prompt_template entity'
   - 'create terms in tags'
   - 'create url aliases'
   - 'delete own files'
@@ -32,4 +44,5 @@ permissions:
   - 'revert all revisions'
   - 'view all revisions'
   - 'view own unpublished content'
+  - 'view pipeline runs'
   - 'view the administration theme'

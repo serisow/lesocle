@@ -46,6 +46,17 @@ action_config.delete:
   title: 'Delete'
   base_route: entity.action_config.canonical
 
+
+prompt_template.edit:
+  route_name: entity.prompt_template.edit_form
+  title: 'Edit'
+  base_route: entity.prompt_template.canonical
+
+prompt_template.delete:
+  route_name: entity.prompt_template.delete_form
+  title: 'Delete'
+  base_route: entity.prompt_template.canonical
+
 entity.pipeline.edit_runs:
   route_name: entity.pipeline.edit_runs
   title: 'Execution history'

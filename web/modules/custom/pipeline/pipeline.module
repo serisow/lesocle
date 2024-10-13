@@ -69,20 +69,20 @@ function pipeline_toolbar() {
         '#theme' => 'links__toolbar_pipeline',
         '#links' => [
           'pipelines' => [
-            'title' => t('All pipelines'),
+            'title' => t('Pipelines'),
             'url' => Url::fromRoute('entity.pipeline.collection'),
           ],
-          'add_pipeline' => [
-            'title' => t('Add Pipeline'),
-            'url' => Url::fromRoute('entity.pipeline.add_form'),
+          'llm_config' => [
+            'title' => t('LLM Configuration'),
+            'url' => Url::fromRoute('entity.llm_config.collection'),
           ],
           'action_config' => [
             'title' => t('Action Config'),
             'url' => Url::fromRoute('entity.action_config.collection'),
           ],
-          'llm_config' => [
-            'title' => t('LLM Configuration'),
-            'url' => Url::fromRoute('entity.llm_config.collection'),
+          'prompt_template' => [
+            'title' => t('Prompt templates'),
+            'url' => Url::fromRoute('entity.prompt_template.collection'),
           ],
           'pipeline_settings' => [
             'title' => t('General settings'),

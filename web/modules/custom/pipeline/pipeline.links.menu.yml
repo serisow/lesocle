@@ -25,3 +25,10 @@ pipeline.action_config_list:
   parent: system.admin_config
   route_name: entity.action_config.collection
   weight: -7
+
+pipeline.prompt_template_list:
+  title: 'Prompt Template'
+  description: 'Manage configurations for Actions'
+  parent: system.admin_config
+  route_name: entity.prompt_template.collection
+  weight: -7

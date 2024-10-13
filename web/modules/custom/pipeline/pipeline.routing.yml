@@ -224,6 +224,54 @@ entity.action_config.delete_form:
   requirements:
     _permission: 'administer action config'
 
+
+
+# Prompt Template routes
+entity.prompt_template.canonical:
+  path: '/admin/config/pipeline/prompt-templates/{prompt_template}'
+  defaults:
+    _entity_view: 'prompt_template.full'
+    _title: 'Prompt Template'
+  requirements:
+    _permission: 'administer prompt templates'
+  options:
+    parameters:
+      prompt_template:
+        type: entity:prompt_template
+
+entity.prompt_template.collection:
+  path: '/admin/config/pipeline/prompt-templates'
+  defaults:
+    _entity_list: 'prompt_template'
+    _title: 'Prompt Templates'
+  requirements:
+    _permission: 'administer prompt templates'
+
+entity.prompt_template.add_form:
+  path: '/admin/config/pipeline/prompt-templates/add'
+  defaults:
+    _entity_form: 'prompt_template.add'
+    _title: 'Add Prompt Template'
+  requirements:
+    _permission: 'administer prompt templates'
+
+entity.prompt_template.edit_form:
+  path: '/admin/config/pipeline/prompt-templates/{prompt_template}/edit'
+  defaults:
+    _entity_form: 'prompt_template.edit'
+    _title: 'Edit Prompt Template'
+  requirements:
+    _permission: 'administer prompt templates'
+
+entity.prompt_template.delete_form:
+  path: '/admin/config/pipeline/prompt-templates/{prompt_template}/delete'
+  defaults:
+    _entity_form: 'prompt_template.delete'
+    _title: 'Delete Prompt Template'
+  requirements:
+    _permission: 'administer prompt templates'
+
+
 pipeline.api.scheduled:
   path: '/api/pipelines/scheduled'
   defaults:

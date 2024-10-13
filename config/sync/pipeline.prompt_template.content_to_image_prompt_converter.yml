@@ -1,0 +1,9 @@
+uuid: b377273a-eda1-4be9-93d3-df2ec0e05987
+langcode: en
+status: true
+dependencies: {  }
+id: content_to_image_prompt_converter
+label: 'Content to Image Prompt Converter'
+description: 'Create a prompt for image generator model like dalle-e-3  from a lenghty content'
+template: "From the following given text about climate change, craft a prompt for an LLM to generate an image which captures the essence of the text.\r\nMake it short between 100 or 200 characters.\r\nThe image should be clean; don't try to make a caption.\r\nHere is the text:\r\n\r\n####\r\n\r\n{step2}\r\n\r\n####\" \r\n"
+output_format: text

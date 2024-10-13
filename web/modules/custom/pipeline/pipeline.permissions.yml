@@ -10,6 +10,10 @@ administer action config:
   title: 'Administer Action Configurations'
   description: 'Create, edit, and delete action configurations.'
 
+administer prompt templates:
+  title: 'Administer Prompt templates'
+  description: 'Create, edit, and delete Prompt templates configurations.'
+
 access pipeline api:
   title: 'Access Pipeline API'
   description: 'Allow access to the Pipeline API endpoints'

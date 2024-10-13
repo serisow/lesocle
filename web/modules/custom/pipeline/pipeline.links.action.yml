@@ -13,7 +13,7 @@ pipeline.pipeline_export:
     - entity.pipeline.edit_questions
     - entity.pipeline.participants
 
-
+#### LLM CONFIG
 llm_config.add:
   route_name: entity.llm_config.add_form
   title: 'Add LLM Configuration'
@@ -30,6 +30,7 @@ llm_config.delete:
   title: 'Delete'
   base_route: entity.llm_config.canonical
 
+#### ACTION CONFIG
 action_config.add:
   route_name: entity.action_config.add_form
   title: 'Add Action Configuration'
@@ -45,3 +46,22 @@ action_config.delete:
   route_name: entity.action_config.delete_form
   title: 'Delete'
   base_route: entity.action_config.canonical
+
+
+#### PROMPT TEMPLATE CONFIG
+
+prompt_template.add:
+  route_name: entity.prompt_template.add_form
+  title: 'Add Prompt template'
+  appears_on:
+    - entity.prompt_template.collection
+
+prompt_template.edit:
+  route_name: entity.prompt_template.edit_form
+  title: 'Edit'
+  base_route: entity.prompt_template.canonical
+
+prompt_template.delete:
+  route_name: entity.prompt_template.delete_form
+  title: 'Delete'
+  base_route: entity.prompt_template.canonical
