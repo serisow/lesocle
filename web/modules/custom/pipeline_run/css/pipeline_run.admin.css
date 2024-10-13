@@ -1,0 +1,27 @@
+pre code.json {
+  display: block;
+  background-color: #f4f4f4;
+  border: 1px solid #ddd;
+  padding: 10px;
+  max-height: 300px;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.pipeline-step-status {
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+
+.pipeline-step-status--completed {
+  color: #28a745;
+}
+
+.pipeline-step-status--failed {
+  background-color: #fce7e7;
+  color: #dc3545;
+}

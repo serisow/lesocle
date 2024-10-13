@@ -1,18 +1,4 @@
-<style>
-  pre code.json {
-    display: block;
-    background-color: #f4f4f4;
-    border: 1px solid #ddd;
-    padding: 10px;
-    max-height: 300px;
-    overflow: auto;
-    font-family: monospace;
-    font-size: 14px;
-    line-height: 1.4;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-  }
-</style>
+{{ attach_library('pipeline_run/admin') }}
 
 <h2>{{ 'Steps for Pipeline Run @id'|t({'@id': pipeline_run.label}) }}</h2>
 
@@ -33,7 +19,7 @@
       <td>{{ step.step_description }}</td>
       <td>{{ step.step_type }}</td>
       <td>{{ step.additional_info }}</td>
-      <td>{{ step.status }}</td>
+      <td class="pipeline-step-status pipeline-step-status--{{ step.status|clean_class }}">{{ step.status }}</td>
       <td>{{ step.duration }} {{ 'seconds'|t }}</td>
       <td>
         <details>
