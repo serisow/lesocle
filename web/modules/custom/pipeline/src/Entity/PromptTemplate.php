@@ -77,6 +77,13 @@ class PromptTemplate extends ConfigEntityBase {
    */
   protected $output_format;
 
+  /**
+   * {@inheritdoc}
+   */
+  public function label() {
+    return $this->label;
+  }
+
   public function getDescription() {
     return $this->description;
   }

@@ -61,7 +61,6 @@ abstract class PipelineStepTypeFormBase extends FormBase {
 
     $form['#attached']['library'][] = 'pipeline/admin';
     $form['#attached']['library'][] = 'pipeline/step_type_modal';
-    $form['#attributes']['class'][] = 'step-type-form';
     $form['#attached']['drupalSettings']['pipelineEditUrl'] = $this->pipeline->toUrl('edit-form')->toString();
 
     $form['id'] = [

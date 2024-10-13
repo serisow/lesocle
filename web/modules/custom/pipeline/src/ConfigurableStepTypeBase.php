@@ -58,8 +58,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
     $form['required_steps'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Required Steps'),
-      '#description' => $this->t('List the output keys of preceding steps that this step depends on, one per line. This step will have access to the results of these steps when executing.'),
-      '#default_value' => is_array($this->configuration['required_steps'])
+      '#description' => $this->t('List the output keys of previous steps that this step needs. Each key on a new line. These become available as {key} in your prompt.'),      '#default_value' => is_array($this->configuration['required_steps'])
         ? implode("\r\n", $this->configuration['required_steps'])
         : $this->configuration['required_steps'],
       '#required' => FALSE,
@@ -69,7 +68,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
     $form['step_output_key'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Output Key'),
-      '#description' => $this->t('Enter a unique identifier for this step\'s output. Other steps can use this key to reference this output.'),
+      '#description' => $this->t('Give this step\'s output a unique name. Other steps can use this name to access the result of this step.'),
       '#default_value' => $this->configuration['step_output_key'],
       '#required' => FALSE,
       '#weight' => 1

@@ -320,3 +320,14 @@ entity.pipeline.edit_runs:
     _permission: 'administer pipelines'
   options:
     _admin_route: TRUE
+
+pipeline.update_prompt:
+  path: '/admin/structure/pipelines/{pipeline}/update-prompt/{step_type}'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\PipelineStepTypeController::updatePrompt'
+  requirements:
+    _permission: 'administer pipelines'
+  options:
+    parameters:
+      pipeline:
+        type: entity:pipeline

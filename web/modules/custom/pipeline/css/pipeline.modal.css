@@ -1,10 +1,13 @@
 /* Modal styles */
 .ui-dialog {
   position: fixed !important;
-  top: 1% !important;
+  top: 2px !important;
+  bottom: 5px !important;
   left: 50% !important;
   transform: translateX(-50%);
-  max-height: 95vh;
+  width: 70% !important; /* Increase width */
+  max-width: 700px; /* Set a maximum width */
+  max-height: 100vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -28,13 +31,13 @@
 }
 
 .ui-dialog-content {
-  max-height: none !important; /* Remove this line */
+  max-height: 100vh !important; /* Increase content area height */
   overflow-y: visible;
   flex-grow: 1;
 }
 
 .ui-dialog .ui-dialog-content {
-  padding: 15px 20px;
+  padding: 10px 20px;
 }
 
 .ui-dialog .form-item {
@@ -45,6 +48,11 @@
   font-weight: 500;
   margin-bottom: 5px;
   display: block;
+}
+
+.ui-dialog .form-item__description {
+  max-width: none;
+  width: 100%;
 }
 
 .ui-dialog input[type="text"],
@@ -208,7 +216,7 @@
 }
 
 .form-textarea-wrapper textarea {
-  min-height: 100px;
+  min-height: 150px;
 }
 
 .step-text-area {

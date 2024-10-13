@@ -12,6 +12,7 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Url;
 use Drupal\pipeline\Entity\PipelineInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -150,5 +151,19 @@ class PipelineStepTypeController extends ControllerBase implements ContainerInje
     }
 
     return $response;
+  }
+
+  public function updatePrompt(Request $request, PipelineInterface $pipeline, $step_type) {
+    $prompt_template_id = $request->request->get('prompt_template_id');
+
+    if ($prompt_template_id) {
+      $prompt_template = $this->entityTypeManager()->getStorage('prompt_template')->load($prompt_template_id);
+      if ($prompt_template) {
+        $prompt = $prompt_template->getTemplate();
+        return new JsonResponse(['prompt' => $prompt]);
+      }
+    }
+
+    return new JsonResponse(['error' => 'Prompt template not found'], 404);
   }
 }

@@ -114,6 +114,38 @@
           });
         });
 
+        // Handle prompt template selection
+        $(element).on('autocompleteclose', 'input[name="data[prompt_template]"]', function (event) {
+          var $input = $(this);
+          var $form = $input.closest('form');
+          var pipelineId = drupalSettings.pipelineId;
+          var stepType = $form.find('input[name="step_type"]').val();
+          var inputValue = $input.val();
+
+          // Extract the entity ID from the input value
+          var promptTemplateId = inputValue.match(/\((.*?)\)$/);
+          promptTemplateId = promptTemplateId ? promptTemplateId[1] : inputValue;
+
+          if (promptTemplateId) {
+            $.ajax({
+              url: drupalSettings.path.baseUrl + 'admin/structure/pipelines/' + pipelineId + '/update-prompt/' + stepType,
+              type: 'POST',
+              data: {
+                prompt_template_id: promptTemplateId
+              },
+              dataType: 'json',
+              success: function (response) {
+                if (response.prompt) {
+                  $form.find('textarea[name="data[prompt]"]').val(response.prompt);
+                }
+              },
+              error: function (jqXHR, textStatus, errorThrown) {
+                console.error('AJAX error:', textStatus, errorThrown);
+              }
+            });
+          }
+        });
+
       });
     },
 
