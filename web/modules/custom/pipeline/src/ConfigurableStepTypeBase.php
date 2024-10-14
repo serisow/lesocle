@@ -85,13 +85,6 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       '#weight' => 2,
     ];
 
-    $form['response'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Response'),
-      '#default_value' => $this->configuration['response'],
-      '#disabled' => TRUE,
-      '#weight' => 4
-    ];
     return $this->additionalConfigurationForm($form, $form_state);
   }
 
@@ -110,7 +103,6 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
     $this->configuration['step_description'] = $form_state->getValue('step_description');
     $this->configuration['step_output_key'] = $form_state->getValue('step_output_key');
     $this->configuration['output_type'] = $form_state->getValue('output_type');
-    $this->configuration['response'] = $form_state->getValue('response');
     $required_steps = $form_state->getValue(['data', 'required_steps']);
     $this->configuration['required_steps'] = array_filter(explode("\r\n", $required_steps));
     $this->additionalSubmitConfigurationForm($form, $form_state);

@@ -23,7 +23,6 @@ class LLMStep extends AbstractLLMStepType {
   protected function additionalDefaultConfiguration() {
     return [
       'prompt' => '',
-      'response' => '',
       'prompt_template' => '',
     ];
   }

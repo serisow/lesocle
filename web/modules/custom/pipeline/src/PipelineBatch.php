@@ -39,8 +39,6 @@ class PipelineBatch {
           '@info' => $step_info,
         ]);
 
-        // Save the updated pipeline
-        //$pipeline->save();
       } catch (\Exception $e) {
         $step_result['status'] = 'failed';
         $step_result['error_message'] = $e->getMessage();

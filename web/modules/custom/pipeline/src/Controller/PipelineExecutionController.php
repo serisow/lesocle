@@ -112,9 +112,6 @@ class PipelineExecutionController extends ControllerBase {
 
         $step_results[$step_uuid] = $step_result;
         $context['results'][$step_uuid] = $step_result;
-        $config['data']['response'] = $result['data'];
-        $step_type->setConfiguration($config);
-
 
         // Handle featured image
         if ($result['output_type'] === 'featured_image') {
@@ -122,10 +119,8 @@ class PipelineExecutionController extends ControllerBase {
           $step_result['data'] = $image_data;
           $step_results[$step_uuid] = $step_result;
           $context['results'][$step_uuid]['data'] = $image_data;
-          $config['data']['response'] = $image_data;
         }
 
-        $step_type->setConfiguration($config);
       }
     }
     if ( $pipeline_run->get('status')->value !== 'failed') {

@@ -109,31 +109,6 @@ pipeline.step_type_ajax:
         type: entity:pipeline
 
 
-pipeline.add_multiple_choice_option:
-  path: '/admin/structure/pipelines/{pipeline}/add-multiple-choice-option'
-  defaults:
-    _controller: '\Drupal\pipeline\Controller\MultipleChoiceController::addMultipleChoiceOption'
-  requirements:
-    _permission: 'administer pipelines'
-  options:
-    parameters:
-      pipeline:
-        type: entity:pipeline
-
-# When use add a new option in the modal, input tex, when the input focus left,
-# the onchange event fire, this route is hit
-pipeline.step_type_on_option_change:
-  path: '/admin/structure/pipelines/{pipeline}/step-type-onchange-input/{step_type}'
-  defaults:
-    _controller: '\Drupal\pipeline\Controller\MultipleChoiceController::handleOnInputChange'
-    step_type: null
-  requirements:
-    _permission: 'administer pipelines'
-  options:
-    parameters:
-      pipeline:
-        type: entity:pipeline
-
 
 # LLM CONFIG routes
 entity.llm_config.canonical:
