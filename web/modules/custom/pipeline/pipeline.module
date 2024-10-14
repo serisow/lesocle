@@ -84,10 +84,6 @@ function pipeline_toolbar() {
             'title' => t('Prompt templates'),
             'url' => Url::fromRoute('entity.prompt_template.collection'),
           ],
-          'pipeline_settings' => [
-            'title' => t('General settings'),
-            'url' => Url::fromRoute('pipeline.settings'),
-          ],
           'custom_google_search_settings' => [
             'title' => t('Custom Google Search'),
             'url' => Url::fromRoute('pipeline.google_settings'),

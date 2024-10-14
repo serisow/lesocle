@@ -135,15 +135,6 @@ pipeline.step_type_on_option_change:
         type: entity:pipeline
 
 
-pipeline.settings:
-  path: '/admin/config/pipeline/settings'
-  defaults:
-    _form: '\Drupal\pipeline\Form\PipelineSettingsForm'
-    _title: 'Pipeline Settings'
-  requirements:
-    _permission: 'administer pipeline settings'
-
-
 # LLM CONFIG routes
 entity.llm_config.canonical:
   path: '/admin/config/llm/{llm_config}'
