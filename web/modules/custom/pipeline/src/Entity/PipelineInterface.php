@@ -189,4 +189,58 @@ interface PipelineInterface extends ConfigEntityInterface {
    * @return $this
    */
   public function setScheduledTime($timestamp);
+
+  /**
+   * Gets the schedule type.
+   *
+   * @return string
+   *   The schedule type.
+   */
+  public function getScheduleType();
+
+  /**
+   * Sets the schedule type.
+   *
+   * @param string $schedule_type
+   *   The schedule type.
+   *
+   * @return $this
+   */
+  public function setScheduleType($schedule_type);
+
+  /**
+   * Gets the recurring frequency.
+   *
+   * @return string
+   *   The recurring frequency.
+   */
+  public function getRecurringFrequency();
+
+  /**
+   * Sets the recurring frequency.
+   *
+   * @param string $recurring_frequency
+   *   The recurring frequency.
+   *
+   * @return $this
+   */
+  public function setRecurringFrequency($recurring_frequency);
+
+  /**
+   * Gets the recurring time.
+   *
+   * @return string
+   *   The recurring time.
+   */
+  public function getRecurringTime();
+
+  /**
+   * Sets the recurring time.
+   *
+   * @param string $recurring_time
+   *   The recurring time.
+   *
+   * @return $this
+   */
+  public function setRecurringTime($recurring_time);
 }

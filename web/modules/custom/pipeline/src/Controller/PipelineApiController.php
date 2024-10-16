@@ -58,24 +58,93 @@ class PipelineApiController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   A JSON response containing scheduled pipelines.
    */
+  /**
+   * Returns a list of scheduled pipelines.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   A JSON response containing scheduled pipelines.
+   */
+
   public function getScheduledPipelines() {
     $pipeline_storage = $this->entityTypeManager->getStorage('pipeline');
+    $pipeline_run_storage = $this->entityTypeManager->getStorage('pipeline_run');
 
-    // Query for enabled pipelines with scheduled times
+    $current_date = new \DateTime('now', new \DateTimeZone('UTC'));
+    $start_of_day = $current_date->setTime(0, 0, 0)->getTimestamp();
+    $start_of_next_day = $current_date->modify('+1 day')->getTimestamp();
+
+    // Query for enabled pipelines with any type of schedule
     $query = $pipeline_storage->getQuery()
+      ->accessCheck()
       ->condition('status', TRUE)
-      ->condition('scheduled_time', 0, '>')
-      ->sort('scheduled_time', 'ASC');
+      ->condition('schedule_type', ['one_time', 'recurring'], 'IN');
+
+    // Add condition for one-time schedules to be within the current day
+    $query->condition(
+      $query->orConditionGroup()
+        ->condition(
+          $query->andConditionGroup()
+            ->condition('schedule_type', 'one_time')
+            ->condition('scheduled_time', $start_of_day, '>=')
+            ->condition('scheduled_time', $start_of_next_day, '<')
+        )
+        ->condition('schedule_type', 'recurring')
+    );
+
+    $query->sort('scheduled_time', 'ASC');
     $pipeline_ids = $query->execute();
 
     $scheduled_pipelines = [];
     foreach ($pipeline_ids as $id) {
       $pipeline = $pipeline_storage->load($id);
-      $scheduled_pipelines[] = [
+
+      // Fetch the most recent pipeline run
+      $last_run_query = $pipeline_run_storage->getQuery()
+        ->accessCheck()
+        ->condition('pipeline_id', $pipeline->id())
+        ->condition('status', 'completed')
+        ->sort('end_time', 'DESC')
+        ->range(0, 1);
+      $last_run_ids = $last_run_query->execute();
+
+      $last_run_time = 0;
+      if (!empty($last_run_ids)) {
+        $last_run = $pipeline_run_storage->load(reset($last_run_ids));
+        $last_run_time = (int) $last_run->getEndTime();
+      }
+
+      $scheduled_pipeline = [
         'id' => $pipeline->id(),
-        'scheduled_time' => $pipeline->getScheduledTime(),
+        'label' => $pipeline->label(),
+        'schedule_type' => $pipeline->getScheduleType(),
+        'last_run_time' => $last_run_time,
       ];
+
+      switch ($pipeline->getScheduleType()) {
+        case 'one_time':
+          $scheduled_pipeline['scheduled_time'] = $pipeline->getScheduledTime();
+          break;
+        case 'recurring':
+          $scheduled_pipeline['recurring_frequency'] = $pipeline->getRecurringFrequency();
+          $scheduled_pipeline['recurring_time'] = $pipeline->getRecurringTime();
+          break;
+      }
+
+      $scheduled_pipelines[] = $scheduled_pipeline;
     }
+
+    // Debug: Log query parameters and result
+    \Drupal::logger('pipeline')->debug('Scheduled pipelines query executed with parameters: @params', [
+      '@params' => json_encode([
+        'start_of_day' => $start_of_day,
+        'start_of_next_day' => $start_of_next_day,
+        'pipeline_ids' => $pipeline_ids,
+      ]),
+    ]);
+
+    \Drupal::logger('pipeline')->debug('Scheduled pipelines result: @result', [
+      '@result' => json_encode($scheduled_pipelines),
+    ]);
 
     return new JsonResponse($scheduled_pipelines);
   }
@@ -103,9 +172,19 @@ class PipelineApiController extends ControllerBase {
       'instructions' => $pipeline->getInstructions(),
       'created' => $pipeline->getCreatedTime(),
       'changed' => $pipeline->getChangedTime(),
-      'scheduled_time' => $pipeline->getScheduledTime(),
+      'schedule_type' => $pipeline->getScheduleType(),
       'steps' => [],
     ];
+
+    switch ($pipeline->getScheduleType()) {
+      case 'one_time':
+        $pipeline_data['scheduled_time'] = $pipeline->getScheduledTime();
+        break;
+      case 'recurring':
+        $pipeline_data['recurring_frequency'] = $pipeline->getRecurringFrequency();
+        $pipeline_data['recurring_time'] = $pipeline->getRecurringTime();
+        break;
+    }
 
     foreach ($pipeline->getStepTypes() as $step_type) {
       $step_data = [
@@ -127,7 +206,6 @@ class PipelineApiController extends ControllerBase {
         switch ($step_data['type']) {
           case 'llm_step':
             $step_data['prompt'] = $configuration['data']['prompt'] ?? '';
-            $step_data['response'] = $configuration['data']['response'] ?? '';
             $step_data['llm_config'] = $configuration['data']['llm_config'] ?? '';
 
             if (isset($configuration['data']['llm_config'])) {
@@ -172,31 +250,5 @@ class PipelineApiController extends ControllerBase {
 
     return new JsonResponse($pipeline_data);
   }
-  /**
-   * Cleans the step configuration for API output.
-   *
-   * @param array $configuration
-   *   The step configuration array.
-   *
-   * @return array
-   *   The cleaned configuration array.
-   */
-  protected function cleanStepConfiguration(array $configuration) {
-    // Remove internal Drupal keys
-    unset($configuration['id']);
-    unset($configuration['uuid']);
-    unset($configuration['weight']);
 
-    // Clean the data array
-    if (isset($configuration['data'])) {
-      // Remove any sensitive information
-      unset($configuration['data']['api_key']);
-
-      // Flatten the data array for easier consumption
-      $configuration = array_merge($configuration, $configuration['data']);
-      unset($configuration['data']);
-    }
-
-    return $configuration;
-  }
 }

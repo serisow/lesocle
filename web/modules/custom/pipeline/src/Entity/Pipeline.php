@@ -43,7 +43,10 @@ use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
  *     "langcode",
  *     "created",
  *     "changed",
- *     "scheduled_time"
+ *     "scheduled_time",
+ *     "schedule_type",
+ *     "recurring_frequency",
+ *     "recurring_time"
  *   }
  * )
  */
@@ -86,6 +89,27 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    * @var int
    */
   protected $scheduled_time;
+
+  /**
+   * The schedule type.
+   *
+   * @var string
+   */
+  protected $schedule_type = 'none';
+
+  /**
+   * The recurring frequency.
+   *
+   * @var string
+   */
+  protected $recurring_frequency;
+
+  /**
+   * The recurring time.
+   *
+   * @var string
+   */
+  protected $recurring_time;
 
   /**
    * The pipeline status.
@@ -321,4 +345,50 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
      $this->scheduled_time = $timestamp;
      return $this;
    }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getScheduleType() {
+    return $this->schedule_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setScheduleType($schedule_type) {
+    $this->schedule_type = $schedule_type;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRecurringFrequency() {
+    return $this->recurring_frequency;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRecurringFrequency($recurring_frequency) {
+    $this->recurring_frequency = $recurring_frequency;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRecurringTime() {
+    return $this->recurring_time;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setRecurringTime($recurring_time) {
+    $this->recurring_time = $recurring_time;
+    return $this;
+  }
+
 }

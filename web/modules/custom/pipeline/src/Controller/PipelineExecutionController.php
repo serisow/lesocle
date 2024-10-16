@@ -97,7 +97,7 @@ class PipelineExecutionController extends ControllerBase {
             try {
               $action_result = $action_service->executeAction($action_config->toArray(), $context);
               $step_result['data'] = $action_result;
-              $step_result['status'] = 'success';
+              $step_result['status'] = 'completed';
 
             }
             catch (\Exception $e) {
