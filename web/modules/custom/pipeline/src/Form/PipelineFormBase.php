@@ -48,14 +48,20 @@ abstract class PipelineFormBase extends EntityForm {
     );
   }
 
+
+  /**
+   * {@inheritdoc}
+   */
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
+
     $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Pipeline name'),
       '#default_value' => $this->entity->label(),
       '#required' => TRUE,
     ];
+
     $form['id'] = [
       '#type' => 'machine_name',
       '#machine_name' => [
@@ -65,6 +71,7 @@ abstract class PipelineFormBase extends EntityForm {
       '#required' => TRUE,
       '#disabled' => !$this->entity->isNew(),
     ];
+
     $form['instructions'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Pipeline Instructions'),
@@ -90,69 +97,100 @@ abstract class PipelineFormBase extends EntityForm {
       '#wrapper_attributes' => ['class' => ['description']],
     ];
 
-    $form['schedule_type'] = [
+    $form['execution_type'] = [
       '#type' => 'radios',
-      '#title' => $this->t('Schedule Type'),
+      '#title' => $this->t('Execution Type'),
       '#options' => [
-        'none' => $this->t('No schedule'),
-        'one_time' => $this->t('One-time schedule'),
-        'recurring' => $this->t('Recurring schedule'),
+        'scheduled' => $this->t('Scheduled'),
+        'on_demand' => $this->t('Run on-demand through API CALL'),
       ],
-      '#default_value' => $this->entity->getScheduleType() ?? 'none',
+      '#default_value' => $this->entity->get('execution_type') ?? 'scheduled',
+      '#description' => $this->t('Choose how this pipeline should be executed.'),
       '#ajax' => [
-        'callback' => '::updateScheduleForm',
-        'wrapper' => 'schedule-settings',
+        'callback' => '::updateExecutionTypeForm',
+        'wrapper' => 'execution-settings',
+        'event' => 'change',
       ],
     ];
 
-    $form['schedule_settings'] = [
+    $form['execution_settings'] = [
       '#type' => 'container',
-      '#attributes' => ['id' => 'schedule-settings'],
+      '#attributes' => ['id' => 'execution-settings'],
     ];
 
-    $schedule_type = $form_state->getValue('schedule_type') ?? $this->entity->getScheduleType() ?? 'none';
+    $execution_type = $form_state->getValue('execution_type') ?? $this->entity->get('execution_type') ?? 'scheduled';
 
-    if ($schedule_type == 'one_time') {
-      $form['schedule_settings']['one_time'] = [
-        '#type' => 'datetime',
-        '#title' => $this->t('Schedule Execution'),
-        '#default_value' => $this->entity->getScheduledTime() ? DrupalDateTime::createFromTimestamp($this->entity->getScheduledTime()) : NULL,
-        '#date_time_element' => 'time',
-      ];
-    } elseif ($schedule_type == 'recurring') {
-      $form['schedule_settings']['recurring'] = [
-        '#type' => 'fieldset',
-        '#title' => $this->t('Recurring Schedule'),
-      ];
-      $form['schedule_settings']['recurring']['frequency'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Frequency'),
+    if ($execution_type == 'scheduled') {
+      $form['execution_settings']['schedule_type'] = [
+        '#type' => 'radios',
+        '#title' => $this->t('Schedule Type'),
         '#options' => [
-          'daily' => $this->t('Daily'),
-          'weekly' => $this->t('Weekly'),
-          'monthly' => $this->t('Monthly'),
+          'none' => $this->t('No schedule'),
+          'one_time' => $this->t('One-time schedule'),
+          'recurring' => $this->t('Recurring schedule'),
         ],
-        '#default_value' => $this->entity->getRecurringFrequency() ?? 'daily',
+        '#default_value' => $this->entity->getScheduleType() ?? 'none',
+        '#ajax' => [
+          'callback' => '::updateScheduleForm',
+          'wrapper' => 'schedule-settings',
+          'event' => 'change',
+        ],
       ];
 
-      $hours = range(0, 23);
-      $minutes = range(0, 59);
-
-      $default_time = $this->entity->getRecurringTime() ?? '00:00';
-      list($default_hour, $default_minute) = explode(':', $default_time);
-
-      $form['schedule_settings']['recurring']['time']['hour'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Hour'),
-        '#options' => array_combine($hours, array_map(function($h) { return sprintf('%02d', $h); }, $hours)),
-        '#default_value' => (int) $default_hour,
+      $form['execution_settings']['schedule_settings'] = [
+        '#type' => 'container',
+        '#attributes' => ['id' => 'schedule-settings'],
       ];
 
-      $form['schedule_settings']['recurring']['time']['minute'] = [
-        '#type' => 'select',
-        '#title' => $this->t('Minute'),
-        '#options' => array_combine($minutes, array_map(function($m) { return sprintf('%02d', $m); }, $minutes)),
-        '#default_value' => (int) $default_minute,
+      $schedule_type = $form_state->getValue(['execution_settings', 'schedule_type']) ?? $this->entity->getScheduleType() ?? 'none';
+
+      if ($schedule_type == 'one_time') {
+        $form['execution_settings']['schedule_settings']['one_time'] = [
+          '#type' => 'datetime',
+          '#title' => $this->t('Schedule Execution'),
+          '#default_value' => $this->entity->getScheduledTime() ? DrupalDateTime::createFromTimestamp($this->entity->getScheduledTime()) : NULL,
+          '#date_time_element' => 'time',
+        ];
+      } elseif ($schedule_type == 'recurring') {
+        $form['execution_settings']['schedule_settings']['recurring'] = [
+          '#type' => 'fieldset',
+          '#title' => $this->t('Recurring Schedule'),
+        ];
+        $form['execution_settings']['schedule_settings']['recurring']['frequency'] = [
+          '#type' => 'select',
+          '#title' => $this->t('Frequency'),
+          '#options' => [
+            'daily' => $this->t('Daily'),
+            'weekly' => $this->t('Weekly'),
+            'monthly' => $this->t('Monthly'),
+          ],
+          '#default_value' => $this->entity->getRecurringFrequency() ?? 'daily',
+        ];
+
+        $hours = range(0, 23);
+        $minutes = range(0, 59);
+
+        $default_time = $this->entity->getRecurringTime() ?? '00:00';
+        list($default_hour, $default_minute) = explode(':', $default_time);
+
+        $form['execution_settings']['schedule_settings']['recurring']['time']['hour'] = [
+          '#type' => 'select',
+          '#title' => $this->t('Hour'),
+          '#options' => array_combine($hours, array_map(function($h) { return sprintf('%02d', $h); }, $hours)),
+          '#default_value' => (int) $default_hour,
+        ];
+
+        $form['execution_settings']['schedule_settings']['recurring']['time']['minute'] = [
+          '#type' => 'select',
+          '#title' => $this->t('Minute'),
+          '#options' => array_combine($minutes, array_map(function($m) { return sprintf('%02d', $m); }, $minutes)),
+          '#default_value' => (int) $default_minute,
+        ];
+      }
+    } else {
+      $form['execution_settings']['on_demand_note'] = [
+        '#type' => 'item',
+        '#markup' => $this->t('This pipeline will be executed manually or through an API call.'),
       ];
     }
 
@@ -165,6 +203,21 @@ abstract class PipelineFormBase extends EntityForm {
 
     return $form;
   }
+
+  /**
+   * Ajax callback to update the execution type form.
+   */
+  public function updateExecutionTypeForm(array &$form, FormStateInterface $form_state) {
+    return $form['execution_settings'];
+  }
+
+  /**
+   * AJAX callback for updating the schedule form.
+   */
+  public function updateScheduleForm(array &$form, FormStateInterface $form_state) {
+    return $form['execution_settings']['schedule_settings'];
+  }
+
 
   /**
    * {@inheritdoc}
@@ -188,39 +241,46 @@ abstract class PipelineFormBase extends EntityForm {
     $status = $form_state->getValue(['status_container', 'status']);
     $this->entity->setStatus($status);
 
-    parent::submitForm($form, $form_state);
+    // Set the execution type
+    $execution_type = $form_state->getValue('execution_type');
+    $this->entity->set('execution_type', $execution_type);
 
-    $schedule_type = $form_state->getValue('schedule_type');
-    $this->entity->setScheduleType($schedule_type);
+    if ($execution_type == 'scheduled') {
+      $schedule_type = $form_state->getValue(['execution_settings', 'schedule_type']);
+      $this->entity->setScheduleType($schedule_type);
 
-    if ($schedule_type == 'one_time') {
-      $scheduled_time = $form_state->getValue(['schedule_settings', 'one_time']);
-      $this->entity->setScheduledTime($scheduled_time?->getTimestamp());
-      $this->entity->setRecurringFrequency(NULL);
-      $this->entity->setRecurringTime(NULL);
-    } elseif ($schedule_type == 'recurring') {
-      $frequency = $form_state->getValue(['schedule_settings', 'recurring', 'frequency']);
-      $hour = $form_state->getValue(['schedule_settings', 'recurring', 'time', 'hour']);
-      $minute = $form_state->getValue(['schedule_settings', 'recurring', 'time', 'minute']);
-      $time = sprintf('%02d:%02d', $hour, $minute);
-      $this->entity->setRecurringFrequency($frequency);
-      $this->entity->setRecurringTime($time);
-      $this->entity->setScheduledTime(NULL);
+      if ($schedule_type == 'one_time') {
+        $scheduled_time = $form_state->getValue(['execution_settings', 'schedule_settings', 'one_time']);
+        $this->entity->setScheduledTime($scheduled_time instanceof DrupalDateTime ? $scheduled_time->getTimestamp() : NULL);
+        $this->entity->setRecurringFrequency(NULL);
+        $this->entity->setRecurringTime(NULL);
+      } elseif ($schedule_type == 'recurring') {
+        $frequency = $form_state->getValue(['execution_settings', 'schedule_settings', 'recurring', 'frequency']);
+        $hour = $form_state->getValue(['execution_settings', 'schedule_settings', 'recurring', 'time', 'hour']);
+        $minute = $form_state->getValue(['execution_settings', 'schedule_settings', 'recurring', 'time', 'minute']);
+        $time = sprintf('%02d:%02d', $hour, $minute);
+        $this->entity->setRecurringFrequency($frequency);
+        $this->entity->setRecurringTime($time);
+        $this->entity->setScheduledTime(NULL);
+      } else {
+        // 'none' schedule type
+        $this->entity->setScheduledTime(NULL);
+        $this->entity->setRecurringFrequency(NULL);
+        $this->entity->setRecurringTime(NULL);
+      }
     } else {
+      // For on-demand pipelines, clear all scheduling information
+      $this->entity->setScheduleType(NULL);
       $this->entity->setScheduledTime(NULL);
       $this->entity->setRecurringFrequency(NULL);
       $this->entity->setRecurringTime(NULL);
     }
 
+    parent::submitForm($form, $form_state);
+
     // Save the entity
     $this->entity->save();
   }
 
-  /**
-   * Ajax callback to update the schedule form.
-   */
-  public function updateScheduleForm(array &$form, FormStateInterface $form_state) {
-    return $form['schedule_settings'];
-  }
 
 }

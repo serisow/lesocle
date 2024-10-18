@@ -23,9 +23,21 @@ pipeline.pipeline.*:
     changed:
       type: integer
       label: 'Changed timestamp'
+    execution_type:
+      type: string
+      label: 'Execution Type'
     scheduled_time:
       type: integer
       label: 'Scheduled execution timestamp'
+    schedule_type:
+      type: string
+      label: 'Schedule Type'
+    recurring_frequency:
+      type: string
+      label: 'Recurring Frequency'
+    recurring_time:
+      type: string
+      label: 'Recurring Time'
     step_types:
       type: sequence
       sequence:

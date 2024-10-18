@@ -243,4 +243,20 @@ interface PipelineInterface extends ConfigEntityInterface {
    * @return $this
    */
   public function setRecurringTime($recurring_time);
+
+  /**
+   * Get the execution type.
+   * @return string
+   *   The execution type.
+   */
+  public function getExecutionType();
+
+  /**
+   * Set the execution type.
+   * @param $execution_type
+   *   The execution type.
+   *
+   * @return $this
+   */
+  public function setExecutionType($execution_type);
 }

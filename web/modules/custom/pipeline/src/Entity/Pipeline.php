@@ -46,7 +46,8 @@ use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
  *     "scheduled_time",
  *     "schedule_type",
  *     "recurring_frequency",
- *     "recurring_time"
+ *     "recurring_time",
+ *     "execution_type"
  *   }
  * )
  */
@@ -82,6 +83,12 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    * @var string
    */
   protected $instructions;
+
+  /**
+   * The execution type(the go service can execute scheduled or in-demand pipeline)
+   * @var string
+   */
+  protected $execution_type;
 
   /**
    * The scheduled execution time of the pipeline.
@@ -388,6 +395,21 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    */
   public function setRecurringTime($recurring_time) {
     $this->recurring_time = $recurring_time;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExecutionType() {
+    return $this->execution_type;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setExecutionType($execution_type) {
+    $this->execution_type = $execution_type;
     return $this;
   }
 
