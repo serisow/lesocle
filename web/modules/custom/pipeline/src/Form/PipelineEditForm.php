@@ -86,9 +86,8 @@ class PipelineEditForm extends PipelineFormBase {
         $form['instructions'],
         $form['status_container'],
         $form['langcode'],
-        $form['scheduled_time'],
-        $form['schedule_type'],
-        $form['schedule_settings']
+        $form['execution_settings'],
+        $form['execution_type']
       );
       // Build the list of existing step types for this pipeline.
       $form['step_types'] = [

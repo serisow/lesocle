@@ -15,6 +15,15 @@ use Drupal\Core\Form\FormStateInterface;
  *   label = @Translation("LLM Step"),
  *   description = @Translation("A step to issue LLM API calls.")
  * )
+ *
+ *  For on-demand pipelines with user input:
+ *  - Set the 'Required Steps' field to "user_input".
+ *  - In the 'Prompt' field, use the {user_input} placeholder where you want the
+ *    user's input to be inserted. For example:
+ *    "Generate a summary about: {user_input}"
+ *
+ *  The {user_input} placeholder will be automatically replaced with the actual
+ *  user input provided during on-demand execution.
  */
 class LLMStep extends AbstractLLMStepType {
   /**
