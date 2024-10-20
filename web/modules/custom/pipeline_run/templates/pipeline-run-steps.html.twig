@@ -2,6 +2,8 @@
 
 <h2>{{ 'Steps for Pipeline Run @id'|t({'@id': pipeline_run.label}) }}</h2>
 
+{{ pipeline_edit_link|raw }}
+
 <table>
   <thead>
   <tr>
@@ -24,7 +26,7 @@
       <td>
         <details>
           <summary>{{ 'View Data'|t }}</summary>
-          <pre><code class="json">{{ step.data|json_encode(constant('JSON_PRETTY_PRINT') b-or constant('JSON_UNESCAPED_SLASHES'))|raw }}</code></pre>
+          <pre><code class="json">{{ step.data|escape }}</code></pre>
         </details>
       </td>
     </tr>

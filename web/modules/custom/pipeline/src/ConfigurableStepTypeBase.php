@@ -144,13 +144,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
   protected function additionalSubmitConfigurationForm(array &$form, FormStateInterface $form_state) {}
 
   public function getRequiredSteps(array $config) {
-    $required_steps = [];
-    if (is_string($config['required_steps'])) {
-      $required_steps = [trim($config['required_steps'])];
-    } elseif(is_array($config['required_steps'])) {
-      $required_steps = $config['required_steps'];
-    }
-    return $required_steps;
+    return array_filter(explode("\r\n", $config['required_steps']));
   }
 
 
@@ -162,7 +156,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       'article_content' => $this->t('Article Content'),
       'featured_image' => $this->t('Featured Image'),
       'seo_metadata' => $this->t('SEO Metadata'),
-      // Add more options as needed
+      'taxonomy_term' => $this->t('Taxonomy Term'),
     ];
   }
 }

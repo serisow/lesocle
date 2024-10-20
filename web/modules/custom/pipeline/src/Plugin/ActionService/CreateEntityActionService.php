@@ -168,11 +168,15 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
    */
   public function executeAction(array $config, array &$context): string {
     // Find the article content
+    $taxonomy_data = null;
     $article_content = null;
     foreach ($context['results'] as $step) {
       if ($step['output_type'] === 'article_content') {
         $article_content = $step['data'];
         break;
+      }
+      if ($step['output_type'] === 'taxonomy_term') {
+        $taxonomy_data = $step['data'];
       }
     }
 
@@ -245,6 +249,24 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
     $title = !empty($title) ? $title : 'Untitled Article';
     $title = substr($title, 0, 255);
 
+// Process taxonomy data
+    $selected_terms = [];
+    if ($taxonomy_data) {
+      // Remove any potential JSON code block markers
+      $taxonomy_data = preg_replace('/^```json\s*|\s*```$/s', '', $taxonomy_data);
+      $taxonomy_data = trim($taxonomy_data);
+
+      $taxonomy_content = json_decode($taxonomy_data, true);
+
+      if (json_last_error() === JSON_ERROR_NONE && isset($taxonomy_content['selected_terms']) && is_array($taxonomy_content['selected_terms'])) {
+        foreach ($taxonomy_content['selected_terms'] as $tid) {
+          if (is_numeric($tid)) {
+            $selected_terms[] = ['target_id' => (int)$tid];
+          }
+        }
+      }
+    }
+
     $node_storage = $this->entityTypeManager->getStorage('node');
     $node = $node_storage->create([
       'type' => 'article',
@@ -254,6 +276,7 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
         'format' => 'full_html',
         'summary' => $seo_content['summary'] ?? '',
       ],
+      'field_category' => $selected_terms, // Set the taxonomy terms
     ]);
 
     // Add the media to the article if available
