@@ -3,6 +3,7 @@ namespace Drupal\pipeline\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\pipeline\Entity\LLMConfig;
 use Drupal\pipeline\Plugin\ModelManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -27,6 +28,12 @@ class PipelineApiController extends ControllerBase {
    */
   protected $modelManager;
 
+  /**
+   * The logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
 
 
   /**
@@ -36,10 +43,17 @@ class PipelineApiController extends ControllerBase {
    *   The entity type manager.
    * @param \Drupal\pipeline\Plugin\ModelManager $model_manager
    *   The model manager.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   * The logger factory.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, ModelManager $model_manager) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    ModelManager $model_manager,
+    LoggerChannelFactoryInterface $logger_factory
+  ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->modelManager = $model_manager;
+    $this->logger = $logger_factory->get('pipeline');
   }
 
   /**
@@ -48,7 +62,8 @@ class PipelineApiController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager'),
-      $container->get('plugin.manager.model_manager')
+      $container->get('plugin.manager.model_manager'),
+      $container->get('logger.factory')
     );
   }
 
@@ -134,7 +149,7 @@ class PipelineApiController extends ControllerBase {
     }
 
     // Debug: Log query parameters and result
-    \Drupal::logger('pipeline')->debug('Scheduled pipelines query executed with parameters: @params', [
+    $this->logger->debug('Scheduled pipelines query executed with parameters: @params', [
       '@params' => json_encode([
         'start_of_day' => $start_of_day,
         'start_of_next_day' => $start_of_next_day,
@@ -142,7 +157,7 @@ class PipelineApiController extends ControllerBase {
       ]),
     ]);
 
-    \Drupal::logger('pipeline')->debug('Scheduled pipelines result: @result', [
+    $this->logger->debug('Scheduled pipelines result: @result', [
       '@result' => json_encode($scheduled_pipelines),
     ]);
 
@@ -209,7 +224,7 @@ class PipelineApiController extends ControllerBase {
             $step_data['llm_config'] = $configuration['data']['llm_config'] ?? '';
 
             if (isset($configuration['data']['llm_config'])) {
-              $llm_config = LLMConfig::load($configuration['data']['llm_config']);
+              $llm_config = $this->entityTypeManager->getStorage('llm_config')->load($configuration['data']['llm_config']);
               if ($llm_config) {
                 $model_plugin = $this->modelManager->createInstanceFromModelName($llm_config->getModelName());
                 $step_data['llm_service'] = [
