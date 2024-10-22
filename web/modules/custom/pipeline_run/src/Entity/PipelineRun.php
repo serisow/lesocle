@@ -2,9 +2,12 @@
 namespace Drupal\pipeline_run\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\File\FileExists;
+use Drupal\Core\File\FileSystemInterface;
 
 /**
  * @ContentEntityType(
@@ -186,6 +189,22 @@ class PipelineRun extends ContentEntityBase {
         'weight' => 9,
       ]);
 
+    $fields['log_file'] = BaseFieldDefinition::create('file')
+      ->setLabel(t('Log File'))
+      ->setDescription(t('Log file containing detailed execution logs.'))
+      ->setSettings([
+        'file_directory' => 'pipeline_logs',  // Basic directory, we'll handle the full path in code
+        'file_extensions' => 'log txt',
+        'uri_scheme' => 'private',
+        'max_filesize' => '10 MB',
+      ])
+      ->setDisplayOptions('view', [
+        'label' => 'inline',
+        'type' => 'file_url_plain',
+        'weight' => 10,
+      ])
+      ->setDisplayConfigurable('view', TRUE);
+
     return $fields;
   }
 
@@ -296,6 +315,86 @@ class PipelineRun extends ContentEntityBase {
     if ($start_time && $end_time) {
       $duration = $end_time - $start_time;
       $this->set('duration', $duration);
+    }
+  }
+
+  /**
+   * Gets the log file.
+   *
+   * @return \Drupal\file\FileInterface|null
+   *   The log file entity or null if not set.
+   */
+  public function getLogFile() {
+    return $this->get('log_file')->entity;
+  }
+
+  /**
+   * Sets the log file.
+   *
+   * @param int $fid
+   *   The file ID.
+   *
+   * @return $this
+   */
+  public function setLogFile($fid) {
+    $this->set('log_file', ['target_id' => $fid]);
+    return $this;
+  }
+
+  /**
+   * Implementation of hook_entity_presave() to handle log file creation
+   */
+  function pipeline_run_entity_presave(EntityInterface $entity) {
+    if ($entity instanceof PipelineRun && $entity->getStepResults()) {
+      $logs = [];
+      $step_results = json_decode($entity->getStepResults(), TRUE);
+
+      foreach ($step_results as $step_uuid => $step) {
+        if (!empty($step['error_message'])) {
+          $logs[] = sprintf(
+            "[%s] Step %s (%s): %s",
+            date('Y-m-d H:i:s', $step['start_time']),
+            $step['step_description'],
+            $step['step_type'],
+            $step['error_message']
+          );
+        }
+
+        // Add PHP errors if captured
+        if (!empty($step['php_errors'])) {
+          foreach ($step['php_errors'] as $error) {
+            $logs[] = sprintf(
+              "[%s] PHP Error in step %s: %s in %s on line %d",
+              date('Y-m-d H:i:s', $error['time']),
+              $step['step_description'],
+              $error['message'],
+              $error['file'],
+              $error['line']
+            );
+          }
+        }
+      }
+
+      if (!empty($logs)) {
+        $directory = 'private://pipeline_logs/' . date('Y-m') . '/';
+        \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
+
+        $filename = sprintf('pipeline_run_%d_%s.log', $entity->id(), date('Y-m-d_His'));
+        $uri = $directory . $filename;
+
+        $file_contents = implode("\n", $logs);
+        $file = \Drupal::service('file.repository')->writeData(
+          $file_contents,
+          $uri,
+          FileExists::Replace
+        );
+
+        if ($file) {
+          $file->setPermanent();
+          $file->save();
+          $entity->setLogFile($file->id());
+        }
+      }
     }
   }
 }

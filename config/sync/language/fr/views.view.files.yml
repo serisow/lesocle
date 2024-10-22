@@ -16,7 +16,7 @@ display:
         filesize:
           label: Taille
         status:
-          label: État
+          label: Statut
           settings:
             format_custom_false: Temporaire
             format_custom_true: Permanent
@@ -59,7 +59,7 @@ display:
             label: 'Type MIME'
         status:
           expose:
-            label: État
+            label: Statut
   page_1:
     display_title: "Vue d'ensemble des fichiers"
     display_options:

@@ -1,0 +1,74 @@
+# pipeline_run.fr.po
+msgid ""
+msgstr ""
+"Project-Id-Version: Pipeline Run\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"Language: fr\n"
+
+msgid "Status"
+msgstr "Statut"
+
+msgid "Completed"
+msgstr "Terminé"
+
+msgid "Failed"
+msgstr "Échoué"
+
+msgid "Duration"
+msgstr "Durée"
+
+msgid "Start Time"
+msgstr "Heure de début"
+
+msgid "End Time"
+msgstr "Heure de fin"
+
+msgid "sec"
+msgstr "sec"
+
+msgid "min"
+msgstr "min"
+
+msgid "Triggered By"
+msgstr "Déclenché par"
+
+msgid "Manual"
+msgstr "Manuel"
+
+msgid "API"
+msgstr "API"
+
+msgid "Created By"
+msgstr "Créé par"
+
+msgid "Anonyme"
+msgstr "Anonyme"
+
+msgid "View Steps"
+msgstr "Voir les étapes"
+
+msgid "Step details"
+msgstr "Détails des étapes"
+
+# Pipeline runs
+msgid "Pipeline Runs"
+msgstr "Éxecutions du pipeline"
+
+msgid "Step Type"
+msgstr "Type de l'étape"
+
+msgid "Additional Info"
+msgstr "Informations complémentaire"
+
+msgid "Pipeline Run Steps"
+msgstr "Étapes d'execution du pipeline"
+
+msgid "Steps for Pipeline Run @id"
+msgstr "Étapes d'execution @id"
+
+msgid "View Data"
+msgstr "Voir les données"
+

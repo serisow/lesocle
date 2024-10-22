@@ -14,6 +14,7 @@ use Drupal\pipeline\Plugin\StepType\ActionStep;
 use Drupal\pipeline\Plugin\StepType\GoogleSearchStep;
 use Drupal\pipeline\Plugin\StepType\LLMStep;
 use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
+use Drupal\pipeline\Service\PipelineErrorHandler;
 
 class PipelineBatch {
   use StringTranslationTrait;
@@ -61,6 +62,12 @@ class PipelineBatch {
    */
   protected $loggerFactory;
 
+  /**
+   * The pipeline error handler.
+   *
+   * @var \Drupal\pipeline\Service\PipelineErrorHandler
+   */
+  protected $errorHandler;
 
   /**
    * Constructs a new PipelineBatch object.
@@ -72,11 +79,13 @@ class PipelineBatch {
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The string translation service.
    * @param \Drupal\Core\State\StateInterface $state
-   *    The state service.
+   *   The state service.
    * @param \Drupal\Core\Datetime\TimeInterface $time
-   *    The time service.
+   *   The time service.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
-   *    The logger factory.
+   *   The logger factory.
+   * @param \Drupal\pipeline\Service\PipelineErrorHandler $error_handler
+   *   The pipeline error handler service.
  */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
@@ -84,7 +93,8 @@ class PipelineBatch {
     TranslationInterface $string_translation,
     StateInterface $state,
     TimeInterface $time,
-    LoggerChannelFactoryInterface $logger_factory
+    LoggerChannelFactoryInterface $logger_factory,
+    PipelineErrorHandler $error_handler
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->messenger = $messenger;
@@ -92,6 +102,7 @@ class PipelineBatch {
     $this->state = $state;
     $this->time = $time;
     $this->loggerFactory = $logger_factory;
+    $this->errorHandler = $error_handler;
   }
 
   /**
@@ -113,7 +124,9 @@ class PipelineBatch {
         'sequence' => $step_type->getWeight(),
       ];
 
-      $start_time = microtime(true);
+      // Start error capture for this step
+     $error_collector = $this->errorHandler->startErrorCapture($step_uuid);
+
       try {
         $config = $step_type->getConfiguration();
         $step_info = self::getStepInfo($step_type, $config);
@@ -135,6 +148,12 @@ class PipelineBatch {
           '@step' => $step_type->getStepDescription(),
           '@info' => $step_info,
         ]);
+      } finally {
+        // Stop error capture and collect any PHP errors
+        $this->errorHandler->stopErrorCapture();
+        if (!empty($error_collector[$step_uuid])) {
+          $step_result['php_errors'] = $error_collector[$step_uuid];
+        }
       }
 
       $step_result['end_time'] = $this->time->getCurrentTime();
@@ -145,6 +164,13 @@ class PipelineBatch {
       $step_results = json_decode($pipeline_run->get('step_results')->value, TRUE) ?: [];
       $step_results[$step_uuid] = $step_result;
       $pipeline_run->set('step_results', json_encode($step_results));
+
+      // Create log file if there are errors
+     if ($step_result['status'] === 'failed' || !empty($step_result['php_errors'])) {
+        if ($log_file = $this->errorHandler->createLogFile($step_results, $pipeline_run_id)) {
+          $pipeline_run->setLogFile($log_file->id());
+        }
+      }
 
       // Update PipelineRun status
       if (isset($context['error_message'])) {
@@ -157,7 +183,6 @@ class PipelineBatch {
 
     } else {
       $error_message = $this->t('Step type does not implement StepTypeExecutableInterface');
-
       $context['error_message'] = $error_message;
       $context['message'] = $this->t('Failed step: @error', ['@error' => $error_message]); // Added line
       $pipeline_run->set('status', 'failed');

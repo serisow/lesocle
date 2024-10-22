@@ -1083,7 +1083,7 @@ display:
           exclude: false
           alter:
             alter_text: true
-            text: '<a href="/admin/pipeline-run/{{ id }}/steps" target="_blank">View Steps</a>'
+            text: "<a href=\"{{ path('entity.pipeline_run.steps', {'pipeline_run': id, 'language': current_language}) }}\" target=\"_blank\">{{ 'View Steps'|t }}</a>"
             make_link: false
             path: ''
             absolute: false

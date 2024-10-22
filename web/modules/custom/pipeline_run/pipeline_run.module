@@ -43,3 +43,37 @@ function pipeline_run_theme($existing, $type, $theme, $path) {
     ],
   ];
 }
+
+/**
+ * Implements hook_views_pre_render().
+ */
+function pipeline_run_views_pre_render(\Drupal\views\ViewExecutable $view) {
+  if ($view->id() == 'pipeline_runs' && $view->current_display == 'embed_1') {
+    // Translate field labels
+    foreach ($view->field as $field_id => $field) {
+      switch ($field_id) {
+        case 'status':
+          $field->options['label'] = t('Status');
+          break;
+        case 'duration':
+          $field->options['label'] = t('Duration');
+          break;
+        case 'triggered_by':
+          $field->options['label'] = t('Triggered By');
+          break;
+        case 'start_time':
+          $field->options['label'] = t('Start Time');
+          break;
+        case 'end_time':
+          $field->options['label'] = t('End Time');
+          break;
+        case 'created_by':
+          $field->options['label'] = t('Created By');
+          break;
+        case 'id':
+          $field->options['label'] = t('Step details');
+          break;
+      }
+    }
+  }
+}

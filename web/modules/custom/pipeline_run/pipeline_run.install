@@ -1,5 +1,28 @@
 <?php
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\File\FileSystemInterface;
+
+/**
+ * Implements hook_install().
+ */
+function pipeline_run_install() {
+  // Create the pipeline logs directory
+  $directory = 'private://pipeline_logs';
+  \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function pipeline_run_uninstall() {
+  // Optionally clean up the logs directory
+  // Comment out if you want to preserve logs after uninstall
+  $directory = 'private://pipeline_logs';
+  if (\Drupal::service('file_system')->prepareDirectory($directory)) {
+    \Drupal::service('file_system')->deleteRecursive($directory);
+  }
+}
+
 
 /**
  * Add duration field to PipelineRun entity.
@@ -75,4 +98,35 @@ function pipeline_run_update_9003(&$sandbox) {
   }
 
   $sandbox['#finished'] = $sandbox['progress'] / $sandbox['total'];
+}
+
+/**
+ * Add log_file field to PipelineRun entity.
+ */
+function pipeline_run_update_9004() {
+  $entity_definition_update_manager = \Drupal::entityDefinitionUpdateManager();
+  $field_storage_definition = BaseFieldDefinition::create('file')
+    ->setLabel(t('Log File'))
+    ->setDescription(t('Log file containing detailed execution logs.'))
+    ->setSettings([
+      'file_directory' => 'pipeline_logs',  // Basic directory, we'll handle the full path in code
+      'file_extensions' => 'log txt',
+      'uri_scheme' => 'private',
+      'max_filesize' => '10 MB',
+    ])
+    ->setDisplayOptions('view', [
+      'label' => 'inline',
+      'type' => 'file_url_plain',
+      'weight' => 10,
+    ])
+    ->setDisplayConfigurable('view', TRUE);
+
+  $entity_definition_update_manager->installFieldStorageDefinition(
+    'log_file',
+    'pipeline_run',
+    'pipeline_run',
+    $field_storage_definition
+  );
+
+  return t('Added log_file field to PipelineRun entity.');
 }

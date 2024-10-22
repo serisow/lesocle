@@ -1,4 +1,4 @@
-# pipeline.fr.po
+# pipeline.pot
 msgid ""
 msgstr ""
 "Project-Id-Version: Pipeline\n"
@@ -6,109 +6,130 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"Language: fr\n"
 
+# Pipeline management
 msgid "Pipeline Management"
-msgstr "Gestion des Pipelines"
+msgstr ""
 
+# Pipeline configuration
 msgid "Configure and manage pipelines"
-msgstr "Configurer et gérer les pipelines"
+msgstr ""
 
+# Execution types
 msgid "Scheduled"
-msgstr "Programmé"
+msgstr ""
 
 msgid "Run on-demand through API CALL"
-msgstr "Exécuter à la demande via API"
+msgstr ""
 
+# Schedule types
 msgid "No schedule"
-msgstr "Pas de programmation"
+msgstr ""
 
 msgid "One-time schedule"
-msgstr "Programmation unique"
+msgstr ""
 
 msgid "Recurring schedule"
-msgstr "Programmation récurrente"
+msgstr ""
 
+# Form labels
 msgid "Pipeline name"
-msgstr "Nom du pipeline"
+msgstr ""
 
 msgid "Pipeline Instructions"
-msgstr "Instructions du pipeline"
+msgstr ""
 
 msgid "Execution Type"
-msgstr "Type d'exécution"
+msgstr ""
 
 msgid "Schedule Type"
-msgstr "Type de programmation"
+msgstr ""
 
 msgid "Pipeline Language"
-msgstr "Langue du pipeline"
+msgstr ""
 
 # Actions
 msgid "Update pipeline"
-msgstr "Mettre à jour le pipeline"
+msgstr ""
 
 msgid "Execute Pipeline"
-msgstr "Exécuter le pipeline"
+msgstr ""
 
 msgid "Delete"
-msgstr "Supprimer"
+msgstr ""
 
 # Messages
 msgid "Pipeline "@name" has been updated."
-msgstr "Pipeline "@name" a été mise à jour."
+msgstr ""
 
 msgid "Pipeline execution completed successfully."
-msgstr "L'exécution du pipeline s'est déroulée avec succès."
+msgstr ""
 
 msgid "Pipeline execution failed."
-msgstr "L'exécution du pipeline a échouée"
+msgstr ""
 
 msgid "Step Type"
-msgstr "Type Étape"
+msgstr ""
 
 msgid "Step"
-msgstr "Étape"
+msgstr ""
 
 msgid "Model"
-msgstr "Modèle"
+msgstr ""
 
 # Step types
 msgid "Google search"
-msgstr "Recherche Google"
+msgstr ""
 
 msgid "LLM Step"
-msgstr "Étape LLM"
+msgstr ""
 
 msgid "Action Step"
-msgstr "Étape Action"
+msgstr ""
 
 # Pipeline run messages
 msgid "Step execution completed"
-msgstr "Éxecution de l'étape réussie"
+msgstr ""
 
 msgid "Step execution failed"
-msgstr "Éxecution de l'étape échouée"
+msgstr ""
 
 msgid "Execution history"
-msgstr "Historique des éxecutions"
+msgstr ""
+
+msgid "Duration"
+msgstr ""
+
+msgid "Start Time"
+msgstr ""
+
+msgid "End Time"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Step details"
+msgstr ""
+
+msgid "Execution history"
+msgstr ""
 
 msgid "Manage Steps (@count)"
-msgstr "Gérer les étapes (@count)"
+msgstr ""
 
 msgid "Add Pipeline"
-msgstr "Nouveau Pipeline"
+msgstr ""
 
 msgid "Export Pipeline"
-msgstr "Exporter Pipeline"
+msgstr ""
+
 
 msgid "Provide instructions for the pipeline takers."
-msgstr "Fournir des instructions pour les utilisateurs du pipeline."
+msgstr ""
 
 msgid "Whether the pipeline is enabled or disabled."
-msgstr "Indique si le pipeline est activé ou désactivé."
+msgstr ""
 
 msgid "Choose how this pipeline should be executed."
-msgstr "Choisir comment ce pipeline doit être exécuté."
-
-
+msgstr ""

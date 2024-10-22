@@ -29,6 +29,15 @@ services:
       - '@entity_type.manager'
       - '@logger.factory'
 
+  pipeline.error_handler:
+    class: Drupal\pipeline\Service\PipelineErrorHandler
+    arguments:
+      - '@file_system'
+      - '@file.repository'
+      - '@date.formatter'
+      - '@string_translation'
+
+
   pipeline.batch:
     class: Drupal\pipeline\PipelineBatch
     arguments:
@@ -38,3 +47,5 @@ services:
       - '@state'
       - '@datetime.time'
       - '@logger.factory'
+      - '@pipeline.error_handler'
+

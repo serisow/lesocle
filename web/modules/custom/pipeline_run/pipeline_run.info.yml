@@ -5,3 +5,6 @@ package: Custom
 core_version_requirement: ^10 || ^11
 dependencies:
   - pipeline:pipeline
+
+'interface translation project': pipeline_run
+'interface translation server pattern': modules/custom/pipeline_run/translations/%project-%language.po

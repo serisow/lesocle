@@ -5,6 +5,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\pipeline\Plugin\ActionServiceManager;
 use Drupal\pipeline\Service\ImageDownloadService;
+use Drupal\pipeline\Service\PipelineErrorHandler;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,24 +17,33 @@ class PipelineExecutionController extends ControllerBase {
   protected $actionServiceManager;
 
   /**
+   *
    * @var \Drupal\pipeline\Service\ImageDownloadService
    */
   protected $imageDownloadService;
 
+  /** @var \Drupal\pipeline\Service\PipelineErrorHandler */
+  protected $errorHandler;
+
+
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     ActionServiceManager $action_service_manager,
-    ImageDownloadService $image_download_service) {
+    ImageDownloadService $image_download_service,
+    PipelineErrorHandler $error_handler
+  ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->actionServiceManager = $action_service_manager;
     $this->imageDownloadService = $image_download_service;
+    $this->errorHandler = $error_handler;
   }
 
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.action_service'),
-      $container->get('pipeline.image_download_service')
+      $container->get('pipeline.image_download_service'),
+      $container->get('pipeline.error_handler')
     );
   }
 
@@ -64,74 +74,92 @@ class PipelineExecutionController extends ControllerBase {
     $pipeline_run->save();
 
     $context = ['results' => $step_results];
+    $has_errors = false;
 
     foreach ($step_results as $step_uuid => $result) {
       $step_type = $pipeline->getStepType($step_uuid);
       if ($step_type) {
         $start_time = $result['start_time'] ?? \Drupal::time()->getCurrentTime();
         $end_time = $result['end_time'] ?? \Drupal::time()->getCurrentTime();
-        $duration = $result['duration'] ?? \Drupal::time()->getCurrentTime();
-        // Create PipelineStepRun entity
-        $step_result = [
-          'step_uuid' => $step_uuid,
-          'step_description' => $result['step_description'],
-          'status' => $result['status'] ?? 'completed',
-          'start_time' => $start_time,
-          'end_time' => $end_time,
-          'duration' => $end_time - $start_time,
-          'step_type' => $step_type->getPluginId(),
-          'sequence' => $step_type->getWeight(),
-          'data' => $result['data'],
-          'output_type' => $result['output_type'],
-          'error_message' => $result['error_message'] ?? '',
-        ];
 
-        $config = $step_type->getConfiguration();
+        // Start error capture for this step
+        $this->errorHandler->startErrorCapture($step_uuid);
 
-        if ($step_type->getPluginId() === 'action_step') {
-          $action_config_id = $config['data']['action_config'];
-          $action_config = $this->entityTypeManager->getStorage('action_config')->load($action_config_id);
-          if ($action_config) {
-            $action_service_id = $action_config->getActionService();
-            $action_service = $this->actionServiceManager->createInstance($action_service_id);
-            try {
-              $action_result = $action_service->executeAction($action_config->toArray(), $context);
-              $step_result['data'] = $action_result;
-              $step_result['status'] = 'completed';
+        try {
+          // Create PipelineStepRun entity
+          $step_result = [
+            'step_uuid' => $step_uuid,
+            'step_description' => $result['step_description'],
+            'status' => $result['status'] ?? 'completed',
+            'start_time' => $start_time,
+            'end_time' => $end_time,
+            'duration' => $end_time - $start_time,
+            'step_type' => $step_type->getPluginId(),
+            'sequence' => $step_type->getWeight(),
+            'data' => $result['data'],
+            'output_type' => $result['output_type'],
+            'error_message' => $result['error_message'] ?? '',
+          ];
 
-            }
-            catch (\Exception $e) {
-              \Drupal::logger('pipeline')->error('Error executing action: @error', ['@error' => $e->getMessage()]);
-              $step_result['status'] = 'failed';
-              $step_result['error_message'] = $e->getMessage();
-              $pipeline_run->set('status', 'failed');
-              $pipeline_run->set('error_message', 'Error in step: ' . $step_type->getPluginId());
+          $config = $step_type->getConfiguration();
+
+          if ($step_type->getPluginId() === 'action_step') {
+            $action_config_id = $config['data']['action_config'];
+            $action_config = $this->entityTypeManager->getStorage('action_config')->load($action_config_id);
+            if ($action_config) {
+              $action_service_id = $action_config->getActionService();
+              $action_service = $this->actionServiceManager->createInstance($action_service_id);
+              try {
+                $action_result = $action_service->executeAction($action_config->toArray(), $context);
+                $step_result['data'] = $action_result;
+                $step_result['status'] = 'completed';
+              }
+              catch (\Exception $e) {
+                $has_errors = true;
+                $step_result['status'] = 'failed';
+                $step_result['error_message'] = $e->getMessage();
+                \Drupal::logger('pipeline')->error('Error executing action: @error', ['@error' => $e->getMessage()]);
+              }
             }
           }
-        }
 
-        $step_results[$step_uuid] = $step_result;
-        $context['results'][$step_uuid] = $step_result;
-
-        // Handle featured image
-        if ($result['output_type'] === 'featured_image') {
-          $image_data = $this->imageDownloadService->downloadImage($result['data']);
-          $step_result['data'] = $image_data;
           $step_results[$step_uuid] = $step_result;
-          $context['results'][$step_uuid]['data'] = $image_data;
-        }
+          $context['results'][$step_uuid] = $step_result;
 
+          // Handle featured image
+          if ($result['output_type'] === 'featured_image') {
+            $image_data = $this->imageDownloadService->downloadImage($result['data']);
+            $step_result['data'] = $image_data;
+            $step_results[$step_uuid] = $step_result;
+            $context['results'][$step_uuid]['data'] = $image_data;
+          }
+
+        } catch (\Exception $e) {
+          $has_errors = true;
+          $step_result['status'] = 'failed';
+          $step_result['error_message'] = $e->getMessage();
+          \Drupal::logger('pipeline')->error('Error in step execution: @error', ['@error' => $e->getMessage()]);
+        } finally {
+          // Stop error capture
+          $this->errorHandler->stopErrorCapture();
+        }
       }
     }
-    if ( $pipeline_run->get('status')->value !== 'failed') {
+
+    // Create log file if there are errors
+    if ($has_errors) {
+      $pipeline_run->set('status', 'failed');
+      if ($log_file = $this->errorHandler->createLogFile($step_results, $pipeline_run->id())) {
+        $pipeline_run->setLogFile($log_file->id());
+      }
+    } else {
       $pipeline_run->set('status', 'completed');
     }
+
     $pipeline_run->set('end_time', \Drupal::time()->getCurrentTime());
     $pipeline_run->set('step_results', json_encode($step_results));
-
     $pipeline_run->save();
 
     return new JsonResponse(['message' => 'Execution results processed successfully']);
   }
-
 }
