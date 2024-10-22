@@ -1,0 +1,9 @@
+uuid: ba2d0812-b90a-470b-8ede-9d0b03a3db8e
+langcode: en
+status: true
+dependencies: {  }
+name: Category
+vid: category
+description: 'Principal vocabulary to organize content.'
+weight: 0
+new_revision: false

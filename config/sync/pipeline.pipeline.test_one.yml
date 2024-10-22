@@ -1,0 +1,76 @@
+uuid: aad18838-2b62-48ec-a543-131bc5bb9065
+langcode: en
+status: true
+dependencies: {  }
+id: test_one
+label: 'Test one'
+instructions: 'Test one'
+created: 1728929299
+changed: 1729361813
+execution_type: scheduled
+scheduled_time: null
+schedule_type: none
+recurring_frequency: null
+recurring_time: null
+step_types:
+  6a32050d-9f98-43c2-96b1-180c42f9c1d1:
+    id: llm_step
+    data:
+      step_description: 'Test create story'
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      llm_config: gemini_1_5_pro_002
+      prompt_template: ''
+      prompt: 'You knowledgeable expert on  Artificial Intelligence, write an insightful article on the subject which can illuminate future direction on the subject.'
+      response: ''
+    weight: 0
+    uuid: 6a32050d-9f98-43c2-96b1-180c42f9c1d1
+  af17888a-4753-4691-83ec-55b20a415bb8:
+    id: action_step
+    data:
+      step_description: 'Load taxonomy terms.'
+      required_steps: ''
+      step_output_key: step2
+      output_type: generic_content
+      action_config: fetch_taxonomy
+      response: ''
+    weight: 1
+    uuid: af17888a-4753-4691-83ec-55b20a415bb8
+  398c7b07-a4c9-4e26-80e5-18c9f81ed206:
+    id: llm_step
+    data:
+      step_description: 'Classify the article on the taxonomy of the website.'
+      required_steps: "step1\r\nstep2"
+      step_output_key: step3
+      output_type: taxonomy_term
+      llm_config: gemini_1_5_flash
+      prompt_template: ''
+      prompt: "Classify the following article into the provided taxonomy terms. Return a JSON object with the selected term IDs.\r\n\r\nArticle:\r\n{step1}\r\n\r\nTaxonomy Terms:\r\n{step2}\r\n\r\nPlease return your response in the following JSON format, replacing the numbers with actual term IDs.\r\n\r\n{\"selected_terms\":[1,2,3]}\r\n\r\nTHIS IS VERY IMPORTANT: Do not add any extras texte only the json structure.\r\n"
+      response: ''
+    weight: 2
+    uuid: 398c7b07-a4c9-4e26-80e5-18c9f81ed206
+  d1ec5cf8-e328-4085-a7d0-916f330a6078:
+    id: llm_step
+    data:
+      step_description: 'Format the article.'
+      required_steps: "step1\r\n"
+      step_output_key: step4
+      output_type: article_content
+      llm_config: gemini_1_5_flash
+      prompt_template: ''
+      prompt: "Your task is to create a comprehensive and well-informed article  based on the provided content, then format it as a beautifully styled HTML snippet wrapped in a JSON structure. Follow these steps:\r\n\r\n1. Carefully analyze ALL elements of the content provided.\r\n2. Synthesize this information to create a balanced, factual, and cohesive article that incorporates key points from multiple sources without contradictions.\r\n3. Create a short, descriptive title for the content that captures its essence.\r\n4. Format the main content using semantic HTML5 tags, ensuring proper structure and readability.\r\n5. Include some basic CSS for styling (inline or in a <style> tag) to enhance visual appeal.\r\n6. Wrap the result in a JSON structure.\r\n\r\nHere is the content to base your article on:\r\n\r\n###\r\n{step1}\r\n###\r\n\r\nPlease provide your response in the following JSON structure. Do not add anything else, only the JSON structure:\r\n\r\n\"title\": \"Your generated title here\",\r\n\"body\": \"Your full HTML content here, including the title in an <h1> tag and the rest of the content\"\r\n\r\nEnsure that:\r\n1. The \"title\" field contains plain text (no HTML tags).\r\n2. The \"body\" field contains valid HTML, including the title in an <h1> tag and the full article content.\r\n3. All quotes within the HTML are properly escaped for valid JSON.\r\n4. The entire response is valid JSON that can be parsed without errors.\r\n"
+      response: ''
+    weight: 3
+    uuid: d1ec5cf8-e328-4085-a7d0-916f330a6078
+  67bc47ff-7987-43e2-ac46-e29b27578c71:
+    id: action_step
+    data:
+      step_description: 'Create article.'
+      required_steps: step4
+      step_output_key: step5
+      output_type: generic_content
+      action_config: create_article_action
+      response: ''
+    weight: 4
+    uuid: 67bc47ff-7987-43e2-ac46-e29b27578c71

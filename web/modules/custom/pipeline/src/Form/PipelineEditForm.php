@@ -211,11 +211,12 @@ class PipelineEditForm extends PipelineFormBase {
     // Store the pipeline_run_id in the State API
     // We need the pipeline_run_id in finishBatch callback and i do not find a better way of doing it.
     \Drupal::state()->set('pipeline.current_run_id', $pipeline_run->id());
+    $pipeline_batch = \Drupal::service('pipeline.batch');
 
     $batch = [
       'title' => $this->t('Executing Pipeline'),
       'operations' => [],
-      'finished' => '\Drupal\pipeline\PipelineBatch::finishBatch',
+      'finished' => [$pipeline_batch, 'finishBatch'],
       'progressive' => TRUE,
       'init_message' => $this->t('Starting pipeline execution.'),
       'progress_message' => $this->t('Processed @current out of @total steps.'),
@@ -224,7 +225,7 @@ class PipelineEditForm extends PipelineFormBase {
 
     foreach ($pipeline->getStepTypes() as $step_type) {
       $batch['operations'][] = [
-        '\Drupal\pipeline\PipelineBatch::processStep',
+        [$pipeline_batch, 'processStep'],
         [$pipeline->id(), $step_type->getUuid()],
       ];
     }

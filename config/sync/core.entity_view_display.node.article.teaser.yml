@@ -5,6 +5,7 @@ dependencies:
   config:
     - core.entity_view_mode.node.teaser
     - field.field.node.article.body
+    - field.field.node.article.field_category
     - field.field.node.article.field_media_image
     - field.field.node.article.field_tags
     - node.type.article
@@ -20,7 +21,7 @@ content:
     type: text_trimmed
     label: hidden
     settings:
-      trim_length: 250
+      trim_length: 150
     third_party_settings: {  }
     weight: 1
     region: content
@@ -34,6 +35,7 @@ content:
     weight: 0
     region: content
 hidden:
+  field_category: true
   field_tags: true
   langcode: true
   links: true

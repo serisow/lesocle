@@ -28,3 +28,13 @@ services:
       - '@file.repository'
       - '@entity_type.manager'
       - '@logger.factory'
+
+  pipeline.batch:
+    class: Drupal\pipeline\PipelineBatch
+    arguments:
+      - '@entity_type.manager'
+      - '@messenger'
+      - '@string_translation'
+      - '@state'
+      - '@datetime.time'
+      - '@logger.factory'

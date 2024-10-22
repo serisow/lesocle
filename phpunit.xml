@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" bootstrap="web/core/tests/bootstrap.php" colors="true" beStrictAboutTestsThatDoNotTestAnything="true" beStrictAboutOutputDuringTests="true" beStrictAboutChangesToGlobalState="true" printerClass="\Drupal\Tests\Listeners\HtmlOutputPrinter" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
+  <coverage processUncoveredFiles="true">
+    <include>
+      <directory suffix=".module">./web/modules/custom</directory>
+      <directory suffix=".inc">./web/modules/custom</directory>
+      <directory suffix=".php">./web/modules/custom</directory>
+    </include>
+  </coverage>
+  <php>
+    <ini name="error_reporting" value="32767"/>
+    <env name="SIMPLETEST_BASE_URL" value="http://apache"/>
+    <!-- Assuming 'nginx' is the name of your web service in your docker-compose.yml -->
+    <env name="SIMPLETEST_DB" value="mysql://drupal:drupal@mariadb/drupal"/>
+    <!-- Replace these credentials with the ones that are being used in your docker-compose.yml -->
+    <env name="BROWSERTEST_OUTPUT_DIRECTORY" value="/var/www/html/phpunit-results"/>
+  </php>
+  <testsuites>
+    <testsuite name="unit">
+      <directory>./web/modules/custom/*/tests/src/Unit</directory>
+    </testsuite>
+    <testsuite name="kernel">
+      <directory>./web/modules/custom/*/tests/src/Kernel</directory>
+    </testsuite>
+    <testsuite name="functional">
+      <directory>./web/modules/custom/*/tests/src/Functional</directory>
+    </testsuite>
+    <testsuite name="functionalJavascript">
+      <directory>./web/modules/custom/*/tests/src/FunctionalJavascript</directory>
+    </testsuite>
+  </testsuites>
+</phpunit>

@@ -4,6 +4,7 @@ status: true
 dependencies:
   config:
     - field.field.node.article.body
+    - field.field.node.article.field_category
     - field.field.node.article.field_media_image
     - field.field.node.article.field_tags
     - node.type.article
@@ -22,6 +23,14 @@ content:
     third_party_settings: {  }
     weight: 1
     region: content
+  field_category:
+    type: entity_reference_label
+    label: inline
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 2
+    region: content
   field_media_image:
     type: entity_reference_entity_view
     label: hidden
@@ -33,16 +42,16 @@ content:
     region: content
   field_tags:
     type: entity_reference_label
-    label: above
+    label: visually_hidden
     settings:
       link: true
     third_party_settings: {  }
-    weight: 2
+    weight: 3
     region: content
   links:
     settings: {  }
     third_party_settings: {  }
-    weight: 3
+    weight: 4
     region: content
 hidden:
   langcode: true

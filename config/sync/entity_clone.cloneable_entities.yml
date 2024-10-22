@@ -46,3 +46,4 @@ cloneable_entities:
   - metatag_defaults
   - pipeline_run
   - pipeline_step_run
+  - pathauto_pattern

@@ -1,0 +1,9 @@
+uuid: 9ab3ee9b-2503-4d67-8a37-981138668bcb
+langcode: en
+status: true
+dependencies: {  }
+id: taxonomy_classification
+label: 'Taxonomy classification'
+description: 'Classify the generated article in the taxonomy of the website.'
+template: "Classify the following content into the provided taxonomy terms. Return a JSON object with the selected term IDs.\r\n\r\nContent:\r\n{YOUR_STEP_CONTENT}\r\n\r\nTaxonomy Terms:\r\n{YOUR_STEP_TAXONOMY}\r\n\r\nPlease return your response in the following JSON format:\r\n{\r\n  \"selected_terms\": [tid1, tid2, ...]\r\n}"
+output_format: json

@@ -1,7 +1,7 @@
 <?php
 namespace Drupal\pipeline\Plugin;
 
-interface StepTypeExecutableInterface {
+interface StepTypeExecutableInterface extends StepTypeInterface {
   /**
    * Executes the step type logic.
    *

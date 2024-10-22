@@ -303,9 +303,9 @@ display:
         options:
           uses_fields: false
           columns: 2
-          cell_min_width: 300
-          grid_gutter: 50
-          alignment: vertical
+          cell_min_width: 400
+          grid_gutter: 0
+          alignment: horizontal
       row:
         type: 'entity:node'
         options:

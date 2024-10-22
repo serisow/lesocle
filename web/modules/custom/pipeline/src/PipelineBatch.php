@@ -1,7 +1,15 @@
 <?php
 namespace Drupal\pipeline;
 
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\Messenger\MessengerInterface;
+use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\pipeline\Plugin\StepType\ActionStep;
 use Drupal\pipeline\Plugin\StepType\GoogleSearchStep;
 use Drupal\pipeline\Plugin\StepType\LLMStep;
@@ -9,18 +17,98 @@ use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
 
 class PipelineBatch {
   use StringTranslationTrait;
-  public static function processStep($pipeline_id, $step_uuid, &$context) {
-    $pipeline = \Drupal::entityTypeManager()->getStorage('pipeline')->load($pipeline_id);
+  use DependencySerializationTrait;
+
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The messenger service.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
+  protected $messenger;
+
+  /**
+   * The string translation service.
+   *
+   * @var \Drupal\Core\StringTranslation\TranslationInterface
+   */
+  protected $stringTranslation;
+
+  /**
+   * The state service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
+   * The time service.
+   *
+   * @var \Drupal\Core\Datetime\TimeInterface
+   */
+  protected $time;
+
+  /**
+   * The logger factory.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   */
+  protected $loggerFactory;
+
+
+  /**
+   * Constructs a new PipelineBatch object.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   The messenger service.
+   * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
+   *   The string translation service.
+   * @param \Drupal\Core\State\StateInterface $state
+   *    The state service.
+   * @param \Drupal\Core\Datetime\TimeInterface $time
+   *    The time service.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *    The logger factory.
+ */
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    MessengerInterface $messenger,
+    TranslationInterface $string_translation,
+    StateInterface $state,
+    TimeInterface $time,
+    LoggerChannelFactoryInterface $logger_factory
+  ) {
+    $this->entityTypeManager = $entity_type_manager;
+    $this->messenger = $messenger;
+    $this->setStringTranslation($string_translation);
+    $this->state = $state;
+    $this->time = $time;
+    $this->loggerFactory = $logger_factory;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function processStep($pipeline_id, $step_uuid, &$context) {
+    $pipeline = $this->entityTypeManager->getStorage('pipeline')->load($pipeline_id);
     $step_type = $pipeline->getStepType($step_uuid);
-    $pipeline_run_id = \Drupal::state()->get('pipeline.current_run_id');
-    $pipeline_run = \Drupal::entityTypeManager()->getStorage('pipeline_run')->load($pipeline_run_id);
+    $pipeline_run_id = $this->state->get('pipeline.current_run_id');
+    $pipeline_run = $this->entityTypeManager->getStorage('pipeline_run')->load($pipeline_run_id);
 
     if ($step_type instanceof StepTypeExecutableInterface) {
       $step_result = [
         'step_uuid' => $step_uuid,
         'step_description' => $step_type->getStepDescription(),
         'status' => 'running',
-        'start_time' => \Drupal::time()->getCurrentTime(),
+        'start_time' => $this->time->getCurrentTime(),
         'step_type' => $step_type->getPluginId(),
         'sequence' => $step_type->getWeight(),
       ];
@@ -34,7 +122,7 @@ class PipelineBatch {
         $step_result['status'] = 'completed';
         $step_result['data'] = $result;
 
-        $context['message'] = t('Processed step: @step @info', [
+        $context['message'] = $this->t('Processed step: @step @info', [
           '@step' => $step_type->getStepDescription(),
           '@info' => $step_info,
         ]);
@@ -43,13 +131,13 @@ class PipelineBatch {
         $step_result['status'] = 'failed';
         $step_result['error_message'] = $e->getMessage();
         $context['error_message'] = $e->getMessage();
-        $context['message'] = t('Failed step: @step @info', [
+        $context['message'] = $this->t('Failed step: @step @info', [
           '@step' => $step_type->getStepDescription(),
           '@info' => $step_info,
         ]);
       }
 
-      $step_result['end_time'] = \Drupal::time()->getCurrentTime();
+      $step_result['end_time'] = $this->time->getCurrentTime();
       $step_result['duration'] = $step_result['end_time'] - $step_result['start_time'];
 
 
@@ -68,32 +156,35 @@ class PipelineBatch {
       $pipeline_run->save();
 
     } else {
-      $context['error_message'] = t('Step type does not implement StepTypeExecutableInterface');
+      $error_message = $this->t('Step type does not implement StepTypeExecutableInterface');
+
+      $context['error_message'] = $error_message;
+      $context['message'] = $this->t('Failed step: @error', ['@error' => $error_message]); // Added line
       $pipeline_run->set('status', 'failed');
       $pipeline_run->set('error_message', $context['error_message']);
       $pipeline_run->save();
     }
 
   }
-  private static function getStepInfo($step_type, $config)
+  private function getStepInfo($step_type, $config)
   {
     switch (true) {
       case $step_type instanceof LLMStep:
         $llm_config_id = $config['data']['llm_config'] ?? '';
-        $llm_config = \Drupal::entityTypeManager()->getStorage('llm_config')->load($llm_config_id);
+        $llm_config = $this->entityTypeManager->getStorage('llm_config')->load($llm_config_id);
         $model_name = $llm_config ? $llm_config->getModelName() : 'N/A';
-        return t('(Model: @model)', ['@model' => $model_name]);
+        return $this->t('(Model: @model)', ['@model' => $model_name]);
 
       case $step_type instanceof ActionStep:
         $action_config_id = $config['data']['action_config'] ?? '';
-        $action_config = \Drupal::entityTypeManager()->getStorage('action_config')->load($action_config_id);
+        $action_config = $this->entityTypeManager->getStorage('action_config')->load($action_config_id);
         $action_service = $action_config ? $action_config->getActionService() : 'N/A';
-        return t('(Action: @action)', ['@action' => $action_service]);
+        return $this->t('(Action: @action)', ['@action' => $action_service]);
 
       case $step_type instanceof GoogleSearchStep:
         $query = $config['data']['query'] ?? 'N/A';
         $category = $config['data']['category'] ?? '';
-        return t('(Query: @query, Category: @category)', [
+        return $this->t('(Query: @query, Category: @category)', [
           '@query' => $query,
           '@category' => $category ?: 'N/A',
         ]);
@@ -103,36 +194,31 @@ class PipelineBatch {
     }
   }
 
-  public static function finishBatch($success, $results, $operations) {
-    \Drupal::logger('pipeline')->notice('finishBatch method called. Success: @success', ['@success' => $success ? 'true' : 'false']);
-    $pipeline_run_id = \Drupal::state()->get('pipeline.current_run_id');
+  public function finishBatch($success, $results, $operations) {
+    $this->loggerFactory->get('pipeline')->notice('finishBatch method called. Success: @success', ['@success' => $success ? 'true' : 'false']);
+    $pipeline_run_id = $this->state->get('pipeline.current_run_id');
     if (!$pipeline_run_id) {
-      \Drupal::logger('pipeline')->error('Pipeline run ID not found in state.');
+      $this->loggerFactory->get('pipeline')->error('Pipeline run ID not found in state.');
       return;
     }
 
-    $pipeline_run = \Drupal::entityTypeManager()->getStorage('pipeline_run')->load($pipeline_run_id);
+    $pipeline_run = $this->entityTypeManager->getStorage('pipeline_run')->load($pipeline_run_id);
     if (!$pipeline_run) {
-      \Drupal::logger('pipeline')->error('Pipeline run with ID @id not found.', ['@id' => $pipeline_run_id]);
+      $this->loggerFactory->get('pipeline')->error('Pipeline run with ID @id not found.', ['@id' => $pipeline_run_id]);
       return;
     }
-
     if ($success) {
       $pipeline_run->set('status', 'completed');
-      $message = t('Pipeline executed successfully.');
+      $message = $this->t('Pipeline executed successfully.');
     } else {
       $pipeline_run->set('status', 'failed');
-      $message = t('Pipeline execution failed.');
+      $message = $this->t('Pipeline execution failed.');
     }
-
-    $pipeline_run->set('end_time', \Drupal::time()->getCurrentTime());
-
+    $pipeline_run->set('end_time', $this->time->getCurrentTime());
     $pipeline_run->save();
-
     // Clear the state after we're done
-    \Drupal::state()->delete('pipeline.current_run_id');
-
-    \Drupal::messenger()->addMessage($message);
+    $this->state->delete('pipeline.current_run_id');
+    $this->messenger->addMessage($message);
   }
 
 

@@ -1,0 +1,9 @@
+uuid: 3485c59a-3b05-4abd-897d-1ddd311406fe
+langcode: en
+status: true
+dependencies: {  }
+id: seo_metadata_generator_for_article_content
+label: 'SEO Metadata Generator for Article Content'
+description: 'Generate SEO Metadata based on content provided.'
+template: "Based on the following  content, generate an **SEO-optimized title** and a **meta description** that capture the essence of the article and encourage clicks.\r\n\r\n**Title Requirements:**\r\n  - Maximum of **60 characters**.\r\n  - Include relevant **keywords** for better search ranking.\r\n  - Make it **engaging** and **compelling** to attract readers.\r\n  - **Meta Description Requirements:**\r\n  - Between **150-160 characters**.\r\n  - Provide a concise **summary** of the article.\r\n  - Use **action-oriented language** to encourage clicks.\r\n  - Include a **call-to-action** if appropriate.\r\n\r\n  Please output your response in the following JSON structure. Do not add anything else—only the JSON structure:\r\n\r\n  ```json\r\n  {\r\n    \"title\": \"Your generated title here\",\r\n    \"summary\": \"Your meta description here\"\r\n  }\r\n  ```\r\n\r\n  ####\r\n\r\n  {step2}\r\n\r\n  ####\r\n\r\n"
+output_format: json
