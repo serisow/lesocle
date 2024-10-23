@@ -15,7 +15,6 @@ use Prophecy\Argument;
 use Psr\Log\LoggerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Core\Test\FunctionalTestSetupTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Drupal\pipeline\Plugin\StepTypeInterface; // Ensure this is correct

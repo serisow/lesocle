@@ -80,24 +80,52 @@ class OpenAIImageService extends PluginBase implements LLMServiceInterface, Cont
           throw new \Exception('Unexpected response format from OpenAI Image API.');
         }
       } catch (RequestException $e) {
-        $response = $e->getResponse();
-        $statusCode = $response ? $response->getStatusCode() : null;
-        $body = $response ? $response->getBody()->getContents() : '';
+        $errorDetails = $this->extractErrorDetails($e);
 
-        // Log detailed error
-        $this->loggerFactory->get('pipeline')->error('OpenAI Image API error: @status @body', [
-          '@status' => $statusCode,
-          '@body' => $body,
-        ]);
+        // Special handling for quota errors
+        if ($errorDetails['status_code'] === 429) {
+          $this->loggerFactory->get('pipeline')->error('OpenAI Image API quota exceeded: @message', [
+            '@message' => $errorDetails['error_message'],
+            'error_type' => $errorDetails['error_type'],
+            'image_size' => $config['image_size'] ?? '1024x1024',
+            'api_url' => $config['api_url'],
+          ]);
 
-        // Determine if we should retry
-        $shouldRetry = $statusCode >= 500 || $e->getCode() === 0; // 5xx or network error
-        if ($attempt === $maxRetries || !$shouldRetry) {
-          throw new \Exception('Failed to call OpenAI Image API: ' . $e->getMessage());
+          throw new \Exception(sprintf(
+            'OpenAI Image quota exceeded - Error Type: %s, Message: %s. Please check your billing details.',
+            $errorDetails['error_type'],
+            $errorDetails['error_message']
+          ));
         }
 
+        // Handle other errors
+        if ($attempt === $maxRetries) {
+          $this->loggerFactory->get('pipeline')->error('OpenAI Image API error after @attempts attempts: @details', [
+            '@attempts' => $maxRetries,
+            '@details' => json_encode($errorDetails),
+            'status_code' => $errorDetails['status_code'],
+            'error_type' => $errorDetails['error_type'],
+            'image_size' => $config['image_size'] ?? '1024x1024',
+          ]);
+
+          throw new \Exception(sprintf(
+            'Failed to call OpenAI Image API after %d attempts - Status: %d, Type: %s, Message: %s',
+            $maxRetries,
+            $errorDetails['status_code'],
+            $errorDetails['error_type'],
+            $errorDetails['error_message']
+          ));
+        }
+
+        $this->loggerFactory->get('pipeline')->warning('OpenAI Image API attempt @attempt failed: @message. Retrying in @delay seconds...', [
+          '@attempt' => $attempt,
+          '@message' => $errorDetails['error_message'],
+          '@delay' => $retryDelay,
+          'status_code' => $errorDetails['status_code'],
+          'error_type' => $errorDetails['error_type'],
+        ]);
+
         // Log and wait before retrying
-        $this->loggerFactory->get('pipeline')->warning('Attempt ' . $attempt . ' failed with status ' . $statusCode . '. Retrying in ' . $retryDelay . ' seconds...');
         sleep($retryDelay);
       }
 
@@ -107,5 +135,32 @@ class OpenAIImageService extends PluginBase implements LLMServiceInterface, Cont
 
   public function callLLM(array $config, string $prompt): string {
     return $this->callOpenAIImage($config, $prompt);
+  }
+
+  /**
+   * Extracts detailed error information from OpenAI API response.
+   */
+  protected function extractErrorDetails(RequestException $e): array {
+    $response = $e->getResponse();
+    $statusCode = $response ? $response->getStatusCode() : 0;
+    $body = '';
+    $errorType = '';
+    $errorMessage = '';
+
+    if ($response) {
+      $body = $response->getBody()->getContents();
+      $errorData = json_decode($body, TRUE);
+      if (isset($errorData['error'])) {
+        $errorType = $errorData['error']['type'] ?? '';
+        $errorMessage = $errorData['error']['message'] ?? '';
+      }
+    }
+
+    return [
+      'status_code' => $statusCode,
+      'error_type' => $errorType,
+      'error_message' => $errorMessage,
+      'raw_body' => $body,
+    ];
   }
 }

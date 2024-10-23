@@ -73,3 +73,5 @@ node_modules
 
 
 /coverage
+/backup-files/*
+/.phpunit.result.cache

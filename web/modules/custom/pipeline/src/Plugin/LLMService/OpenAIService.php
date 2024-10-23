@@ -105,11 +105,50 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
           throw new \Exception('Unexpected response format from OpenAI API.');
         }
       } catch (RequestException $e) {
-        if ($attempt === $maxRetries) {
-          $this->loggerFactory->get('pipeline')->error('Error calling OpenAI API after ' . $maxRetries . ' attempts: @error', ['@error' => $e->getMessage()]);
-          throw new \Exception('Failed to call OpenAI API after multiple attempts: ' . $e->getMessage());
+        $errorDetails = $this->extractErrorDetails($e);
+
+        // Special handling for quota errors
+        if ($errorDetails['status_code'] === 429) {
+          $this->loggerFactory->get('pipeline')->error('OpenAI API quota exceeded: @message', [
+            '@message' => $errorDetails['error_message'],
+            'error_type' => $errorDetails['error_type'],
+            'model' => $config['model_name'],
+            'api_url' => $config['api_url'],
+          ]);
+
+          throw new \Exception(sprintf(
+            'OpenAI quota exceeded - Error Type: %s, Message: %s. Please check your billing details.',
+            $errorDetails['error_type'],
+            $errorDetails['error_message']
+          ));
         }
-        $this->loggerFactory->get('pipeline')->warning('Attempt ' . $attempt . ' failed. Retrying in ' . $retryDelay . ' seconds...');
+
+        if ($attempt === $maxRetries) {
+          $this->loggerFactory->get('pipeline')->error('OpenAI API error after @attempts attempts: @details', [
+            '@attempts' => $maxRetries,
+            '@details' => json_encode($errorDetails),
+            'status_code' => $errorDetails['status_code'],
+            'error_type' => $errorDetails['error_type'],
+            'model' => $config['model_name'],
+          ]);
+
+          throw new \Exception(sprintf(
+            'Failed to call OpenAI API after %d attempts - Status: %d, Type: %s, Message: %s',
+            $maxRetries,
+            $errorDetails['status_code'],
+            $errorDetails['error_type'],
+            $errorDetails['error_message']
+          ));
+        }
+
+        $this->loggerFactory->get('pipeline')->warning('OpenAI API attempt @attempt failed: @message. Retrying in @delay seconds...', [
+          '@attempt' => $attempt,
+          '@message' => $errorDetails['error_message'],
+          '@delay' => $retryDelay,
+          'status_code' => $errorDetails['status_code'],
+          'error_type' => $errorDetails['error_type'],
+        ]);
+
         sleep($retryDelay);
       }
     }
@@ -124,4 +163,32 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
   public function callLLM(array $config, string $prompt): string {
     return $this->callOpenAI($config, $prompt);
   }
+
+  /**
+   * Extracts detailed error information from OpenAI API response.
+   */
+  protected function extractErrorDetails(RequestException $e): array {
+    $response = $e->getResponse();
+    $statusCode = $response ? $response->getStatusCode() : 0;
+    $body = '';
+    $errorType = '';
+    $errorMessage = '';
+
+    if ($response) {
+      $body = $response->getBody()->getContents();
+      $errorData = json_decode($body, TRUE);
+      if (isset($errorData['error'])) {
+        $errorType = $errorData['error']['type'] ?? '';
+        $errorMessage = $errorData['error']['message'] ?? '';
+      }
+    }
+
+    return [
+      'status_code' => $statusCode,
+      'error_type' => $errorType,
+      'error_message' => $errorMessage,
+      'raw_body' => $body,
+    ];
+  }
+
 }

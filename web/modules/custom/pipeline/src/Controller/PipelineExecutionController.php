@@ -52,7 +52,19 @@ class PipelineExecutionController extends ControllerBase {
     $data = json_decode($request->getContent(), TRUE);
 
     if (!$data) {
-      return new JsonResponse(['error' => 'Invalid JSON data'], 400);
+      return new JsonResponse([
+        'error' => 'Invalid JSON data',
+        'context' => [
+          'pipeline_id' => $pipeline->id(),
+          'pipeline_label' => $pipeline->label(),
+          'request_time' => \Drupal::time()->getCurrentTime(),
+          'content_type' => $request->headers->get('Content-Type'),
+          'content_length' => $request->headers->get('Content-Length'),
+          'raw_content' => substr($request->getContent(), 0, 255) . '...',
+        ],
+        'status' => 'error',
+        'code' => 400,
+      ], 400);
     }
 
     $step_results = $data['step_results'] ?? [];
@@ -160,6 +172,35 @@ class PipelineExecutionController extends ControllerBase {
     $pipeline_run->set('step_results', json_encode($step_results));
     $pipeline_run->save();
 
-    return new JsonResponse(['message' => 'Execution results processed successfully']);
+    $response_data = [
+      'message' => 'Execution results processed successfully',
+      'context' => [
+        'pipeline_id' => $pipeline->id(),
+        'pipeline_label' => $pipeline->label(),
+        'execution_summary' => [
+          'start_time' => $pipeline_run->getStartTime(),
+          'end_time' => $pipeline_run->getEndTime(),
+          'duration' => $pipeline_run->getDuration(),
+          'total_steps' => count($step_results),
+          'status' => $pipeline_run->getStatus(),
+          'triggered_by' => $pipeline_run->getTriggeredBy(),
+        ],
+        'steps_summary' => [
+          'completed' => count(array_filter($step_results, function($step) {
+            return $step['status'] === 'completed';
+          })),
+          'failed' => count(array_filter($step_results, function($step) {
+            return $step['status'] === 'failed';
+          })),
+        ],
+        'run_id' => $pipeline_run->id(),
+        'has_errors' => $has_errors,
+        'log_file' => $has_errors ? $pipeline_run->getLogFile()?->createFileUrl() : null,
+      ],
+      'status' => 'success',
+      'code' => 200,
+    ];
+
+    return $response_data;
   }
 }
