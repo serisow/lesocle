@@ -47,7 +47,8 @@ use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
  *     "schedule_type",
  *     "recurring_frequency",
  *     "recurring_time",
- *     "execution_type"
+ *     "execution_type",
+ *     "execution_failures"
  *   }
  * )
  */
@@ -145,6 +146,14 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    * @var int
    */
   protected $changed;
+
+  /**
+   * Help keep track the number of failures of the pipeline execution.
+   * This prevent from running a failig pipeline due to external technical problem.
+   *
+   * @var int
+   */
+  protected $execution_failures = 0;
 
   /**
    * {@inheritdoc}
@@ -268,6 +277,10 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    */
   public function setStatus($status) {
     $this->status = $status;
+    // Reset failures when pipeline is re-enabled
+    if ($status) {
+      $this->execution_failures = 0;
+    }
     return $this;
   }
 
@@ -410,6 +423,44 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    */
   public function setExecutionType($execution_type) {
     $this->execution_type = $execution_type;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExecutionFailures() {
+    return $this->execution_failures;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setExecutionFailures($count) {
+    $this->execution_failures = $count;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function incrementExecutionFailures() {
+    $this->execution_failures++;
+    // If we hit the failure threshold, disable the pipeline
+    if ($this->execution_failures >= 3) {
+      $this->status = FALSE;
+      \Drupal::logger('pipeline')->warning('Pipeline %label has been automatically disabled after 3 consecutive failures.', [
+        '%label' => $this->label(),
+      ]);
+    }
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function resetExecutionFailures() {
+    $this->execution_failures = 0;
     return $this;
   }
 

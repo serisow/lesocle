@@ -92,6 +92,8 @@ class PipelineApiController extends ControllerBase {
     $query = $pipeline_storage->getQuery()
       ->accessCheck()
       ->condition('status', TRUE)
+      // Add condition to filter out pipelines with too many failures
+      ->condition('execution_failures', 3, '<')
       ->condition('schedule_type', ['one_time', 'recurring'], 'IN');
 
     // Add condition for one-time schedules to be within the current day
@@ -108,6 +110,17 @@ class PipelineApiController extends ControllerBase {
 
     $query->sort('scheduled_time', 'ASC');
     $pipeline_ids = $query->execute();
+
+    // After getting the pipeline IDs...
+    if (empty($pipeline_ids)) {
+      $this->logger->debug('No eligible pipelines found for scheduling. Query parameters: @params', [
+        '@params' => json_encode([
+          'start_of_day' => $start_of_day,
+          'start_of_next_day' => $start_of_next_day,
+          'max_failures' => 3,
+        ]),
+      ]);
+    }
 
     $scheduled_pipelines = [];
     foreach ($pipeline_ids as $id) {
@@ -188,6 +201,7 @@ class PipelineApiController extends ControllerBase {
       'created' => $pipeline->getCreatedTime(),
       'changed' => $pipeline->getChangedTime(),
       'schedule_type' => $pipeline->getScheduleType(),
+      'execution_failures' => $pipeline->getExecutionFailures(),
       'steps' => [],
     ];
 

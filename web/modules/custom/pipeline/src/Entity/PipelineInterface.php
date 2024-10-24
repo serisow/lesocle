@@ -259,4 +259,36 @@ interface PipelineInterface extends ConfigEntityInterface {
    * @return $this
    */
   public function setExecutionType($execution_type);
+
+  /**
+   * Gets the number of consecutive execution failures.
+   *
+   * @return int
+   *   The number of consecutive execution failures.
+   */
+  public function getExecutionFailures();
+
+  /**
+   * Sets the number of consecutive execution failures.
+   *
+   * @param int $count
+   *   The number of consecutive failures.
+   *
+   * @return $this
+   */
+  public function setExecutionFailures($count);
+
+  /**
+   * Increments the execution failure count.
+   *
+   * @return $this
+   */
+  public function incrementExecutionFailures();
+
+  /**
+   * Resets the execution failure count.
+   *
+   * @return $this
+   */
+  public function resetExecutionFailures();
 }

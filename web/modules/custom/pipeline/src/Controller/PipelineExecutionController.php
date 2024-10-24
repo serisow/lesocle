@@ -76,7 +76,7 @@ class PipelineExecutionController extends ControllerBase {
     // Create PipelineRun entity
     $pipeline_run = $this->entityTypeManager->getStorage('pipeline_run')->create([
       'pipeline_id' => $pipeline->id(),
-      'status' => 'completed', // Assuming the Go service completes the pipeline
+      'status' => $data['success'] ? 'completed' : 'failed',
       'start_time' => $data['start_time'] ?? \Drupal::time()->getCurrentTime(),
       'end_time' => $data['end_time'] ?? \Drupal::time()->getCurrentTime(),
       'created_by' => \Drupal::currentUser()->id(),
@@ -158,20 +158,40 @@ class PipelineExecutionController extends ControllerBase {
       }
     }
 
-    // Create log file if there are errors
-    if ($has_errors) {
+    if (!$data['success']) {
       $pipeline_run->set('status', 'failed');
       if ($log_file = $this->errorHandler->createLogFile($step_results, $pipeline_run->id())) {
         $pipeline_run->setLogFile($log_file->id());
       }
+      $pipeline->incrementExecutionFailures();
+
+      // Add these lines to ensure config is saved properly
+      $failures = $pipeline->getExecutionFailures();
+      $pipeline->save();
+
+      // Force config cache clear for this entity
+      \Drupal::service('config.factory')->reset('pipeline.pipeline.' . $pipeline->id());
+
+      if ($failures >= 3) {
+        \Drupal::logger('pipeline')->error('Pipeline %pipeline has failed %count consecutive times and will be skipped until reset.', [
+          '%pipeline' => $pipeline->label(),
+          '%count' => $failures,
+        ]);
+      }
     } else {
       $pipeline_run->set('status', 'completed');
+      $pipeline->resetExecutionFailures();
+      $pipeline->save();
+      // Force config cache clear for this entity
+      \Drupal::service('config.factory')->reset('pipeline.pipeline.' . $pipeline->id());
     }
 
     $pipeline_run->set('end_time', \Drupal::time()->getCurrentTime());
     $pipeline_run->set('step_results', json_encode($step_results));
+
     $pipeline_run->save();
 
+    // Allow the go service to have context from the Drupal side
     $response_data = [
       'message' => 'Execution results processed successfully',
       'context' => [
@@ -196,10 +216,16 @@ class PipelineExecutionController extends ControllerBase {
         'run_id' => $pipeline_run->id(),
         'has_errors' => $has_errors,
         'log_file' => $has_errors ? $pipeline_run->getLogFile()?->createFileUrl() : null,
+        'execution_failures' => $pipeline->getExecutionFailures(),
+        'current_status' => [
+          'execution_enabled' => $pipeline->getExecutionFailures() < 3,
+          'failure_count' => $pipeline->getExecutionFailures(),
+        ],
       ],
       'status' => 'success',
       'code' => 200,
     ];
+
 
     return $response_data;
   }

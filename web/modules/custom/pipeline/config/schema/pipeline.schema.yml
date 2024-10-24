@@ -38,6 +38,9 @@ pipeline.pipeline.*:
     recurring_time:
       type: string
       label: 'Recurring Time'
+    execution_failures:
+      type: integer
+      label: 'Execution Failures Count'
     step_types:
       type: sequence
       sequence:
