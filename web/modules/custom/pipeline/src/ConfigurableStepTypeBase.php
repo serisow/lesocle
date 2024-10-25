@@ -158,6 +158,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       'seo_metadata'    => $this->t('SEO Metadata'),
       'taxonomy_term'   => $this->t('Taxonomy Term'),
       'tweet_content'   => $this->t('Tweet Content'),
+      'sms_content'      => $this->t('Sms Content'),
     ];
   }
 }
