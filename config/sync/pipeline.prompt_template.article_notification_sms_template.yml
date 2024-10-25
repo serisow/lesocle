@@ -1,0 +1,9 @@
+uuid: d5179d8c-9913-4d5b-ac5e-755d7fc22d97
+langcode: en
+status: true
+dependencies: {  }
+id: article_notification_sms_template
+label: 'Article Notification SMS Template'
+description: 'Send notification when a new article is created.'
+template: "You are crafting an SMS notification about a newly published article. Your task is to create a brief, engaging SMS that informs the recipient about the new article.\r\n\r\nContent to summarize into SMS:\r\n{previous_content}\r\n\r\nInstructions:\r\n1. Keep the message under 160 characters\r\n2. Make it engaging without being pushy\r\n3. Include article title if space permits\r\n4. Include one clear call-to-action\r\n5. Format must be professional and direct\r\n\r\nRules:\r\n- NO emoji or special characters\r\n- NO URLs (will be added by the system)\r\n- DO make it actionable\r\n- DO keep it professional\r\n- DO ensure it makes sense standalone\r\n\r\nFormat your response EXACTLY like this example:\r\n{\r\n  \"message\": \"New article published: AI Trends 2024. Essential reading for tech leaders. Check your dashboard now.\"\r\n}\r\n\r\nRemember: Response must be valid JSON with only the \"message\" field. No additional text or explanation."
+output_format: json

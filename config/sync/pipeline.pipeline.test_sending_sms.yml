@@ -1,0 +1,53 @@
+uuid: d563c84c-4ce9-4ba0-9d5f-0a1f54200787
+langcode: en
+status: null
+dependencies: {  }
+id: test_sending_sms
+label: 'Test Sending SMS'
+instructions: 'This test for sending sms'
+created: 1729847299
+changed: 1729847884
+execution_type: null
+scheduled_time: null
+schedule_type: null
+recurring_frequency: null
+recurring_time: null
+execution_failures: 0
+step_types:
+  b84ef86a-a021-4d68-9ccb-5074f192b024:
+    id: llm_step
+    data:
+      step_description: 'Craft sms notification for new article.'
+      required_steps: "step1\r\n"
+      step_output_key: step2
+      output_type: sms_content
+      llm_config: gemini_1_5_pro_002
+      prompt_template: 'Article Notification SMS Template (article_notification_sms_template)'
+      prompt: "You are crafting an SMS notification about a newly published article. Your task is to create a brief, engaging SMS that informs the recipient about the new article.\r\n\r\nContent to summarize into SMS:\r\n{step1}\r\n\r\nInstructions:\r\n1. Keep the message under 160 characters\r\n2. Make it engaging without being pushy\r\n3. Include article title if space permits\r\n4. Include one clear call-to-action\r\n5. Format must be professional and direct\r\n\r\nRules:\r\n- NO emoji or special characters\r\n- NO URLs (will be added by the system)\r\n- DO make it actionable\r\n- DO keep it professional\r\n- DO ensure it makes sense standalone\r\n\r\nFormat your response EXACTLY like this example:\r\n{\r\n  \"message\": \"New article published: AI Trends 2024. Essential reading for tech leaders. Check your dashboard now.\"\r\n}\r\n\r\nRemember: Response must be valid JSON with only the \"message\" field. No additional text or explanation."
+      response: ''
+    weight: -9
+    uuid: b84ef86a-a021-4d68-9ccb-5074f192b024
+  ab7c5103-15bd-425b-b526-810d07403fa2:
+    id: llm_step
+    data:
+      step_description: 'Generate an article.'
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      llm_config: gemini_1_5_pro_002
+      prompt_template: ''
+      prompt: 'Your task is craft a well written article about the impact of inflation in the economy globally.'
+      response: ''
+    weight: -10
+    uuid: ab7c5103-15bd-425b-b526-810d07403fa2
+  64345a1e-a175-42c9-901e-e9b321253dee:
+    id: action_step
+    data:
+      step_description: 'Send the sms'
+      required_steps: step2
+      step_output_key: step3
+      output_type: generic_content
+      action_config: send_sms
+      response: ''
+    weight: 2
+    uuid: 64345a1e-a175-42c9-901e-e9b321253dee
