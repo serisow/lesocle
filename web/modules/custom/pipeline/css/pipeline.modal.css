@@ -5,7 +5,7 @@
   bottom: 5px !important;
   left: 50% !important;
   transform: translateX(-50%);
-  width: 70% !important; /* Increase width */
+  width: 50% !important; /* Increase width */
   max-width: 700px; /* Set a maximum width */
   max-height: 100vh;
   overflow-y: auto;

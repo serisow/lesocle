@@ -159,6 +159,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       'taxonomy_term'   => $this->t('Taxonomy Term'),
       'tweet_content'   => $this->t('Tweet Content'),
       'sms_content'      => $this->t('Sms Content'),
+      'generic_webhook_content'  => $this->t('Generic Webhook Content'),
     ];
   }
 }
