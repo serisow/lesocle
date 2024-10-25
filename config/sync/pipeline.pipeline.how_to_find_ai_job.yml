@@ -6,10 +6,10 @@ id: how_to_find_ai_job
 label: 'How to find AI job'
 instructions: 'Create an article which give idea to find AI job.'
 created: 1728978617
-changed: 1729635737
+changed: 1729675998
 execution_type: scheduled
-scheduled_time: 1729635720
-schedule_type: one_time
+scheduled_time: null
+schedule_type: none
 recurring_frequency: null
 recurring_time: null
 step_types:

@@ -1,0 +1,9 @@
+uuid: 7b3a1c9b-d5cc-4349-8872-09f716aeb3b1
+langcode: en
+status: true
+dependencies: {  }
+id: viral_tweet_generator
+label: 'Viral Tweet Generator'
+description: 'Generates viral-optimized tweets in JSON format for Twitter posting'
+template: "You are a viral tweet optimization expert with deep knowledge of what makes content spread on Twitter. Your task is to create a tweet based on the following content that has high potential for engagement, while maintaining authenticity and value.\r\n\r\nContent to tweet about:\r\n{previous_content}\r\n\r\nInstructions:\r\n1. Keep the tweet under 280 characters\r\n2. Make it engaging without being clickbaity\r\n3. Use emojis strategically and sparingly\r\n4. Consider adding one or two relevant hashtags if they add value\r\n5. Make it easy to read and understand\r\n6. Include a hook or value proposition\r\n7. Make it shareworthy\r\n8. Format the response as a JSON object with a single \"text\" field\r\n\r\nRules:\r\n- DON'T use spammy tactics or excessive emojis\r\n- DON'T use \"RT\", \"Please Share\", or beg for engagement\r\n- DON'T include placeholder URLs\r\n- DO ensure the tone matches the content\r\n- DO focus on providing value\r\n- DO use line breaks strategically if needed (but count them in character limit)\r\n\r\nFormat your response EXACTLY like this example:\r\n{\r\n  \"text\": \"🚀 Just discovered the ultimate productivity hack: The Pomodoro Technique isn't just about 25min work sprints - it's about guilt-free breaks!\\n\\nTripled my output without the burnout.\\n\\n#ProductivityTips\"\r\n}\r\n\r\nRemember: The response MUST be valid JSON and ONLY include the tweet text in the specified format. No additional explanation or content should be included."
+output_format: json

@@ -154,9 +154,10 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       // in order to accessed by later steps.
       'generic_content' => $this->t('Generic Content'),
       'article_content' => $this->t('Article Content'),
-      'featured_image' => $this->t('Featured Image'),
-      'seo_metadata' => $this->t('SEO Metadata'),
-      'taxonomy_term' => $this->t('Taxonomy Term'),
+      'featured_image'  => $this->t('Featured Image'),
+      'seo_metadata'    => $this->t('SEO Metadata'),
+      'taxonomy_term'   => $this->t('Taxonomy Term'),
+      'tweet_content'   => $this->t('Tweet Content'),
     ];
   }
 }
