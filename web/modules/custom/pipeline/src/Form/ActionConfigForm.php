@@ -70,6 +70,19 @@ class ActionConfigForm extends EntityForm {
       ],
     ];
 
+    // Add execution location field
+    $form['execution_location'] = [
+      '#type' => 'radios',
+      '#title' => $this->t('Execution Location'),
+      '#options' => [
+        'drupal' => $this->t('Drupal (for Drupal-specific actions)'),
+        'go' => $this->t('Go Service (for compute-intensive actions)'),
+      ],
+      '#default_value' => $action_config->getExecutionLocation(),
+      '#required' => TRUE,
+      '#description' => $this->t('Choose where this action should be executed. Select Go Service for compute-intensive tasks not requiring Drupal functionality.'),
+    ];
+
     $form['configuration'] = [
       '#type' => 'container',
       '#attributes' => ['id' => 'action-service-configuration'],
@@ -118,6 +131,9 @@ class ActionConfigForm extends EntityForm {
 
     $action_service = $form_state->getValue('action_service');
     $this->entity->setActionService($action_service);
+
+    $this->entity->setExecutionLocation($form_state->getValue('execution_location'));
+
 
     $action_service_plugin = $this->actionServiceManager->createInstance($action_service);
     $configuration = $action_service_plugin->submitConfigurationForm($form['configuration'], $form_state);

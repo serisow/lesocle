@@ -33,6 +33,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "id",
  *     "label",
  *     "action_service",
+ *     "execution_location",
  *     "configuration",
  *   }
  * )
@@ -60,6 +61,14 @@ class ActionConfig extends ConfigEntityBase  implements ActionConfigInterface {
   protected $action_service;
 
   /**
+   * The execution location (drupal|go).
+   *
+   * @var string
+   */
+  protected $execution_location = 'drupal';
+
+
+  /**
    * The Action Service configuration.
    *
    * @var array
@@ -78,6 +87,21 @@ class ActionConfig extends ConfigEntityBase  implements ActionConfigInterface {
    */
   public function setActionService($action_service) {
     $this->action_service = $action_service;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExecutionLocation() {
+    return $this->execution_location;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setExecutionLocation($execution_location) {
+    $this->execution_location = $execution_location;
     return $this;
   }
 

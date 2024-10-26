@@ -24,6 +24,25 @@ interface ActionConfigInterface extends ConfigEntityInterface {
   public function setActionService($action_service);
 
   /**
+   * Gets the execution location.
+   *
+   * @return string
+   *   The execution location.
+   */
+  public function getExecutionLocation();
+
+  /**
+   * Sets the execution location.
+   *
+   * @param string $execution_location
+   *   The execution location.
+   *
+   * @return $this
+   */
+  public function setExecutionLocation($execution_location);
+
+
+  /**
    * Gets the configuration.
    *
    * @return array

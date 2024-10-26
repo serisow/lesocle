@@ -119,18 +119,26 @@ class PipelineExecutionController extends ControllerBase {
             $action_config_id = $config['data']['action_config'];
             $action_config = $this->entityTypeManager->getStorage('action_config')->load($action_config_id);
             if ($action_config) {
-              $action_service_id = $action_config->getActionService();
-              $action_service = $this->actionServiceManager->createInstance($action_service_id);
-              try {
-                $action_result = $action_service->executeAction($action_config->toArray(), $context);
-                $step_result['data'] = $action_result;
-                $step_result['status'] = 'completed';
-              }
-              catch (\Exception $e) {
-                $has_errors = true;
-                $step_result['status'] = 'failed';
-                $step_result['error_message'] = $e->getMessage();
-                \Drupal::logger('pipeline')->error('Error executing action: @error', ['@error' => $e->getMessage()]);
+              // Only execute if this is a Drupal-side action or if execution_location is not set (backward compatibility)
+              $execution_location = $action_config->get('execution_location') ?? 'drupal';
+              if ($execution_location === 'drupal') {
+                $action_service_id = $action_config->getActionService();
+                $action_service = $this->actionServiceManager->createInstance($action_service_id);
+                try {
+                  $action_result = $action_service->executeAction($action_config->toArray(), $context);
+                  $step_result['data'] = $action_result;
+                  $step_result['status'] = 'completed';
+                  $step_result['executed_in'] = 'drupal';
+                }
+                catch (\Exception $e) {
+                  $has_errors = true;
+                  $step_result['status'] = 'failed';
+                  $step_result['error_message'] = $e->getMessage();
+                  \Drupal::logger('pipeline')->error('Error executing action: @error', ['@error' => $e->getMessage()]);
+                }
+              } else {
+                // For Go-executed actions, use the result directly
+                $step_result['executed_in'] = 'go';
               }
             }
           }
@@ -227,6 +235,6 @@ class PipelineExecutionController extends ControllerBase {
     ];
 
 
-    return $response_data;
+    return new JsonResponse($response_data);
   }
 }

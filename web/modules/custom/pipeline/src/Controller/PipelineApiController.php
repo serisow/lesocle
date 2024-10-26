@@ -256,6 +256,21 @@ class PipelineApiController extends ControllerBase {
 
           case 'action_step':
             $step_data['action_config'] = $configuration['data']['action_config'] ?? '';
+            // Load and add action configuration details
+            if (isset($configuration['data']['action_config'])) {
+              $action_config = $this->entityTypeManager->getStorage('action_config')
+                ->load($configuration['data']['action_config']);
+
+              if ($action_config) {
+                $step_data['action_details'] = [
+                  'id' => $action_config->id(),
+                  'label' => $action_config->label(),
+                  'action_service' => $action_config->getActionService(),
+                  'execution_location' => $action_config->get('execution_location') ?? 'drupal',
+                  'configuration' => $action_config->getConfiguration(),
+                ];
+              }
+            }
             break;
 
           case 'google_search':
