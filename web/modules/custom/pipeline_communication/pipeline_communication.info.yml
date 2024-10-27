@@ -1,0 +1,7 @@
+name: 'Pipeline Communication'
+type: module
+description: 'Provides communication capabilities for Pipeline module'
+package: Pipeline
+core_version_requirement: ^10 || ^11
+dependencies:
+  - pipeline:pipeline

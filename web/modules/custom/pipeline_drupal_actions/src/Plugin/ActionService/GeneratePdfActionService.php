@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\pipeline\Plugin\ActionService;
+namespace Drupal\pipeline_drupal_actions\Plugin\ActionService;
 
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;

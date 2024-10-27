@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\pipeline\Plugin\ActionService;
+namespace Drupal\pipeline_drupal_actions\Plugin\ActionService;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
