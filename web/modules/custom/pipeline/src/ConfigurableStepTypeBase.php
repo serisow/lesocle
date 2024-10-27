@@ -152,13 +152,14 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
     return [
       // Generic content do not have particular handling, it purpose is to be put in the context
       // in order to accessed by later steps.
-      'generic_content' => $this->t('Generic Content'),
-      'article_content' => $this->t('Article Content'),
-      'featured_image'  => $this->t('Featured Image'),
-      'seo_metadata'    => $this->t('SEO Metadata'),
-      'taxonomy_term'   => $this->t('Taxonomy Term'),
-      'tweet_content'   => $this->t('Tweet Content'),
+      'generic_content'  => $this->t('Generic Content'),
+      'article_content'  => $this->t('Article Content'),
+      'featured_image'   => $this->t('Featured Image'),
+      'seo_metadata'     => $this->t('SEO Metadata'),
+      'taxonomy_term'    => $this->t('Taxonomy Term'),
+      'tweet_content'    => $this->t('Tweet Content'),
       'sms_content'      => $this->t('Sms Content'),
+      'bulk_sms_content' => $this->t('Bulk SMS Content'),
       'generic_webhook_content'  => $this->t('Generic Webhook Content'),
     ];
   }
