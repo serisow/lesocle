@@ -32,6 +32,12 @@ class PipelineApiControllerTest extends UnitTestCase {
   protected $pipelineStorage;
   protected $llmConfigStorage;
   protected $pipelineRunStorage;
+
+  /**
+   * @var \Drupal\Core\Entity\EntityStorageInterface|\Prophecy\Prophecy\ObjectProphecy
+   */
+  protected $actionConfigStorage;
+
   protected $modelManager;
   /**
    * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface|\Prophecy\Prophecy\ObjectProphecy
@@ -54,7 +60,8 @@ class PipelineApiControllerTest extends UnitTestCase {
     $this->entityTypeManager = $this->prophesize(EntityTypeManagerInterface::class);
     $this->pipelineStorage = $this->prophesize(EntityStorageInterface::class);
     $this->llmConfigStorage = $this->prophesize(EntityStorageInterface::class);
-    $this->pipelineRunStorage = $this->prophesize(EntityStorageInterface::class); // Initialized
+    $this->pipelineRunStorage = $this->prophesize(EntityStorageInterface::class);
+    $this->actionConfigStorage = $this->prophesize(EntityStorageInterface::class);
     $this->modelManager = $this->prophesize(ModelManager::class);
     $this->loggerFactory = $this->prophesize(LoggerChannelFactoryInterface::class);
     $this->logger = $this->prophesize(LoggerInterface::class);
@@ -63,7 +70,8 @@ class PipelineApiControllerTest extends UnitTestCase {
 
     $this->entityTypeManager->getStorage('pipeline')->willReturn($this->pipelineStorage->reveal());
     $this->entityTypeManager->getStorage('llm_config')->willReturn($this->llmConfigStorage->reveal());
-    $this->entityTypeManager->getStorage('pipeline_run')->willReturn($this->pipelineRunStorage->reveal()); // Configured
+    $this->entityTypeManager->getStorage('pipeline_run')->willReturn($this->pipelineRunStorage->reveal());
+    $this->entityTypeManager->getStorage('action_config')->willReturn($this->actionConfigStorage->reveal());
 
     $container->set('entity_type.manager', $this->entityTypeManager->reveal());
     $container->set('plugin.manager.model_manager', $this->modelManager->reveal());
@@ -91,6 +99,7 @@ class PipelineApiControllerTest extends UnitTestCase {
 
     $query->accessCheck()->willReturn($query);
     $query->condition('status', TRUE)->willReturn($query);
+    $query->condition('execution_failures', 3, '<')->willReturn($query);
     $query->condition('schedule_type', ['one_time', 'recurring'], 'IN')->willReturn($query);
 
     $query->orConditionGroup()->willReturn($orGroup->reveal());
@@ -268,6 +277,7 @@ class PipelineApiControllerTest extends UnitTestCase {
 
     $query->accessCheck()->willReturn($query);
     $query->condition('status', TRUE)->willReturn($query);
+    $query->condition('execution_failures', 3, '<')->willReturn($query);
     $query->condition('schedule_type', ['one_time', 'recurring'], 'IN')->willReturn($query);
 
     $query->orConditionGroup()->willReturn($orGroup->reveal());
@@ -353,6 +363,7 @@ class PipelineApiControllerTest extends UnitTestCase {
     $pipeline->getChangedTime()->willReturn(1234567891);
     $pipeline->getScheduleType()->willReturn('one_time');
     $pipeline->getScheduledTime()->willReturn(1234567892);
+    $pipeline->getExecutionFailures()->willReturn(0);
 
     $stepType = $this->prophesize(StepTypeInterface::class); // Ensure interface is imported
     $stepType->getUuid()->willReturn('step1_uuid');
@@ -439,6 +450,7 @@ class PipelineApiControllerTest extends UnitTestCase {
     $pipeline->getScheduleType()->willReturn('recurring');
     $pipeline->getRecurringFrequency()->willReturn('weekly');
     $pipeline->getRecurringTime()->willReturn('08:00');
+    $pipeline->getExecutionFailures()->willReturn(0);
 
     // Mock step types
     $stepType = $this->prophesize(StepTypeInterface::class);
@@ -543,6 +555,7 @@ class PipelineApiControllerTest extends UnitTestCase {
     $pipeline->getChangedTime()->willReturn(1234567891);
     $pipeline->getScheduleType()->willReturn('one_time');
     $pipeline->getScheduledTime()->willReturn(1234567892);
+    $pipeline->getExecutionFailures()->willReturn(0);
 
     // Mock the 'action_step' step type
     $stepType = $this->prophesize(StepTypeInterface::class);
@@ -615,7 +628,7 @@ class PipelineApiControllerTest extends UnitTestCase {
     $pipeline->getChangedTime()->willReturn(1234567891);
     $pipeline->getScheduleType()->willReturn('one_time');
     $pipeline->getScheduledTime()->willReturn(1234567892);
-
+    $pipeline->getExecutionFailures()->willReturn(0);
     // Mock the 'google_search' step type
     $stepType = $this->prophesize(StepTypeInterface::class);
     $stepType->getUuid()->willReturn('step_google_search_uuid');
@@ -703,6 +716,153 @@ class PipelineApiControllerTest extends UnitTestCase {
     $this->assertInstanceOf(PipelineApiController::class, $controller, 'create() should return an instance of PipelineApiController.');
   }
 
+  /**
+   * @covers ::getPipeline
+   */
+  public function testGetPipelineWithFailureTracking() {
+    // Test cases for different failure counts
+    $testCases = [
+      [
+        'failures' => 0,
+        'expectedStatus' => TRUE,
+        'description' => 'Pipeline with no failures should be enabled'
+      ],
+      [
+        'failures' => 2,
+        'expectedStatus' => TRUE,
+        'description' => 'Pipeline with 2 failures should still be enabled'
+      ],
+      [
+        'failures' => 3,
+        'expectedStatus' => FALSE,
+        'description' => 'Pipeline should be automatically disabled after 3 failures'
+      ],
+      [
+        'failures' => 4,
+        'expectedStatus' => FALSE,
+        'description' => 'Pipeline should remain disabled after more than 3 failures'
+      ],
+    ];
+
+    foreach ($testCases as $testCase) {
+      // Mock pipeline with specific failure count
+      $pipelineId = 'test_pipeline_' . $testCase['failures'];
+      $pipeline = $this->prophesize(Pipeline::class);
+      $pipeline->id()->willReturn($pipelineId);
+      $pipeline->label()->willReturn('Test Pipeline');
+      $pipeline->getInstructions()->willReturn('Test instructions');
+      $pipeline->getCreatedTime()->willReturn(1234567890);
+      $pipeline->getChangedTime()->willReturn(1234567891);
+      $pipeline->getScheduleType()->willReturn('one_time');
+      $pipeline->getScheduledTime()->willReturn(1234567892);
+      $pipeline->getExecutionFailures()->willReturn($testCase['failures']);
+      $pipeline->getStepTypes()->willReturn([]);
+      $pipeline->isEnabled()->willReturn($testCase['expectedStatus']);
+
+      $this->pipelineStorage->load($pipelineId)->willReturn($pipeline->reveal());
+
+      // Test pipeline status through API
+      $response = $this->controller->getPipeline($pipelineId);
+      $content = json_decode($response->getContent(), TRUE);
+
+      // Assert pipeline status matches expected state
+      $this->assertEquals(
+        $testCase['expectedStatus'],
+        $content['status'],
+        $testCase['description']
+      );
+      $this->assertEquals(
+        $testCase['failures'],
+        $content['execution_failures'],
+        sprintf('Pipeline should report %d execution failures', $testCase['failures'])
+      );
+    }
+  }
+
+  /**
+   * @covers ::getScheduledPipelines
+   */
+  public function testScheduledPipelinesExcludesFailedPipelines() {
+    $currentDate = new \DateTime('now', new \DateTimeZone('UTC'));
+    $startOfDay = $currentDate->setTime(0, 0, 0)->getTimestamp();
+
+    // Create pipelines with different failure counts
+    $pipelines = [
+      'pipeline1' => $this->createMockPipeline('pipeline1', 'Good Pipeline', 'one_time', $startOfDay + 3600, null, null, TRUE, 0),
+      'pipeline2' => $this->createMockPipeline('pipeline2', 'Warning Pipeline', 'one_time', $startOfDay + 7200, null, null, TRUE, 2),
+      'pipeline3' => $this->createMockPipeline('pipeline3', 'Failed Pipeline', 'one_time', $startOfDay + 10800, null, null, FALSE, 3),
+    ];
+
+    // Mock query to return all pipeline IDs
+    $query = $this->prophesize(QueryInterface::class);
+    $orGroup = $this->prophesize(QueryInterface::class);
+    $andGroup = $this->prophesize(QueryInterface::class);
+
+    $query->accessCheck()->willReturn($query);
+    $query->condition('status', TRUE)->willReturn($query);
+    $query->condition('execution_failures', 3, '<')->willReturn($query);
+    $query->condition('schedule_type', ['one_time', 'recurring'], 'IN')->willReturn($query);
+    $query->orConditionGroup()->willReturn($orGroup->reveal());
+    $query->andConditionGroup()->willReturn($andGroup->reveal());
+
+    // Rest of query setup...
+    $orGroup->condition(Argument::cetera())->willReturn($orGroup);
+    $andGroup->condition(Argument::cetera())->willReturn($andGroup);
+    $query->condition($orGroup)->willReturn($query);
+    $query->sort('scheduled_time', 'ASC')->willReturn($query);
+    $query->execute()->willReturn(['pipeline1', 'pipeline2']); // Only return pipelines with < 3 failures
+
+    $this->pipelineStorage->getQuery()->willReturn($query->reveal());
+
+    // Mock pipeline loading
+    foreach ($pipelines as $id => $pipeline) {
+      $this->pipelineStorage->load($id)->willReturn($pipeline);
+    }
+
+    // Mock run query
+    $runQuery = $this->prophesize(QueryInterface::class);
+    $runQuery->accessCheck()->willReturn($runQuery);
+    $runQuery->condition(Argument::cetera())->willReturn($runQuery);
+    $runQuery->sort(Argument::cetera())->willReturn($runQuery);
+    $runQuery->range(Argument::cetera())->willReturn($runQuery);
+    $runQuery->execute()->willReturn([]);
+
+    $this->pipelineRunStorage->getQuery()->willReturn($runQuery->reveal());
+
+    // Get scheduled pipelines
+    $response = $this->controller->getScheduledPipelines();
+    $content = json_decode($response->getContent(), TRUE);
+
+    // Assertions
+    $this->assertCount(2, $content, 'Only pipelines with less than 3 failures should be returned');
+
+    // Check that failed pipeline is not included
+    foreach ($content as $pipeline) {
+      $this->assertLessThan(
+        3,
+        $pipelines[$pipeline['id']]->getExecutionFailures(),
+        'Pipelines with 3 or more failures should not be included in scheduled pipelines'
+      );
+    }
+
+    // Verify specific pipelines
+    $this->assertContains(
+      'pipeline1',
+      array_column($content, 'id'),
+      'Pipeline with 0 failures should be included'
+    );
+    $this->assertContains(
+      'pipeline2',
+      array_column($content, 'id'),
+      'Pipeline with 2 failures should be included'
+    );
+    $this->assertNotContains(
+      'pipeline3',
+      array_column($content, 'id'),
+      'Pipeline with 3 failures should not be included'
+    );
+  }
+
 
   /**
    * Helper method to create mock pipelines with status.
@@ -725,7 +885,16 @@ class PipelineApiControllerTest extends UnitTestCase {
    * @return \Drupal\pipeline\Entity\Pipeline
    *   The mocked pipeline entity.
    */
-  private function createMockPipeline($id, $label, $scheduleType, $scheduledTime = null, $recurringFrequency = null, $recurringTime = null, $status = TRUE) {
+  private function createMockPipeline(
+    $id,
+    $label,
+    $scheduleType,
+    $scheduledTime = null,
+    $recurringFrequency = null,
+    $recurringTime = null,
+    $status = TRUE,
+    $executionFailures = 0
+  ) {
     $pipeline = $this->prophesize(Pipeline::class);
     $pipeline->id()->willReturn($id);
     $pipeline->label()->willReturn($label);
@@ -734,7 +903,7 @@ class PipelineApiControllerTest extends UnitTestCase {
     $pipeline->getRecurringFrequency()->willReturn($recurringFrequency);
     $pipeline->getRecurringTime()->willReturn($recurringTime);
     $pipeline->isEnabled()->willReturn($status);
+    $pipeline->getExecutionFailures()->willReturn($executionFailures);
     return $pipeline->reveal();
   }
-
 }
