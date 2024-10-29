@@ -2,6 +2,8 @@
 
 namespace Drupal\pipeline\Plugin\ActionService;
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -24,7 +26,9 @@ class GenericWebhookActionService extends AbstractWebhookActionService {
   /**
    * {@inheritdoc}
    */
-  protected function addServiceSpecificConfiguration(array $form, array $configuration): array {
+// In GenericWebhookActionService.php
+
+  protected function addServiceSpecificConfiguration(array &$form, FormStateInterface $form_state, array $configuration): array {
     $form['custom_headers'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Additional Headers'),
@@ -41,21 +45,30 @@ class GenericWebhookActionService extends AbstractWebhookActionService {
         'bearer' => $this->t('Bearer Token'),
         'custom' => $this->t('Custom Header'),
       ],
-      '#default_value' => $configuration['authentication'] ?? 'none',
+      '#default_value' => $form_state->getValue('authentication') ?? $configuration['authentication'] ?? 'none',
       '#ajax' => [
-        'callback' => '::updateAuthenticationForm',
+        'callback' => [$this, 'updateAuthenticationForm'],
         'wrapper' => 'auth-settings-wrapper',
+        'event' => 'change',
+        'progress' => [
+          'type' => 'throbber',
+          'message' => $this->t('Updating authentication settings...'),
+        ],
       ],
     ];
 
     $form['auth_settings'] = [
       '#type' => 'container',
+      '#tree' => TRUE,
       '#prefix' => '<div id="auth-settings-wrapper">',
       '#suffix' => '</div>',
     ];
 
-    // Add authentication fields based on configuration
-    $this->addAuthenticationFields($form, $configuration['authentication'] ?? 'none', $configuration);
+    // Determine the authentication type
+    $auth_type = $form_state->getValue('authentication') ?? $configuration['authentication'] ?? 'none';
+
+    // Update the authentication fields
+    $this->addAuthenticationFields($form, $auth_type, $form_state, $configuration);
 
     return $form;
   }
@@ -70,17 +83,31 @@ class GenericWebhookActionService extends AbstractWebhookActionService {
    * @param array $configuration
    *   The current configuration.
    */
-  protected function addAuthenticationFields(array &$form, string $auth_type, array $configuration): void {
+  /**
+   * Adds authentication fields based on selected type.
+   */
+  protected function addAuthenticationFields(array &$form, string $auth_type, FormStateInterface $form_state, array $configuration): void {
+    // Remove existing child elements but keep container attributes
+    foreach ($form['auth_settings'] as $key => $value) {
+      if (strpos($key, '#') !== 0) {
+        unset($form['auth_settings'][$key]);
+      }
+    }
+
+    // Add fields based on authentication type
     switch ($auth_type) {
       case 'basic':
         $form['auth_settings']['username'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Username'),
           '#default_value' => $configuration['username'] ?? '',
+          '#required' => TRUE,
         ];
         $form['auth_settings']['password'] = [
           '#type' => 'password',
           '#title' => $this->t('Password'),
+          '#default_value' => $configuration['password'] ?? '',
+          '#required' => TRUE,
         ];
         break;
 
@@ -89,6 +116,7 @@ class GenericWebhookActionService extends AbstractWebhookActionService {
           '#type' => 'textfield',
           '#title' => $this->t('Bearer Token'),
           '#default_value' => $configuration['token'] ?? '',
+          '#required' => TRUE,
         ];
         break;
 
@@ -97,49 +125,52 @@ class GenericWebhookActionService extends AbstractWebhookActionService {
           '#type' => 'textfield',
           '#title' => $this->t('Header Name'),
           '#default_value' => $configuration['header_name'] ?? '',
+          '#required' => TRUE,
         ];
         $form['auth_settings']['header_value'] = [
           '#type' => 'textfield',
           '#title' => $this->t('Header Value'),
           '#default_value' => $configuration['header_value'] ?? '',
+          '#required' => TRUE,
         ];
         break;
     }
   }
 
+
   /**
    * Ajax callback for authentication type selection.
    */
   public function updateAuthenticationForm(array &$form, FormStateInterface $form_state): array {
-    return $form['auth_settings'];
+    return $form['configuration']['auth_settings'];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function addServiceSpecificConfigurationSubmit(array $config, FormStateInterface $form_state): array {
-    $config['custom_headers'] = $form_state->getValue('custom_headers');
-    $config['authentication'] = $form_state->getValue('authentication');
+  protected function addServiceSpecificConfigurationSubmit(array &$form, FormStateInterface $form_state): array {
+    $this->configuration['custom_headers'] = $form_state->getValue('custom_headers');
+    $this->configuration['authentication'] = $form_state->getValue('authentication');
 
     // Add authentication settings based on type
-    switch ($config['authentication']) {
+    switch ($this->configuration['authentication']) {
       case 'basic':
-        $config['username'] = $form_state->getValue(['auth_settings', 'username']);
-        $config['password'] = $form_state->getValue(['auth_settings', 'password']);
+        $this->configuration['username'] = $form_state->getValue(['auth_settings', 'username']);
+        $this->configuration['password'] = $form_state->getValue(['auth_settings', 'password']);
         break;
 
       case 'bearer':
-        $config['token'] = $form_state->getValue(['auth_settings', 'token']);
+        $this->configuration['token'] = $form_state->getValue(['auth_settings', 'token']);
         break;
 
       case 'custom':
-        $config['header_name'] = $form_state->getValue(['auth_settings', 'header_name']);
-        $config['header_value'] = $form_state->getValue(['auth_settings', 'header_value']);
+        $this->configuration['header_name'] = $form_state->getValue(['auth_settings', 'header_name']);
+        $this->configuration['header_value'] = $form_state->getValue(['auth_settings', 'header_value']);
         break;
     }
-
-    return $config;
+    return $this->configuration;
   }
+
 
   /**
    * {@inheritdoc}

@@ -76,7 +76,7 @@ abstract class AbstractWebhookActionService extends PluginBase implements Action
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state, array $configuration)
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state, $configuration)
   {
     $form['webhook_url'] = [
       '#type' => 'url',
@@ -113,9 +113,7 @@ abstract class AbstractWebhookActionService extends PluginBase implements Action
     ];
 
     // Allow service-specific configuration to be added
-    $form = $this->addServiceSpecificConfiguration($form, $configuration);
-
-    return $form;
+    return $this->addServiceSpecificConfiguration($form, $form_state, $configuration);
   }
 
   /**
@@ -123,15 +121,13 @@ abstract class AbstractWebhookActionService extends PluginBase implements Action
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state)
   {
-    $config = [
-      'webhook_url' => $form_state->getValue('webhook_url'),
-      'http_method' => $form_state->getValue('http_method'),
-      'timeout' => $form_state->getValue('timeout'),
-      'retry_attempts' => $form_state->getValue('retry_attempts'),
-    ];
+    $this->configuration['webhook_url'] = $form_state->getValue('webhook_url');
+    $this->configuration['http_method'] = $form_state->getValue('http_method');
+    $this->configuration['timeout'] = $form_state->getValue('timeout');
+    $this->configuration['retry_attempts'] = $form_state->getValue('retry_attempts');
 
     // Add service-specific configuration
-    return $this->addServiceSpecificConfigurationSubmit($config, $form_state);
+    return $this->addServiceSpecificConfigurationSubmit($form, $form_state);
   }
 
   /**
@@ -239,12 +235,12 @@ abstract class AbstractWebhookActionService extends PluginBase implements Action
   /**
    * Adds service-specific configuration to the form.
    */
-  abstract protected function addServiceSpecificConfiguration(array $form, array $configuration): array;
+  abstract protected function addServiceSpecificConfiguration(array &$form, FormStateInterface $form_state, array $configuration): array;
 
   /**
    * Handles service-specific configuration submit.
    */
-  abstract protected function addServiceSpecificConfigurationSubmit(array $config, FormStateInterface $form_state): array;
+  abstract protected function addServiceSpecificConfigurationSubmit(array &$form, FormStateInterface $form_state): array;
 
   /**
    * Validates the service-specific configuration.
