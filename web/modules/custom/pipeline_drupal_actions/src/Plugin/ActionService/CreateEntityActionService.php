@@ -9,6 +9,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\pipeline\Plugin\ActionServiceInterface;
 use Drupal\pipeline\Service\MediaCreationService;
+use Drupal\pipeline_drupal_actions\EntityCreation\EntityCreationStrategyManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -38,6 +39,13 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
    */
   protected $mediaCreationService;
 
+  /**
+   * The strategy manager service.
+   * @var \Drupal\pipeline_drupal_actions\EntityCreation\EntityCreationStrategyManager
+   */
+  protected $entityCreationStrategyManager;
+
+
 
   /**
    * Constructs a CreateEntityActionService object.
@@ -58,12 +66,14 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
   public function __construct(array $configuration, $plugin_id, $plugin_definition,
     EntityTypeManagerInterface $entity_type_manager,
     EntityTypeBundleInfoInterface $entity_type_bundle_info,
-    MediaCreationService $media_creation_service
+    MediaCreationService $media_creation_service,
+    EntityCreationStrategyManager $strategy_manager
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
     $this->entityTypeBundleInfo = $entity_type_bundle_info;
     $this->mediaCreationService = $media_creation_service;
+    $this->entityCreationStrategyManager = $strategy_manager;
   }
 
   /**
@@ -76,7 +86,8 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
       $plugin_definition,
       $container->get('entity_type.manager'),
       $container->get('entity_type.bundle.info'),
-      $container->get('pipeline.media_creation_service')
+      $container->get('pipeline.media_creation_service'),
+      $container->get('pipeline_drupal_actions.entity_creation_strategy_manager')
     );
   }
 
@@ -167,129 +178,14 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
    * {@inheritdoc}
    */
   public function executeAction(array $config, array &$context): string {
-    // Find the article content
-    $taxonomy_data = null;
-    $article_content = null;
-    foreach ($context['results'] as $step) {
-      if ($step['output_type'] === 'article_content') {
-        $article_content = $step['data'];
-        break;
-      }
-      if ($step['output_type'] === 'taxonomy_term') {
-        $taxonomy_data = $step['data'];
-      }
+    $strategy = $this->entityCreationStrategyManager->getStrategy(
+      $config['configuration']['entity_type'],
+      $config['configuration']['entity_bundle']
+    );
+
+    if (!$strategy) {
+      throw new \Exception("No strategy found for {$config['entity_type']} - {$config['entity_bundle']}");
     }
-
-    if (!$article_content) {
-      throw new \Exception("Article content not found in the context.");
-    }
-
-    // Remove ```json prefix and ``` suffix if present
-    $content = preg_replace('/^```json\s*|\s*```$/s', '', $article_content);
-
-    // Trim any whitespace
-    $content = trim($content);
-
-    // Decode the JSON content
-    $data = json_decode($content, true);
-
-    if (json_last_error() !== JSON_ERROR_NONE) {
-      throw new \Exception("Invalid JSON format: " . json_last_error_msg());
-    }
-
-    if (!isset($data['title']) || !isset($data['body'])) {
-      throw new \Exception("JSON must contain 'title' and 'body' fields");
-    }
-
-    // Remove the first H1 tag and its contents from the body
-    $data['body'] = preg_replace('/<h1>.*?<\/h1>/s', '', $data['body'], 1);
-
-    // Trim any leading whitespace that might remain after removing the H1
-    $data['body'] = ltrim($data['body']);
-
-    // Find the featured image data
-    $image_data = null;
-    foreach ($context['results'] as $step) {
-      if ($step['output_type'] === 'featured_image') {
-        $image_data = $step['data'];
-        break;
-      }
-    }
-
-    // Create media entity if image info is available
-    $media_id = null;
-    if ($image_data) {
-      $image_info = json_decode($image_data, true);
-      if ($image_info) {
-        $media_id = $this->mediaCreationService->createImageMedia($image_info);
-      }
-    }
-
-    // Find SEO metadata
-    $seo_content = null;
-    foreach ($context['results'] as $step) {
-      if ($step['output_type'] === 'seo_metadata') {
-        $seo_data = preg_replace('/^```json\s*|\s*```$/s', '', $step['data']);
-        $seo_content = json_decode(trim($seo_data), true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-          throw new \Exception("Invalid JSON format: " . json_last_error_msg());
-        }
-
-        if (!isset($seo_content['title']) || !isset($seo_content['summary'])) {
-          throw new \Exception("JSON must contain 'title' and 'summary' fields");
-        }
-        break;
-      }
-    }
-
-    $title = $data['title'];
-    $body = $data['body'];
-
-    // Ensure title is not empty and not too long
-    $title = !empty($title) ? $title : 'Untitled Article';
-    $title = substr($title, 0, 255);
-
-// Process taxonomy data
-    $selected_terms = [];
-    if ($taxonomy_data) {
-      // Remove any potential JSON code block markers
-      $taxonomy_data = preg_replace('/^```json\s*|\s*```$/s', '', $taxonomy_data);
-      $taxonomy_data = trim($taxonomy_data);
-
-      $taxonomy_content = json_decode($taxonomy_data, true);
-
-      if (json_last_error() === JSON_ERROR_NONE && isset($taxonomy_content['selected_terms']) && is_array($taxonomy_content['selected_terms'])) {
-        foreach ($taxonomy_content['selected_terms'] as $tid) {
-          if (is_numeric($tid)) {
-            $selected_terms[] = ['target_id' => (int)$tid];
-          }
-        }
-      }
-    }
-
-    $node_storage = $this->entityTypeManager->getStorage('node');
-    $node = $node_storage->create([
-      'type' => 'article',
-      'title' => $seo_content['title'] ?? $title,
-      'body' => [
-        'value' => $body,
-        'format' => 'full_html',
-        'summary' => $seo_content['summary'] ?? '',
-      ],
-      'field_category' => $selected_terms, // Set the taxonomy terms
-    ]);
-
-    // Add the media to the article if available
-    if ($media_id) {
-      $node->field_media_image = ['target_id' => $media_id];
-    }
-
-    $node->save();
-
-    return json_encode([
-      'nid' => $node->id(),
-      'title' => $node->getTitle(),
-      'media_id' => $media_id,
-    ]);
+    return json_encode($strategy->createEntity($context['results'], $context));
   }
 }

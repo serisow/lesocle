@@ -1,0 +1,12 @@
+services:
+  pipeline_drupal_actions.entity_creation_strategy_manager:
+    class: Drupal\pipeline_drupal_actions\EntityCreation\EntityCreationStrategyManager
+    tags:
+      - { name: service_collector, tag: entity_creation_strategy, call: addStrategy }
+
+  pipeline_drupal_actions.article_creation_strategy:
+    class: Drupal\pipeline_drupal_actions\EntityCreation\Strategy\ArticleCreationStrategy
+    arguments: ['@entity_type.manager', '@pipeline.media_creation_service']
+    tags:
+      - { name: entity_creation_strategy }
+
