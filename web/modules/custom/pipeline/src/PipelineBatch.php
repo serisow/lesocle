@@ -1,4 +1,37 @@
 <?php
+/**
+ * Handles pipeline execution through Drupal's batch API.
+ *
+ * This service class manages the Drupal-side execution of pipeline steps using
+ * the Batch API. It is specifically responsible for handling pipelines that
+ * are executed directly within Drupal, particularly for manual/immediate executions
+ * triggered from the UI.
+ *
+ * Critical functionalities:
+ * - Processes steps sequentially through Drupal's batch operations
+ * - Manages execution context and results between steps
+ * - Creates and updates PipelineRun entities
+ * - Handles error capturing and logging
+ *
+ * Error handling:
+ * - Captures PHP errors during step execution
+ * - Updates pipeline failure counts
+ * - Creates detailed log files for failed executions
+ * - Manages step-specific error states
+ *
+ * Key relationships:
+ * - Works with PipelineRun entities for result storage
+ * - Uses PipelineErrorHandler for error logging
+ * - Integrates with Drupal's Batch API system
+ *
+ * Note: Scheduled pipeline executions and Go service interactions are handled
+ * separately through the Go pipeline service and its API endpoints.
+ *
+ * @see \Drupal\pipeline\Service\PipelineErrorHandler
+ * @see \Drupal\pipeline\Entity\PipelineRun
+ * @see \Drupal\pipeline\Controller\PipelineExecutionController
+ */
+
 namespace Drupal\pipeline;
 
 use Drupal\Component\Datetime\TimeInterface;

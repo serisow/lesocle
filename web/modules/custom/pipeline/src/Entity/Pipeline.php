@@ -1,4 +1,33 @@
 <?php
+/**
+ * Defines the Pipeline configuration entity.
+ *
+ * A Pipeline is a configurable sequence of steps that can be executed either on
+ * demand or on a schedule. Each step in the pipeline is a plugin instance that
+ * performs a specific operation (LLM calls, actions, etc.).
+ *
+ * Key features:
+ * - Stores ordered collection of step type plugins
+ * - Supports scheduling (one-time and recurring)
+ * - Tracks execution failures and auto-disables after threshold
+ * - Maintains execution history
+ *
+ * Important behaviors:
+ * - Steps are executed in weight order
+ * - Pipeline auto-disables after 3 consecutive failures
+ * - Each step can access results from previous steps
+ * - Supports both Drupal-side and Go-service execution
+ *
+ * @ConfigEntityType(
+ *   id = "pipeline",
+ *   label = @Translation("Pipeline"),
+ *   handlers = {...}
+ * )
+ *
+ * @see \Drupal\pipeline\Entity\PipelineInterface
+ * @see \Drupal\pipeline\Plugin\StepTypeInterface
+ */
+
 namespace Drupal\pipeline\Entity;
 
 use Drupal\Core\Entity\EntityStorageInterface;

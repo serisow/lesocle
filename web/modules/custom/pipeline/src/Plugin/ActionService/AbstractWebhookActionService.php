@@ -1,5 +1,40 @@
 <?php
 
+/**
+ * Provides base implementation for webhook-based action services.
+ *
+ * This abstract class implements core webhook functionality including retry logic,
+ * error handling, and standardized HTTP communication. It serves as the foundation
+ * for all webhook-based integrations in the pipeline system.
+ *
+ * Core features:
+ * - Implements retry logic with exponential backoff
+ * - Provides standardized HTTP request handling
+ * - Manages timeouts and connection issues
+ * - Handles authentication and headers
+ *
+ * Configuration management:
+ * - Webhook URL and method
+ * - Authentication settings
+ * - Timeout and retry settings
+ * - Custom headers and parameters
+ *
+ * Error handling:
+ * - Implements robust retry logic
+ * - Provides detailed error logging
+ * - Handles various HTTP response codes
+ * - Manages timeout scenarios
+ *
+ * Important note:
+ * Child classes must implement specific abstract methods for:
+ * - Payload preparation
+ * - Header configuration
+ * - Service-specific validation
+ * - Configuration form elements
+ *
+ * @see \Drupal\pipeline\Plugin\ActionService\GenericWebhookActionService
+ * @see \Drupal\pipeline\Plugin\ActionServiceInterface
+ */
 
 namespace Drupal\pipeline\Plugin\ActionService;
 

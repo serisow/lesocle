@@ -1,4 +1,42 @@
 <?php
+
+/**
+ * Provides API endpoints for Go service interaction.
+ *
+ * This controller exposes the necessary endpoints for the Go service to fetch
+ * pipeline configurations and manage scheduled executions. It serves as the
+ * primary interface for the Go service to interact with Drupal's pipeline system.
+ *
+ * Key endpoints:
+ * - GET /api/pipelines/scheduled: Returns scheduled pipelines due for execution
+ * - GET /api/pipelines/{id}: Returns complete pipeline configuration
+ *
+ * Critical functionalities:
+ * - Filters and returns scheduled pipelines based on execution criteria
+ * - Validates pipeline execution eligibility (status, failure counts)
+ * - Provides complete pipeline configurations including steps
+ * - Handles authentication and access control(@TODO: SSOW - THIS IS NEED TO BE COMPLETED)
+ *
+ * Pipeline scheduling logic:
+ * - Handles both one-time and recurring schedules
+ * - Validates execution windows
+ * - Checks failure thresholds
+ * - Manages execution timing
+ *
+ * Response formats:
+ * - Returns detailed pipeline configurations
+ * - Includes step configurations and dependencies
+ * - Provides LLM and action configurations
+ * - Includes execution history and status
+ *
+ * Note: This controller is specifically designed for machine-to-machine
+ * communication with the Go service and implements appropriate security
+ * and validation measures.
+ *
+ * @see \Drupal\pipeline\Entity\Pipeline
+ * @see \Drupal\pipeline\Controller\PipelineExecutionController
+ */
+
 namespace Drupal\pipeline\Controller;
 
 use Drupal\Core\Controller\ControllerBase;

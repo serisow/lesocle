@@ -1,4 +1,28 @@
 <?php
+/**
+ * Plugin manager for LLM Model plugins.
+ *
+ * Manages the registration and configuration of different LLM models (GPT, Claude, Gemini).
+ * This manager handles model selection, versioning, and configuration mapping between
+ * Drupal and various LLM providers.
+ *
+ * Key responsibilities:
+ * - Manages model plugin discovery and instantiation
+ * - Maps model names to service providers
+ * - Handles model configuration and defaults
+ * - Provides model capability information
+ *
+ * Important behaviors:
+ * - Maintains model version compatibility
+ * - Handles model-specific configuration
+ * - Provides fallback mechanisms
+ * - Maps between provider-specific and internal model names
+ *
+ * @see \Drupal\pipeline\Plugin\ModelInterface
+ * @see \Drupal\pipeline\Plugin\Model\GPT4Model
+ * @see \Drupal\pipeline\Plugin\Model\Claude3OpusModel
+ */
+
 namespace Drupal\pipeline\Plugin;
 
 use Drupal\Core\Plugin\DefaultPluginManager;

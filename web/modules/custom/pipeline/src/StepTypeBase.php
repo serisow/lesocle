@@ -1,5 +1,26 @@
 <?php
-
+/**
+ * Provides a base implementation for Step Type plugins.
+ *
+ * Step Types are plugins that define discrete operations within a pipeline.
+ * This base class provides common functionality for all step types, including
+ * configuration management, weight handling, and execution context.
+ *
+ * Important considerations:
+ * - Each step must have a unique UUID within its pipeline
+ * - Steps can define their output format for subsequent steps
+ * - Steps can require results from previous steps
+ * - Step execution can be delegated to Go service based on configuration
+ *
+ * Usage:
+ * - Extend this class for basic step types
+ * - Use ConfigurableStepTypeBase for steps needing configuration
+ * - Use AbstractLLMStepType for LLM-integrated steps
+ *
+ * @see \Drupal\pipeline\ConfigurableStepTypeBase
+ * @see \Drupal\pipeline\AbstractLLMStepType
+ * @see \Drupal\pipeline\Plugin\StepTypeInterface
+ */
 namespace Drupal\pipeline;
 
 use Drupal\Core\Entity\EntityTypeManager;

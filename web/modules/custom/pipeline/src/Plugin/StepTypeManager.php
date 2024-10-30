@@ -1,4 +1,27 @@
 <?php
+/**
+ * Plugin manager for Step Type plugins.
+ *
+ * This class manages the discovery, instantiation, and initialization of all
+ * step type plugins in the system. It's a crucial component that bridges
+ * the pipeline configuration with actual executable step implementations.
+ *
+ * Core responsibilities:
+ * - Discovers available step type plugins
+ * - Manages step type plugin instances
+ * - Handles plugin dependencies and validation
+ * - Provides plugin access control
+ *
+ * Key relationships:
+ * - Manages StepTypeInterface implementations
+ * - Works with Pipeline entity for step instantiation
+ * - Integrates with plugin.manager service container
+ *
+ * @see \Drupal\pipeline\Plugin\StepTypeInterface
+ * @see \Drupal\pipeline\StepTypeBase
+ * @see \Drupal\pipeline\Entity\Pipeline
+ */
+
 namespace Drupal\pipeline\Plugin;
 
 use Drupal\Core\Plugin\DefaultPluginManager;

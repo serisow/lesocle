@@ -1,4 +1,38 @@
 <?php
+/**
+ * Defines the LLM Configuration entity.
+ *
+ * This configuration entity stores the connection and authentication settings
+ * for Language Learning Model (LLM) services. It provides a reusable way to
+ * configure and manage different LLM providers and models.
+ *
+ * Key features:
+ * - Stores API credentials and endpoints
+ * - Manages model-specific configurations
+ * - Provides parameter management for LLM calls
+ * - Supports multiple LLM providers (OpenAI, Anthropic, Gemini)
+ *
+ * Configuration structure:
+ * - API credentials (keys, tokens)
+ * - Model selection and version
+ * - Default parameters (temperature, tokens, etc.)
+ * - Provider-specific settings
+ *
+ * Usage patterns:
+ * - Referenced by LLM steps in pipelines
+ * - Used by LLM services for API calls
+ * - Provides configuration UI for LLM settings
+ *
+ * @ConfigEntityType(
+ *   id = "llm_config",
+ *   label = @Translation("LLM Config"),
+ *   ...
+ * )
+ *
+ * @see \Drupal\pipeline\Plugin\LLMServiceInterface
+ * @see \Drupal\pipeline\Plugin\ModelInterface
+ */
+
 namespace Drupal\pipeline\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;

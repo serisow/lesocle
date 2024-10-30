@@ -1,4 +1,38 @@
 <?php
+/**
+ * Defines the Pipeline Run content entity.
+ *
+ * PipelineRun entities track and store the execution results of a pipeline,
+ * including step-by-step outcomes, timing information, and error states.
+ * This entity is crucial for monitoring, debugging, and auditing pipeline executions.
+ *
+ * Key features:
+ * - Stores execution results for each step
+ * - Tracks execution timing and duration
+ * - Maintains error logs and failure states
+ * - Associates results with specific pipelines
+ *
+ * Important behaviors:
+ * - Auto-generates log files for failed executions
+ * - Maintains step execution order
+ * - Stores context data between steps
+ * - Handles both scheduled and manual triggers
+ *
+ * Storage considerations:
+ * - Step results are stored as serialized JSON
+ * - Log files are stored in private filesystem
+ * - Supports cleanup of old execution records
+ *
+ * @ContentEntityType(
+ *   id = "pipeline_run",
+ *   label = @Translation("Pipeline Run"),
+ *   ...
+ * )
+ *
+ * @see \Drupal\pipeline\Entity\Pipeline
+ * @see \Drupal\pipeline\PipelineBatch
+ */
+
 namespace Drupal\pipeline_run\Entity;
 
 use Drupal\Core\Entity\ContentEntityBase;

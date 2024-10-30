@@ -1,4 +1,31 @@
 <?php
+/**
+ * Provides base implementation for LLM-integrated step types.
+ *
+ * This abstract class implements the core functionality for steps that interact
+ * with Language Learning Models (LLM) such as GPT, Claude, or Gemini. It handles
+ * LLM configuration, prompt management, and response processing.
+ *
+ * Key features:
+ * - Manages LLM service connections
+ * - Handles authentication and API configuration
+ * - Supports prompt templating
+ * - Processes and validates LLM responses
+ *
+ * Important behaviors:
+ * - Implements automatic retry logic for API failures
+ * - Supports context-aware prompt generation
+ * - Provides standardized error handling
+ *
+ * Integration points:
+ * - Works with ModelManager for model selection
+ * - Interfaces with LLMServiceManager for API calls
+ * - Supports multiple LLM providers (OpenAI, Anthropic, Google)
+ *
+ * @see \Drupal\pipeline\Plugin\ModelManager
+ * @see \Drupal\pipeline\Plugin\LLMServiceInterface
+ */
+
 namespace Drupal\pipeline;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;

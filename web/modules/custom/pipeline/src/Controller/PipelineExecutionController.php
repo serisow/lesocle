@@ -1,4 +1,40 @@
 <?php
+/**
+ * Handles execution results from the Go service.
+ *
+ * This controller is the primary bridge between the Go service and Drupal,
+ * specifically handling the reception and processing of pipeline execution
+ * results from the Go service.
+ *
+ * Key responsibilities:
+ * - Receives and validates execution results from Go service
+ * - Creates and updates PipelineRun entities
+ * - Processes step results including special output types (images, etc.)
+ * - Handles Drupal-side actions marked for Drupal execution
+ * - Manages execution failure tracking
+ *
+ * Critical behaviors:
+ * - Processes both successful and failed executions
+ * - Handles media entity creation for image outputs
+ * - Manages pipeline failure thresholds and auto-disabling
+ * - Provides detailed execution feedback to Go service
+ *
+ * Response structure:
+ * - Returns standardized JSON responses with execution context
+ * - Includes pipeline status updates
+ * - Provides execution summaries and step results
+ * - Returns relevant Drupal entity IDs and URLs
+ *
+ * Error handling:
+ * - Creates detailed log files for failures
+ * - Manages pipeline failure counts
+ * - Provides error context back to Go service
+ * - Handles partial execution states
+ *
+ * @see \Drupal\pipeline\Entity\PipelineRun
+ * @see \Drupal\pipeline\Service\PipelineErrorHandler
+ */
+
 namespace Drupal\pipeline\Controller;
 
 use Drupal\Core\Controller\ControllerBase;

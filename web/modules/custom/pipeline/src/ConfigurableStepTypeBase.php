@@ -1,4 +1,40 @@
 <?php
+/**
+ * Provides base implementation for configurable step types.
+ *
+ * This abstract class extends StepTypeBase to provide configuration management
+ * capabilities for pipeline steps. It implements form handling, validation,
+ * and configuration storage for configurable step types.
+ *
+ * Core functionalities:
+ * - Form generation for step configuration
+ * - Configuration validation and processing
+ * - Default configuration management
+ * - Step description and output handling
+ *
+ * Configuration features:
+ * - Step description management
+ * - Output key definition
+ * - Required steps specification
+ * - Output type selection
+ *
+ * Form handling:
+ * - Builds configuration forms
+ * - Manages AJAX updates
+ * - Handles validation
+ * - Processes submissions
+ *
+ * Important behaviors:
+ * - Supports step dependencies through required steps
+ * - Manages step output types
+ * - Handles configuration inheritance
+ * - Provides extension points for specific step types
+ *
+ * @see \Drupal\pipeline\StepTypeBase
+ * @see \Drupal\pipeline\ConfigurableStepTypeInterface
+ * @see \Drupal\pipeline\AbstractLLMStepType
+ */
+
 namespace Drupal\pipeline;
 
 use Drupal\Core\Ajax\AjaxResponse;
