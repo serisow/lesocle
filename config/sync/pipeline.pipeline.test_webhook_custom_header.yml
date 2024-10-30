@@ -1,14 +1,14 @@
-uuid: 77e07842-4148-4cee-bd0a-ed064bb27e73
+uuid: 72179db9-f645-4496-bdd5-b178c008b467
 langcode: en
 status: true
 dependencies: {  }
-id: testing_generic_webhook
-label: 'Testing generic webhook'
+id: test_webhook_custom_header
+label: 'Test webhook custom header'
 instructions: 'Testing generic webhook description.'
-created: 1729877364
-changed: 1730213892
+created: 1730214000
+changed: 1730215179
 execution_type: scheduled
-scheduled_time: 1730213460
+scheduled_time: 1730215140
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -34,7 +34,7 @@ step_types:
       required_steps: step1
       step_output_key: step2
       output_type: generic_webhook_content
-      action_config: test_generic_webhook
+      action_config: generic_webhook_with_custom_header
       response: ''
     weight: 1
     uuid: 9ee04e4f-f635-4e95-9a03-8b11a6cc55af
