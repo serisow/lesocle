@@ -8,6 +8,7 @@ dependencies:
   module:
     - node
     - user
+    - views_infinite_scroll
 _core:
   default_config_hash: OEEnRQIjfIaCFRsz8U3VqDrE82ltQKlo8wNbQJRZXu0
 id: frontpage
@@ -298,6 +299,29 @@ display:
     display_plugin: page
     position: 1
     display_options:
+      pager:
+        type: infinite_scroll
+        options:
+          offset: 0
+          pagination_heading_level: h4
+          items_per_page: 12
+          total_pages: 0
+          id: 0
+          tags:
+            next: 'Next ›'
+            previous: '‹ Previous'
+          expose:
+            items_per_page: false
+            items_per_page_label: 'Items per page'
+            items_per_page_options: '5, 10, 25, 50'
+            items_per_page_options_all: false
+            items_per_page_options_all_label: '- All -'
+            offset: false
+            offset_label: Offset
+          views_infinite_scroll:
+            button_text: 'Load More'
+            automatically_load_content: true
+            initially_load_all_pages: false
       style:
         type: grid_responsive
         options:
@@ -312,8 +336,11 @@ display:
           relationship: none
           view_mode: teaser
       defaults:
+        use_ajax: false
+        pager: false
         style: false
         row: false
+      use_ajax: true
       display_extenders: {  }
       path: node
     cache_metadata:

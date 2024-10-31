@@ -38,6 +38,7 @@
         "drupal/smtp": "^1.4",
         "drupal/symfony_mailer": "^1.5",
         "drupal/token": "^1.15",
+        "drupal/views_infinite_scroll": "^2.0",
         "drupal/webp": "^1.0@RC",
         "drush/drush": "^13.0",
         "twilio/sdk": "^8.3",
