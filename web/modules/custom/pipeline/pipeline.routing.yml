@@ -297,3 +297,11 @@ pipeline.update_prompt:
     parameters:
       pipeline:
         type: entity:pipeline
+
+pipeline.dashboard:
+  path: '/admin/structure/pipelines/dashboard'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\PipelineDashboardController::dashboard'
+    _title: 'Pipeline Dashboard'
+  requirements:
+    _permission: 'administer pipelines'

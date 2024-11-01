@@ -59,3 +59,4 @@ jquery.validate:
     src/js/overrides/validate.js: {}
   dependencies:
     - core/jquery
+

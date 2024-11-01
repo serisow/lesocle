@@ -1,0 +1,105 @@
+{# themes/custom/pipeline_theme/templates/dashboard/pipeline-dashboard.html.twig #}
+<div class="pipeline-dashboard">
+  {# Stats Cards #}
+  <div class="pipeline-dashboard__stats">
+    <div class="row">
+      {% for stat in stats %}
+        <div class="col-md-3">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">{{ stat.title }}</h5>
+              <div class="card-value">{{ stat.value }}</div>
+              <div class="card-subtitle">{{ stat.subtitle }}</div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {# Recent Pipelines Table #}
+  <div class="pipeline-dashboard__recent">
+    <div class="card">
+      <div class="card-header">
+        <h4>Recent Pipelines</h4>
+      </div>
+      <div class="card-body">
+        <table class="table">
+          <thead>
+          <tr>
+            <th>Pipeline</th>
+            <th>Status</th>
+            <th>Last Run</th>
+            <th>Success Rate</th>
+            <th>Actions</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for pipeline in recent_pipelines %}
+            <tr>
+              <td>
+                <div class="pipeline-name">{{ pipeline.label }}</div>
+                <div class="pipeline-steps">{{ pipeline.steps }} steps</div>
+              </td>
+              <td>
+                  <span class="badge badge--{{ pipeline.status|clean_class }}">
+                    {{ pipeline.status }}
+                  </span>
+              </td>
+              <td>{{ pipeline.last_run }}</td>
+              <td>
+                <div class="progress">
+                  <div class="progress-bar" style="width: {{ pipeline.success_rate }}%">
+                    {{ pipeline.success_rate }}%
+                  </div>
+                </div>
+              </td>
+              <td>
+                <a href="{{ pipeline.edit_url }}" class="button button--small">Edit</a>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# Quick Actions and System Status #}
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h4>Quick Actions</h4>
+        </div>
+        <div class="card-body">
+          <div class="quick-actions">
+            {% for action in quick_actions %}
+              <a href="{{ action.url }}" class="quick-action">
+                <i class="icon icon-{{ action.icon }}"></i>
+                {{ action.label }}
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h4>System Status</h4>
+        </div>
+        <div class="card-body">
+          {% for service in system_status %}
+            <div class="status-item">
+              <span class="status-label">{{ service.label }}</span>
+              <span class="badge badge--{{ service.status|clean_class }}">
+                {{ service.status }}
+              </span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

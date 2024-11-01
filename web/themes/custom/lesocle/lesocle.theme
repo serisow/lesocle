@@ -10,3 +10,14 @@ $includes_path = dirname(__FILE__) . '/includes/*.theme';
 foreach (glob($includes_path) as $file) {
   require_once dirname(__FILE__) . '/includes/' . basename($file);
 }
+
+// themes/custom/lesocle/lesocle.theme
+function lesocle_theme_preprocess_pipeline_dashboard(&$variables) {
+  // Add theme-specific preprocessing
+  $variables['attributes']['class'][] = 'pipeline-dashboard';
+
+  // You can add more classes or modify variables here
+  foreach ($variables['stats'] as &$stat) {
+    $stat['attributes']['class'][] = 'pipeline-dashboard__stat';
+  }
+}

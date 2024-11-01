@@ -26,7 +26,7 @@ function pipeline_mail($key, &$message, $params) {
 /**
  * Implements hook_theme().
  */
-function pipeline_theme() {
+function pipeline_theme($existing, $type, $theme, $path) {
   return [
     'pipeline_new_article_notification' => [
       'variables' => [
@@ -35,6 +35,17 @@ function pipeline_theme() {
         'edit_url' => NULL,
       ],
       'template' => 'pipeline-new-article-notification',
+    ],
+    'pipeline_dashboard' => [
+      'variables' => [
+        'stats' => [],
+        'recent_pipelines' => [],
+        'quick_actions' => [],
+        'system_status' => [],
+      ],
+      // This tells Drupal to look in themes for overrides
+      'path' => $path . '/templates',  // Specify the path
+      'template' => 'pipeline-dashboard',
     ],
   ];
 }
@@ -68,6 +79,10 @@ function pipeline_toolbar() {
       'content' => [
         '#theme' => 'links__toolbar_pipeline',
         '#links' => [
+          'dashboard' => [
+            'title' => t('Dashboard'),
+            'url' => Url::fromRoute('pipeline.dashboard'),
+          ],
           'pipelines' => [
             'title' => t('Pipelines'),
             'url' => Url::fromRoute('entity.pipeline.collection'),

@@ -21,6 +21,7 @@ regions:
   footer: Footer
 libraries:
   - lesocle/style
+  - lesocle/dashboard
 ckeditor5-stylesheets:
   - build/css/main.style.css
 libraries-extend:
