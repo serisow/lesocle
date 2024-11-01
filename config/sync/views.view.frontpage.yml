@@ -328,7 +328,7 @@ display:
           uses_fields: false
           columns: 2
           cell_min_width: 400
-          grid_gutter: 0
+          grid_gutter: 40
           alignment: horizontal
       row:
         type: 'entity:node'
@@ -343,6 +343,15 @@ display:
       use_ajax: true
       display_extenders: {  }
       path: node
+      menu:
+        type: none
+        title: Content
+        description: ''
+        weight: 0
+        expanded: false
+        menu_name: main
+        parent: ''
+        context: '0'
     cache_metadata:
       max-age: -1
       contexts:

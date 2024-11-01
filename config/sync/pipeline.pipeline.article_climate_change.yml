@@ -6,7 +6,7 @@ id: article_climate_change
 label: 'Create article about climate change'
 instructions: 'Create an informative article about climate change with an accompanying image.'
 created: 1728600704
-changed: 1730321385
+changed: 1730388198
 execution_type: scheduled
 scheduled_time: 1730321181
 schedule_type: one_time
@@ -42,76 +42,10 @@ step_types:
       required_steps: "step1\r\n"
       step_output_key: step2
       output_type: generic_content
-      response: |-
-        # Climate Change: Understanding Our Planet's Greatest Challenge
-
-        Climate change has emerged as one of the most pressing issues of our time, affecting everything from weather patterns to public health. With significant global attention focused on this crisis, scientists, policymakers, and activists work tirelessly to mitigate its effects. In this article, we explore the latest research, innovative solutions, and challenges surrounding climate change, while also delving into its broader societal implications.
-
-        ### The Current State of Climate Change
-
-        Recent reports underscore the urgency of addressing climate change. The Fifth National Climate Assessment (NCA5) by the U.S. Environmental Protection Agency (EPA) provides a comprehensive analysis of the state of climate change in the United States. It highlights the undeniable impacts climate change has on human health, ecosystems, and air quality ([EPA](https://www.epa.gov/climate-research)). For instance, a common consequence of climate change is the heightened frequency and intensity of extreme weather events, including hurricanes, heatwaves, and floods. 
-
-        **"Climate change is no longer a distant threat; it is impacting lives today,"** says Dr. Patricia Romero, a climate scientist at the Yale School of the Environment. This sentiment resonates with numerous studies indicating the immediate repercussions of our changing climate.
-
-        ### The Role of Natural Solutions
-
-        One promising avenue to combat climate change involves enhancing the carbon storage capacity of forests. Researchers at Yale have mapped out pathways in U.S. forests that could potentially remove up to 1 billion tonnes of carbon dioxide per year. These strategies include regenerative silviculture practices, fire management techniques, and the planting of new forests ([Yale School of the Environment](https://environment.yale.edu/)). 
-
-        **"Nature can be our ally in this fight,"** states Sara Kuebbing, a research scientist focused on forest restoration. Increasing forest resilience is crucial not only for carbon storage but also for maintaining biodiversity and supporting local ecosystems.
-
-        ### Community Involvement and Co-management Efforts
-
-        Community engagement is essential for effective climate action. The Yale Center for Environmental Justice (YCEJ) is at the forefront of initiatives that emphasize Tribal co-management of public lands. Collaborating with Indigenous communities can enhance conservation efforts and leverage traditional ecological knowledge ([Yale School of the Environment](https://environment.yale.edu/)). 
-
-        **"Tribal co-management is a force multiplier,"** explains Pat Gonzales Rogers, co-author of a pivotal white paper on this topic. When local communities are empowered to manage their land, the results can be remarkably effective in terms of conservation and restoration.
-
-        ### The Intersection of Science and Policy
-
-        Collaborative efforts among scientists and policymakers are vital in framing effective climate strategies. Events conducted by the Intergovernmental Panel on Climate Change (IPCC), such as workshops on carbon dioxide removal technologies, aim to bring scientific findings into actionable policy frameworks ([IPCC](https://www.ipcc.ch/)). 
-
-        **"Assessing options for mitigating climate change requires comprehensive input across various sectors,"** highlights Dr. Joy William, a climate policy analyst involved with the IPCC. The more interdisciplinary the dialogue, the better equipped we are to tackle climate challenges.
-
-        ### Health Implications of Climate Change
-
-        Climate change poses significant risks to human health, influencing air quality and increasing exposure to pollutants. The National Institute of Environmental Health Sciences (NIEHS) is researching how environmental factors contribute to diseases across different life stages ([NIEHS](https://www.niehs.nih.gov/)). 
-
-        **"Understanding how climate change impacts health will help us develop targeted interventions,"** asserts NIEHS Director Rick Woychik. Communities that prioritize health research and inform the public are better prepared to face the unfolding climate crisis.
-
-        ### Economic Considerations and Innovations
-
-        Economically, the transition to sustainable practices poses both challenges and opportunities. For instance, electric vehicle (EV) subsidies under the Inflation Reduction Act have resulted in decreased climate pollution, partially offsetting costs of taxpayer investment ([Stanford Doerr School of Sustainability](https://sustainability.stanford.edu/)). However, discussions continue on optimizing these policies to yield the maximum environmental benefit at sustainable costs.
-
-        **"We must be strategic about where our money goes in the fight against climate change,"** says Dr. Roman Grant, an economist examining the implications of green subsidies.
-
-        ### The Ethical Dimensions of Climate Action
-
-        The moral ramifications of climate change are profound. As climate impacts disproportionately affect marginalized communities, ethical considerations are paramount in forming policies. **"Climate justice must accompany climate action,"** emphasizes Dr. Ingrid Frey, an advocate for equitable climate policies.
-
-        This involves not only minimizing environmental injustice but also ensuring that vulnerable communities are involved in decision-making processes about their futures.
-
-        ### Looking Forward: The Path Ahead
-
-        The road ahead in addressing climate change is fraught with complexity. New research continues to emerge, providing insights into areas like groundwater-dependent ecosystems, which are crucial for sustaining biodiversity ([Nature](https://www.nature.com/subjects/climate-change)). As scientists study these ecosystems, it becomes increasingly clear that preserving biodiversity is intertwined with our fight against climate change.
-
-        **"Protecting vital ecosystems is not simply an environmental issue; it's a survival issue,"** emphasizes Dr. Ling Tang, leading a recent study on ecological sustainability.
-
-        ### Conclusion
-
-        Climate change transcends scientific discourse; it affects all aspects of our life, from our health and environment to our economics and ethics. By fostering collaboration among communities, scientists, and policymakers, we can build a more sustainable future. The time to act is now, and across the globe, initiatives are underway to place our planet on a healthier trajectory. 
-
-        Together, we can navigate the challenges of climate change, taking steps to mitigate its effects and preserve our world for future generations.
-
-        ### References
-
-        - [Yale School of the Environment](https://environment.yale.edu/)
-        - [IPCC — Intergovernmental Panel on Climate Change](https://www.ipcc.ch/)
-        - [Climate Change Research | US EPA](https://www.epa.gov/climate-research)
-        - [Stanford Doerr School of Sustainability](https://sustainability.stanford.edu/)
-        - [National Institute of Environmental Health Sciences: NIEHS Home](https://www.niehs.nih.gov/)
-        - [Climate change - Latest research and news | Nature](https://www.nature.com/subjects/climate-change)
       llm_config: gpt_4o_mini
-      prompt: "You are a skilled human writer tasked with creating an engaging, in-depth article based on recent, factual information from the provided Google search results about climate change. Use the following search snippets as your primary source of information.\r\nFocus on the two fields: \"expanded_content\" and \"snippet\".\r\nKeep all the links of the results as References section at the end of the article.\r\nHere are the snippets:\r\n\r\n####\r\n\r\n{step1}\r\n\r\n####\r\n\r\nYour task:\r\n\r\n1. Analyze the search results to identify the most relevant and recent information on climate change.\r\n2. Craft an article of approximately 3000 to 5000 words that synthesizes this information, capturing the essence of the snippets.\r\n3. Provide depth of analysis by exploring potential challenges, criticisms, or different perspectives related to climate change.\r\n4. Include direct quotes from climate scientists, researchers, or policy makers to add credibility and authority to your article.\r\n5. Explore the broader societal, ethical, and economic implications of climate change alongside any scientific projections.\r\n6. Write in a natural, conversational style using simple vocabulary. Ensure that sentences are concise, with a maximum length of 150 characters.\r\n7. Vary sentence structures and use transition words to improve flow and readability.\r\n8. Include references and embed hyperlinks to the original sources of data, reports, or quotes used in your article.\r\n9. Avoid any patterns that might make the text appear AI-generated.\r\n10. Begin your article with a compelling headline that captures the essence of the article.\r\nPlease begin writing the article now.\r\n"
       prompt_template: ''
+      prompt: "You are an expert human writer assigned to create an engaging, comprehensive article on climate change using the latest, factual information from the provided Google search results. Utilize the \"expanded_content\" and \"snippet\" fields from the search snippets below as your primary sources.\r\n\r\n####\r\n\r\n{step1}\r\n\r\n####\r\n\r\n**Your Objectives:**\r\n\r\n1. **Analyze and Synthesize Information:**\r\n   - Examine the search results to extract the most relevant and up-to-date information on climate change.\r\n   - Identify key themes, trends, and data points that are crucial to understanding the current climate scenario.\r\n\r\n2. **Craft a Detailed Article:**\r\n   - **Length:** Approximately 3,000 to 5,000 words.\r\n   - **Structure:** Include a compelling introduction, well-organized body sections with subheadings, and a conclusive summary.\r\n   - **Content:** \r\n     - Synthesize the extracted information to present a clear and comprehensive overview of climate change.\r\n     - Explore potential challenges, criticisms, and diverse perspectives related to climate change.\r\n     - Discuss the broader societal, ethical, and economic implications alongside scientific projections.\r\n\r\n3. **Enhance Credibility and Authority:**\r\n   - Incorporate direct quotes from reputable climate scientists, researchers, and policymakers.\r\n   - Ensure all statements are backed by evidence from the provided search snippets.\r\n\r\n4. **Engage the Reader:**\r\n   - Write in a natural, conversational tone using simple and accessible vocabulary.\r\n   - Keep sentences concise, with a maximum length of 150 characters.\r\n   - Vary sentence structures and utilize transition words to ensure smooth flow and readability.\r\n\r\n5. **Cite Sources Appropriately:**\r\n   - Embed hyperlinks to original sources of data, reports, or quotes within the article.\r\n   - Include a \"References\" section at the end, listing all source links in a clear and organized manner.\r\n\r\n6. **Maintain Originality:**\r\n   - Avoid patterns or phrasing that may make the text appear AI-generated.\r\n   - Strive for a unique voice and perspective throughout the article.\r\n\r\n7. **Create an Impactful Headline:**\r\n   - Begin with a compelling headline that accurately reflects the article's essence and captures the reader's attention.\r\n\r\n**Instructions:**\r\n\r\n- **Start Writing:** Begin the article immediately after these instructions.\r\n- **Formatting:** Use Markdown for formatting headings, subheadings, and hyperlinks.\r\n- **Review:** Ensure the final article is free from grammatical errors and flows logically from one section to the next.\r\n\r\n**Example Structure:**\r\n\r\n1. **Headline**\r\n2. **Introduction**\r\n3. **Current State of Climate Change**\r\n4. **Challenges and Criticisms**\r\n5. **Diverse Perspectives**\r\n6. **Societal, Ethical, and Economic Implications**\r\n7. **Scientific Projections and Future Outlook**\r\n8. **Conclusion**\r\n9. **References**\r\n\r\nPlease proceed to write the article now.\r\n"
+      response: ''
     weight: -9
     uuid: 7189804a-467e-4a05-b6a8-1a0e187e4270
   831e5667-1433-4700-834d-5e2b3dd3cf77:
@@ -121,10 +55,10 @@ step_types:
       required_steps: "step2\r\n"
       step_output_key: step3
       output_type: generic_content
-      response: 'Create an image that embodies the urgency of climate change, featuring extreme weather events, resilient forests, and community collaboration for a sustainable future.'
       llm_config: gpt_4o_mini
-      prompt: "From the following given text about climate change, craft a prompt for an LLM to generate an image which captures the essence of the text.\r\nMake it short between 100 or 200 characters.\r\nThe image should be clean; don't try to make a caption.\r\nHere is the text:\r\n\r\n####\r\n\r\n{step2}\r\n\r\n####\" \r\n"
       prompt_template: ''
+      prompt: "Using the text below on climate change, create a visually stunning and highly realistic image that illustrates the impact of climate change on the environment. Ensure all elements appear entirely natural and organic, avoiding any synthetic or artificial-looking features such as synthetic grass or unnatural textures. Depict authentic environmental changes, such as melting glaciers, drought-affected landscapes, wildfires, or altered ecosystems, to convey the message effectively without exaggeration. Incorporate lush greenery alongside affected areas to highlight contrast and realism. Accompany the image with a captivating caption derived from the main ideas, ensuring it resonates with common human sense and psychological insights. Keep the entire output, including the caption, within 800 characters for clarity and impact.\r\n\r\nText:\r\n\r\n{step2}"
+      response: ''
     weight: -8
     uuid: 831e5667-1433-4700-834d-5e2b3dd3cf77
   792126d9-282e-42c5-8c66-52b0588b24c2:
