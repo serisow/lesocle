@@ -1,0 +1,23 @@
+uuid: 3ab546ab-93e1-44a1-b991-be645395082c
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_embedding_id
+    - media.type.document
+id: media.document.field_embedding_id
+field_name: field_embedding_id
+entity_type: media
+bundle: document
+label: 'Embedding Id'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

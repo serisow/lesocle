@@ -3,7 +3,10 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.media.document.field_embedding_id
+    - field.field.media.document.field_last_indexed
     - field.field.media.document.field_media_document
+    - field.field.media.document.field_rag_indexing_status
     - media.type.document
   module:
     - file
@@ -21,12 +24,31 @@ content:
     region: content
     settings: {  }
     third_party_settings: {  }
+  field_embedding_id:
+    type: number
+    weight: 102
+    region: content
+    settings:
+      placeholder: ''
+    third_party_settings: {  }
+  field_last_indexed:
+    type: datetime_timestamp
+    weight: 103
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   field_media_document:
     type: file_generic
     weight: 0
     region: content
     settings:
       progress_indicator: throbber
+    third_party_settings: {  }
+  field_rag_indexing_status:
+    type: options_select
+    weight: 104
+    region: content
+    settings: {  }
     third_party_settings: {  }
   langcode:
     type: language_select
