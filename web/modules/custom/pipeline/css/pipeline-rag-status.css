@@ -1,0 +1,28 @@
+.rag-status {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;  /* Smaller padding to match "Published" */
+  border-radius: 3px;       /* Slightly smaller radius */
+  font-size: 0.75rem;      /* Smaller font size to match "Published" */
+  font-weight: normal;     /* Normal weight like "Published" */
+  line-height: 1;          /* Tighter line height */
+}
+
+.rag-status--pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.rag-status--processing {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.rag-status--completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.rag-status--failed {
+  background-color: #f8d7da;
+  color: #721c24;
+}

@@ -58,3 +58,24 @@ pipeline.pipeline.*:
 pipeline.step_type.*:
   type: mapping
   label: 'Step type settings'
+
+views.filter.rag_indexing_status_filter:
+  type: views.filter.in_operator
+  label: 'RAG Status filter'
+  mapping:
+    value:
+      type: sequence
+      label: 'Values'
+      sequence:
+        type: string
+        label: 'Value'
+
+views.filter.field_rag_indexing_status_value:
+  type: views.filter.in_operator
+  label: 'RAG indexing status'
+  mapping:
+    value:
+      type: sequence
+      label: 'Status'
+      sequence:
+        type: string

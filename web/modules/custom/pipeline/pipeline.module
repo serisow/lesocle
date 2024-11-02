@@ -121,3 +121,28 @@ function pipeline_toolbar() {
 function pipeline_page_attachments(array &$attachments) {
   $attachments['#attached']['library'][] = 'pipeline/toolbar';
 }
+
+
+/**
+ * Implements hook_views_data_alter().
+ */
+function pipeline_views_data_alter(array &$data) {
+  // Make sure the base table group exists
+  if (isset($data['media__field_rag_indexing_status'])) {
+    // Filter handler
+    $data['media__field_rag_indexing_status']['field_rag_indexing_status_value']['filter'] = [
+      'title' => t('RAG Indexing Status'),
+      'help' => t('Filter by RAG indexing status.'),
+      'field' => 'field_rag_indexing_status_value',
+      'id' => 'rag_indexing_status_filter',
+    ];
+
+    // Field handler
+    $data['media__field_rag_indexing_status']['field_rag_indexing_status_value']['field'] = [
+      'title' => t('RAG Status'),
+      'help' => t('Displays the RAG indexing status with formatting.'),
+      'id' => 'field_rag_indexing_status',
+      'field_name' => 'field_rag_indexing_status',
+    ];
+  }
+}

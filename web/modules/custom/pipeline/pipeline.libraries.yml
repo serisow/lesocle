@@ -14,3 +14,9 @@ step_type_modal:
     - core/drupal
     - core/once
     - core/drupal.dialog
+
+rag-status:
+  version: 1.x
+  css:
+    theme:
+      css/pipeline-rag-status.css: {}
