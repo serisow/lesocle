@@ -44,6 +44,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\pipeline\Entity\LLMConfig;
 use Drupal\pipeline\Plugin\ModelManager;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -300,12 +301,16 @@ class PipelineApiController extends ControllerBase {
                 ->load($configuration['data']['action_config']);
 
               if ($action_config) {
+                $action_configuration = $action_config->getConfiguration();
+                if (empty($action_configuration)) {
+                  $action_configuration = (object) [];
+                }
                 $step_data['action_details'] = [
                   'id' => $action_config->id(),
                   'label' => $action_config->label(),
                   'action_service' => $action_config->getActionService(),
                   'execution_location' => $action_config->get('execution_location') ?? 'drupal',
-                  'configuration' => $action_config->getConfiguration(),
+                  'configuration' => $action_configuration,
                 ];
               }
             }
@@ -331,6 +336,49 @@ class PipelineApiController extends ControllerBase {
     }
 
     return new JsonResponse($pipeline_data);
+  }
+
+  public function fetchDocuments(Request $request) {
+    $batch_size = $request->query->get('batch_size', 10);
+    $status = $request->query->get('status', 'pending');
+
+    $query = $this->entityTypeManager->getStorage('media')->getQuery()
+      ->accessCheck()
+      ->condition('bundle', 'document')
+      ->condition('field_rag_indexing_status', $status)
+      ->range(0, $batch_size)
+      ->sort('changed', 'ASC');
+
+    $document_ids = $query->execute();
+    $documents = [];
+
+    if (!empty($document_ids)) {
+      $media_entities = $this->entityTypeManager->getStorage('media')
+        ->loadMultiple($document_ids);
+
+      foreach ($media_entities as $media) {
+        $file = $media->get('field_media_document')->entity;
+        if ($file) {
+          $documents[] = [
+            'mid' => $media->id(),
+            'filename' => $file->getFilename(),
+            'uri' => $file->createFileUrl(),
+            'mime_type' => $file->getMimeType(),
+            'size' => $file->getSize(),
+          ];
+
+          // Update status to processing
+          $media->set('field_rag_indexing_status', 'processing');
+          $media->save();
+        }
+      }
+    }
+
+    return new JsonResponse([
+      'documents' => $documents,
+      'count' => count($documents),
+      'timestamp' => \Drupal::time()->getCurrentTime(),
+    ]);
   }
 
 }

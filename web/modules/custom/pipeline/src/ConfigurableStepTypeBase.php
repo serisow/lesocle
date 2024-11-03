@@ -197,7 +197,8 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       'sms_content'      => $this->t('Sms Content'),
       'bulk_sms_content' => $this->t('Bulk SMS Content'),
       'generic_webhook_content'  => $this->t('Generic Webhook Content'),
-      'rag_document_content' => $this->t('Rag Document Content'),
+      'fetch_document_content' => $this->t('Fetch Document Content'),
+      'update_document_content' => $this->t('Update Document Content'),
     ];
   }
 }
