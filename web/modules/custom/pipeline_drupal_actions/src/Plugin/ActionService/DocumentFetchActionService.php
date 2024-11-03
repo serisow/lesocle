@@ -77,6 +77,22 @@ class DocumentFetchActionService extends PluginBase implements ActionServiceInte
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state, array $configuration) {
+    $form['rag_service_url'] = [
+      '#type' => 'url',
+      '#title' => $this->t('RAG Service URL'),
+      '#description' => $this->t('The URL of the RAG service (e.g., http://rag-service-host)'),
+      '#default_value' => $configuration['rag_service_url'] ?? '',
+      '#required' => TRUE,
+    ];
+
+    $form['drupal_url'] = [
+      '#type' => 'url',
+      '#title' => $this->t('Drupal URL'),
+      '#description' => $this->t('The URL of the Drupal instance for file content retrieval'),
+      '#default_value' => $configuration['drupal_url'] ?? '',
+      '#required' => TRUE,
+    ];
+
     $form['batch_size'] = [
       '#type' => 'number',
       '#title' => $this->t('Batch Size'),
@@ -107,6 +123,8 @@ class DocumentFetchActionService extends PluginBase implements ActionServiceInte
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     return [
+      'rag_service_url' => $form_state->getValue('rag_service_url'),
+      'drupal_url' => $form_state->getValue('drupal_url'),
       'batch_size' => $form_state->getValue('batch_size'),
       'status_filter' => $form_state->getValue('status_filter'),
     ];
@@ -138,8 +156,8 @@ class DocumentFetchActionService extends PluginBase implements ActionServiceInte
       }
 
       $documents = $this->entityTypeManager->getStorage('media')->loadMultiple($document_ids);
-      $processed = [];
 
+      $processed = [];
       foreach ($documents as $document) {
         // Only process if we have a document file
         $file = $document->get('field_media_document')->entity;
@@ -149,7 +167,8 @@ class DocumentFetchActionService extends PluginBase implements ActionServiceInte
           ]);
           continue;
         }
-
+        // Get the absolute URL for the file
+        $file_url = $this->getAbsoluteFileUrl($file);
         // Update document status
         $document->set('field_rag_indexing_status', 'processing');
         $document->set('field_last_indexed', \Drupal::time()->getRequestTime());
@@ -159,7 +178,7 @@ class DocumentFetchActionService extends PluginBase implements ActionServiceInte
         $processed[] = [
           'mid' => $document->id(),
           'filename' => $file->getFilename(),
-          'uri' => $file->getFileUri(),
+          'uri' => $file_url,
           'mime_type' => $file->getMimeType(),
           'size' => $file->getSize(),
         ];
@@ -183,6 +202,39 @@ class DocumentFetchActionService extends PluginBase implements ActionServiceInte
       ]);
       throw $e;
     }
+  }
+
+  /**
+   * Gets the absolute URL for a file entity.
+   *
+   * @param \Drupal\file\FileInterface $file
+   *   The file entity.
+   *
+   * @return string
+   *   The absolute URL for the file.
+   */
+  protected function getAbsoluteFileUrl($file): string
+  {
+    $file_uri = $file->getFileUri();
+
+    // Convert public:// scheme to actual URL
+    if (str_starts_with($file_uri, 'public://')) {
+      $file_url = \Drupal::service('file_url_generator')->generateAbsoluteString($file_uri);
+
+      // Ensure we're using the configured domain if available
+      $request = \Drupal::request();
+      $current_base_url = $request->getSchemeAndHttpHost();
+
+      // If we have a base URL configured in settings.php, use that instead
+      $configured_base_url = \Drupal::config('system.site')->get('base_url');
+      if (!empty($configured_base_url)) {
+        $file_url = str_replace($current_base_url, $configured_base_url, $file_url);
+      }
+
+      return $file_url;
+    }
+
+    return $file_uri;
   }
 
   /**

@@ -33,3 +33,11 @@ entity.pipeline_run.steps:
     parameters:
       pipeline:
         type: entity:pipeline_run
+
+pipeline_run.bulk_delete:
+  path: '/admin/content/pipeline_runs/delete'
+  defaults:
+    _form: '\Drupal\pipeline_run\Form\PipelineRunBulkDeleteForm'
+    _title: 'Delete Pipeline Runs'
+  requirements:
+    _permission: 'delete pipeline runs'

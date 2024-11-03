@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RedirectDestinationInterface;
+use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -131,6 +132,17 @@ class PipelineRunListBuilder extends EntityListBuilder {
    */
   public function render() {
     $build = parent::render();
+
+    $build['bulk_delete'] = [
+      '#type' => 'link',
+      '#title' => $this->t('Delete multiple runs'),
+      '#url' => Url::fromRoute('pipeline_run.bulk_delete'),
+      '#attributes' => [
+        'class' => ['button'],
+      ],
+      '#weight' => -10,
+    ];
+
     // Remove the 'Add Pipeline Run' action button
     unset($build['table']['#header']['operations']);
     return $build;
