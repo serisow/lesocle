@@ -80,7 +80,7 @@ class DocumentUpdateActionService extends PluginBase implements ActionServiceInt
       // Find update document content in the results using output_type
       $update_data = null;
       foreach ($context['results'] as $step_result) {
-        if ($step_result['output_type'] === 'update_document_content') {
+        if ($step_result['output_type'] === 'fetch_document_content') {
           $update_data = $step_result['data'];
           break;
         }
@@ -116,16 +116,26 @@ class DocumentUpdateActionService extends PluginBase implements ActionServiceInt
           continue;
         }
 
-        // Update document status and embedding ID
-        $media->set('field_rag_indexing_status', 'indexed');
-        $media->set('field_embedding_id', $doc['document_id']);
-        $media->set('field_last_indexed', \Drupal::time()->getRequestTime());
+        // Set status based on the processing result
+        $status = $doc['status'] ?? 'failed';
+        $media->set('field_rag_indexing_status', $status);
 
-        // Update metadata
-        if (isset($doc['metadata'])) {
-          $media->set('field_rag_metadata', json_encode($doc['metadata']));
+        // Only set embedding ID and metadata for successfully indexed documents
+        if ($status === 'indexed') {
+          if (isset($doc['document_id'])) {
+            $media->set('field_embedding_id', $doc['document_id']);
+          }
+
+          if (isset($doc['metadata']) && !empty($doc['metadata'])) {
+            $media->set('field_rag_metadata', json_encode($doc['metadata']));
+          }
+        } else {
+          // For failed documents, clear embedding ID and metadata
+          $media->set('field_embedding_id', null);
+          $media->set('field_rag_metadata', '{}');
         }
 
+        $media->set('field_last_indexed', \Drupal::time()->getRequestTime());
         $media->save();
         $updated_count++;
       }
