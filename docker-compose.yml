@@ -15,6 +15,9 @@ services:
       - ./sql:/docker-entrypoint-initdb.d # Place init .sql file(s) here.
 #      - /path/to/mariadb/data/on/host:/var/lib/mysql # Use bind mount
 
+    networks:
+      - lesocle-shared-network
+
   php:
     build:
       context: docker/drupal-php
@@ -64,6 +67,9 @@ services:
 #    - docker-sync:/var/www/html
 #    # For XHProf and Xdebug profiler traces
 #    - files:/mnt/files
+
+    networks:
+        - lesocle-shared-network
 
 #  crond:
 #    image: wodby/drupal-php:$PHP_TAG
@@ -122,15 +128,17 @@ services:
       APACHE_BACKEND_HOST: php
       APACHE_VHOST_PRESET: php
       APACHE_DOCUMENT_ROOT: /var/www/html/web
-      APACHE_MOD_DEFLATE: 1  # Enable mod_deflate for GZIP
     volumes:
     - ./:/var/www/html:cached
+    networks:
+      - lesocle-shared-network
+
     # Alternative for macOS users: docker-sync https://wodby.com/docs/stacks/drupal/local#docker-for-mac
     #- docker-sync:/var/www/html
     labels:
     - "traefik.http.routers.${PROJECT_NAME}_apache.rule=Host(`${PROJECT_BASE_URL}`)"
 
-#  varnish:
+  #  varnish:
 #    image: wodby/varnish:$VARNISH_TAG
 #    container_name: "${PROJECT_NAME}_varnish"
 #    depends_on:
@@ -148,6 +156,8 @@ services:
   redis:
     container_name: "${PROJECT_NAME}_redis"
     image: wodby/redis:$REDIS_TAG
+    networks:
+      - lesocle-shared-network
 
 #  adminer:
 #    container_name: "${PROJECT_NAME}_adminer"
@@ -168,136 +178,13 @@ services:
       PMA_USER: $DB_USER
       PMA_PASSWORD: $DB_PASSWORD
       UPLOAD_LIMIT: 1G
+    networks:
+      - lesocle-shared-network
+
     labels:
     - "traefik.http.routers.${PROJECT_NAME}_pma.rule=Host(`pma.${PROJECT_BASE_URL}`)"
 
-#  solr:
-#    image: wodby/solr:$SOLR_TAG
-#    container_name: "${PROJECT_NAME}_solr"
-#    environment:
-#      SOLR_DEFAULT_CONFIG_SET: $SOLR_CONFIG_SET
-#      SOLR_HEAP: 1024m
-#    labels:
-#    - "traefik.http.services.${PROJECT_NAME}_solr.loadbalancer.server.port=8983"
-#    - "traefik.http.routers.${PROJECT_NAME}_solr.rule=Host(`solr.${PROJECT_BASE_URL}`)"
 
-#  drupal-node:
-#    image: wodby/drupal-node:$DRUPAL_NODE_TAG
-#    container_name: "${PROJECT_NAME}_drupal_nodejs"
-#    labels:
-#    - "traefik.http.routers.${PROJECT_NAME}_drupal_node.rule=Host(`drupal_node.${PROJECT_BASE_URL}`)"
-#    environment:
-#      NODE_SERVICE_KEY: node-service-key
-
-#  memcached:
-#    container_name: "${PROJECT_NAME}_memcached"
-#    image: wodby/memcached:$MEMCACHED_TAG
-
-#  rsyslog:
-#    container_name: "${PROJECT_NAME}_rsyslog"
-#    image: wodby/rsyslog:$RSYSLOG_TAG
-
-#  athenapdf:
-#    image: arachnysdocker/athenapdf-service:$ATHENAPDF_TAG
-#    container_name: "${PROJECT_NAME}_athenapdf"
-#    environment:
-#      WEAVER_AUTH_KEY: weaver-auth-key
-#      WEAVER_ATHENA_CMD: "athenapdf -S"
-#      WEAVER_MAX_WORKERS: 10
-#      WEAVER_MAX_CONVERSION_QUEUE: 50
-#      WEAVER_WORKER_TIMEOUT: 90
-#      WEAVER_CONVERSION_FALLBACK: "false"
-
- # node:
- #   image: node:$NODE_TAG
- #   working_dir: /home/node/front
- #   environment:
- #     NPM_CONFIG_PREFIX: /home/node/front/.npm-global
- #   user: 'node'
- #   labels:
- #     - "traefik.http.services.${PROJECT_NAME}_node.loadbalancer.server.port=1312"
- #     - "traefik.http.routers.${PROJECT_NAME}_node.rule=Host(`front.${PROJECT_BASE_URL}`)"
- #   expose:
- #     - "1312"
- #   volumes:
- #     - ./:/home/node
- #   command: bash -c "npm install -g gulp && npm start && node"
-
-#  blackfire:
-#    image: blackfire/blackfire
-#    container_name: "${PROJECT_NAME}_blackfire"
-#    environment:
-#      BLACKFIRE_SERVER_ID: XXXXX
-#      BLACKFIRE_SERVER_TOKEN: YYYYY
-
-#  webgrind:
-#    image: wodby/webgrind:$WEBGRIND_TAG
-#    container_name: "${PROJECT_NAME}_webgrind"
-#    environment:
-#      WEBGRIND_PROFILER_DIR: /mnt/files/xdebug/profiler
-#    labels:
-#    - "traefik.http.routers.${PROJECT_NAME}_webgrind.rule=Host(`webgrind.${PROJECT_BASE_URL}`)"
-#    volumes:
-#    - files:/mnt/files
-
-#  elasticsearch:
-#    image: wodby/elasticsearch:$ELASTICSEARCH_TAG
-#    container_name: "${PROJECT_NAME}_elasticsearch"
-#    environment:
-#      ES_JAVA_OPTS: "-Xms500m -Xmx500m"
-#    ulimits:
-#      memlock:
-#        soft: -1
-#        hard: -1
-
-#  kibana:
-#    image: wodby/kibana:$KIBANA_TAG
-#    container_name: "${PROJECT_NAME}_kibana"
-#    depends_on:
-#    - elasticsearch
-#    labels:
-#    - "traefik.http.services.${PROJECT_NAME}_kibana.loadbalancer.server.port=5601"
-#    - "traefik.http.routers.${PROJECT_NAME}_kibana.rule=Host(`kibana.${PROJECT_BASE_URL}`)"
-
-#  opensmtpd:
-#    container_name: "${PROJECT_NAME}_opensmtpd"
-#    image: wodby/opensmtpd:$OPENSMTPD_TAG
-
-#  xhprof:
-#    image: wodby/xhprof:$XHPROF_TAG
-#    container_name: "${PROJECT_NAME}_xhprof"
-#    restart: always
-#    volumes:
-#    - files:/mnt/files
-#    labels:
-#    - "traefik.http.routers.${PROJECT_NAME}_xhprof.rule=Host(`xhprof.${PROJECT_BASE_URL}`)"
-
-#  chrome:
-#    image: selenium/standalone-chrome:$SELENIUM_CHROME_TAG
-#    container_name: "${PROJECT_NAME}_chrome"
-#    volumes:
-#    - /dev/shm:/dev/shm
-#    entrypoint:
-#    - chromedriver
-#    - "--no-sandbox"
-#    - "--disable-dev-shm-usage"
-#    - "--log-path=/tmp/chromedriver.log"
-#    - "--verbose"
-#    - "--whitelisted-ips="
-
-#  portainer:
-#    image: portainer/portainer
-#    container_name: "${PROJECT_NAME}_portainer"
-#    command: --no-auth -H unix:///var/run/docker.sock
-#    volumes:
-#    - /var/run/docker.sock:/var/run/docker.sock
-#    labels:
-#    - "traefik.http.routers.${PROJECT_NAME}_portainer.rule=Host(`portainer.${PROJECT_BASE_URL}`)"
-
-#  sonar:
-#    image: sonarsource/sonar-scanner-cli
-#    volumes:
-#      - ./:/usr/src
   traefik:
     image: traefik:v2.0
     container_name: "${PROJECT_NAME}_traefik"
@@ -307,5 +194,10 @@ services:
 #    - '8080:8080' # Dashboard
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - lesocle-shared-network
 
 
+networks:
+  lesocle-shared-network:
+    external: true
