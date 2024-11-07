@@ -199,6 +199,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       'generic_webhook_content'  => $this->t('Generic Webhook Content'),
       'fetch_document_content' => $this->t('Fetch Document Content'),
       'update_document_content' => $this->t('Update Document Content'),
+      'document_search_result' => $this->t('Document Search Result'),
     ];
   }
 }

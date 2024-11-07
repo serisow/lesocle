@@ -70,8 +70,11 @@ services:
 
     networks:
         - lesocle-shared-network
+    extra_hosts:
+      - "lesoclego-dev.sa:192.168.80.2"  # IP of Traefik in the shared network
 
-#  crond:
+
+  #  crond:
 #    image: wodby/drupal-php:$PHP_TAG
 #    container_name: "${PROJECT_NAME}_crond"
 #    environment:
@@ -136,7 +139,12 @@ services:
     # Alternative for macOS users: docker-sync https://wodby.com/docs/stacks/drupal/local#docker-for-mac
     #- docker-sync:/var/www/html
     labels:
-    - "traefik.http.routers.${PROJECT_NAME}_apache.rule=Host(`${PROJECT_BASE_URL}`)"
+    - "traefik.enable=true"
+    - "traefik.http.routers.${PROJECT_NAME}_apache.rule=Host(`lesocle-dev.sa`)"
+    - "traefik.http.services.${PROJECT_NAME}_apache.loadbalancer.server.port=80"
+
+
+
 
   #  varnish:
 #    image: wodby/varnish:$VARNISH_TAG
@@ -188,10 +196,10 @@ services:
   traefik:
     image: traefik:v2.0
     container_name: "${PROJECT_NAME}_traefik"
-    command: --api.insecure=true --providers.docker
+    command: --api.insecure=true --providers.docker --providers.docker.network=lesocle-shared-network
     ports:
     - '${HTTP_PORT}:80'
-#    - '8080:8080' # Dashboard
+    - '8080:8080' # Dashboard
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
     networks:

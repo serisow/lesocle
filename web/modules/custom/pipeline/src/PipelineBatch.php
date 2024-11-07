@@ -44,6 +44,7 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\pipeline\Plugin\StepType\ActionStep;
+use Drupal\pipeline\Plugin\StepType\DocumentSearchStep;
 use Drupal\pipeline\Plugin\StepType\GoogleSearchStep;
 use Drupal\pipeline\Plugin\StepType\LLMStep;
 use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
@@ -245,6 +246,16 @@ class PipelineBatch {
         return $this->t('(Query: @query, Category: @category)', [
           '@query' => $query,
           '@category' => $category ?: 'N/A',
+        ]);
+
+      case $step_type instanceof DocumentSearchStep:
+        $search_input = $config['data']['search_input'] ?? 'N/A';
+        $max_results = $config['data']['search_settings']['max_results'] ?? 5;
+        $threshold = $config['data']['search_settings']['similarity_threshold'] ?? 0.8;
+        return $this->t('(Input: @input, Max Results: @max, Threshold: @threshold)', [
+          '@input' => $search_input,
+          '@max' => $max_results,
+          '@threshold' => $threshold,
         ]);
 
       default:
