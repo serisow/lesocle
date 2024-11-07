@@ -323,6 +323,23 @@ class PipelineApiController extends ControllerBase {
               'advanced_params' => $configuration['data']['advanced_params'] ?? [],
             ];
             break;
+
+          case 'document_search':
+            $configuration = $step_type->getConfiguration();
+            $step_data['search_input'] = $configuration['data']['search_input'] ?? '';
+            // Add search settings
+            $step_data['document_search_settings'] = [
+              'similarity_threshold' => $configuration['data']['search_settings']['similarity_threshold'] ?? 0.8,
+              'max_results' => $configuration['data']['search_settings']['max_results'] ?? 5,
+              'similarity_metric' => $configuration['data']['search_settings']['similarity_metric'] ?? 'cosine',
+            ];
+            // Add content settings
+            $step_data['content_search_settings'] = [
+              'include_metadata' => $configuration['data']['content_settings']['include_metadata'] ?? TRUE,
+              'min_word_count' => $configuration['data']['content_settings']['min_word_count'] ?? 0,
+              'exclude_already_used' => $configuration['data']['content_settings']['exclude_already_used'] ?? FALSE,
+            ];
+            break;
         }
 
         // Remove the 'data' key as we've extracted its contents
