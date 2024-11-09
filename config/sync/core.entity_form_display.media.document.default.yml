@@ -7,6 +7,7 @@ dependencies:
     - field.field.media.document.field_last_indexed
     - field.field.media.document.field_media_document
     - field.field.media.document.field_rag_indexing_status
+    - field.field.media.document.field_rag_metadata
     - media.type.document
   module:
     - file
@@ -49,6 +50,14 @@ content:
     weight: 104
     region: content
     settings: {  }
+    third_party_settings: {  }
+  field_rag_metadata:
+    type: string_textarea
+    weight: 105
+    region: content
+    settings:
+      rows: 5
+      placeholder: ''
     third_party_settings: {  }
   langcode:
     type: language_select

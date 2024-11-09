@@ -8,6 +8,7 @@ dependencies:
     - field.field.media.document.field_last_indexed
     - field.field.media.document.field_media_document
     - field.field.media.document.field_rag_indexing_status
+    - field.field.media.document.field_rag_metadata
     - media.type.document
 _core:
   default_config_hash: dcpfpqyLXOSGpulacMAJW3H-G34_LeNsjdfxd1_oCfY
@@ -29,6 +30,7 @@ hidden:
   field_last_indexed: true
   field_media_document: true
   field_rag_indexing_status: true
+  field_rag_metadata: true
   name: true
   path: true
   status: true

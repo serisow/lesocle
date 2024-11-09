@@ -1,0 +1,48 @@
+uuid: 4dbcd495-f2b2-4a4d-baff-0f3be58ffdab
+langcode: en
+status: true
+dependencies: {  }
+id: test_rag
+label: 'Test RAG'
+instructions: 'Test RAG basic features.'
+created: 1730891509
+changed: 1731005973
+execution_type: scheduled
+scheduled_time: 1731005880
+schedule_type: one_time
+recurring_frequency: null
+recurring_time: null
+execution_failures: 0
+step_types:
+  3b1ef027-776b-4d7a-8d1e-ffd15fc13bf8:
+    id: document_search
+    data:
+      step_description: 'Search document from our document base.'
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      search_input: 'Drupal developper, Golang'
+      search_settings:
+        similarity_threshold: '0.80'
+        max_results: '5'
+        similarity_metric: cosine
+      content_settings:
+        include_metadata: 1
+        min_word_count: '0'
+        exclude_already_used: 0
+      response: ''
+    weight: 0
+    uuid: 3b1ef027-776b-4d7a-8d1e-ffd15fc13bf8
+  4a238135-ae3a-4574-94a3-6dce7f573594:
+    id: llm_step
+    data:
+      step_description: 'Generate article based on Document fetching.'
+      required_steps: step1
+      step_output_key: step2
+      output_type: generic_content
+      llm_config: gpt_4o_mini
+      prompt_template: ''
+      prompt: "You are a great writer use the content below which is from document research and craft a great article based on it.\r\n\r\nHere is the document result:\r\n\r\n####\r\n{step1}\r\n\r\n####"
+      response: ''
+    weight: 1
+    uuid: 4a238135-ae3a-4574-94a3-6dce7f573594

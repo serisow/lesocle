@@ -1,0 +1,19 @@
+uuid: b16ed25f-d6bd-4201-856c-2139f8845ce5
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_rag_metadata
+    - media.type.document
+id: media.document.field_rag_metadata
+field_name: field_rag_metadata
+entity_type: media
+bundle: document
+label: 'Rag metadata'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string_long

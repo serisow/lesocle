@@ -3,13 +3,13 @@ langcode: en
 status: true
 dependencies: {  }
 id: test_fetch_document_for_rag
-label: 'Test Fetch document for RAG'
+label: 'Index document for RAG'
 instructions: 'This is the beginning for RAG TEST'
-created: 1730505668
-changed: 1730505710
+created: 1730820137
+changed: 1730991283
 execution_type: scheduled
-scheduled_time: null
-schedule_type: none
+scheduled_time: 1730991240
+schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
 execution_failures: 0
@@ -20,8 +20,19 @@ step_types:
       step_description: 'Fetch Document to be indexed.'
       required_steps: ''
       step_output_key: step1
-      output_type: rag_document_content
+      output_type: fetch_document_content
       action_config: fetch_document_for_rag
       response: ''
     weight: 0
     uuid: c1b947d4-9970-4720-a75c-3fd909f2ee65
+  7b2643a0-44d0-4904-bc6e-d219dc94b47e:
+    id: action_step
+    data:
+      step_description: 'Update document after indexation'
+      required_steps: step1
+      step_output_key: step2
+      output_type: fetch_document_content
+      action_config: update_document_for_rag
+      response: ''
+    weight: 1
+    uuid: 7b2643a0-44d0-4904-bc6e-d219dc94b47e

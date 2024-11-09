@@ -18,11 +18,11 @@ settings:
       value: processing
       label: Processing
     -
-      value: completed
-      label: Completed
-    -
       value: failed
       label: Failed
+    -
+      value: indexed
+      label: Indexed
   allowed_values_function: ''
 module: options
 locked: false

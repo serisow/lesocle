@@ -6,9 +6,9 @@ id: test_sending_sms
 label: 'Test Sending SMS'
 instructions: 'This test for sending sms'
 created: 1729847299
-changed: 1730199007
+changed: 1730839001
 execution_type: scheduled
-scheduled_time: 1730194959
+scheduled_time: 1730838840
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null

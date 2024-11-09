@@ -6,7 +6,7 @@ id: article_climate_change
 label: 'Create article about climate change'
 instructions: 'Create an informative article about climate change with an accompanying image.'
 created: 1728600704
-changed: 1730388198
+changed: 1730820138
 execution_type: scheduled
 scheduled_time: 1730321181
 schedule_type: one_time
