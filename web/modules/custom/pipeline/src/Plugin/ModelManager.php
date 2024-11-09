@@ -2,21 +2,43 @@
 /**
  * Plugin manager for LLM Model plugins.
  *
- * Manages the registration and configuration of different LLM models (GPT, Claude, Gemini).
- * This manager handles model selection, versioning, and configuration mapping between
- * Drupal and various LLM providers.
+ * Manages the discovery, initialization, and configuration of Language Learning
+ * Model (LLM) plugins. This manager handles the complexity of different model
+ * versions, providers, and configurations while providing a unified interface
+ * for pipeline steps.
  *
- * Key responsibilities:
- * - Manages model plugin discovery and instantiation
- * - Maps model names to service providers
- * - Handles model configuration and defaults
- * - Provides model capability information
+ * Core responsibilities:
+ * - Model plugin discovery and instantiation
+ * - Version compatibility management
+ * - Provider configuration mapping
+ * - Model capability exposure
+ * - Configuration validation
+ *
+ * Model management:
+ * - Handles multiple model versions (GPT-4, Claude, Gemini)
+ * - Maps between provider-specific and internal model names
+ * - Manages model-specific configurations
+ * - Provides capability information
+ * - Implements fallback mechanisms
  *
  * Important behaviors:
  * - Maintains model version compatibility
- * - Handles model-specific configuration
- * - Provides fallback mechanisms
- * - Maps between provider-specific and internal model names
+ * - Handles provider-specific configurations
+ * - Manages model defaults
+ * - Implements caching for plugin information
+ * - Provides fallback mechanisms for unavailable models
+ *
+ * Integration points:
+ * - LLM service providers (OpenAI, Anthropic, Google)
+ * - Plugin system for model registration
+ * - Cache system for plugin information
+ * - Configuration system for model settings
+ *
+ * Key relationships:
+ * - Works with ModelInterface implementations
+ * - Integrates with LLMServiceManager
+ * - Supports ConfigEntity system
+ * - Handles cache backend integration
  *
  * @see \Drupal\pipeline\Plugin\ModelInterface
  * @see \Drupal\pipeline\Plugin\Model\GPT4Model

@@ -1,4 +1,13 @@
 <?php
+/**
+ * Service for downloading images from external URLs.
+ *
+ * Simple service that downloads an image from a URL and creates a Drupal file entity.
+ * Used primarily in pipeline steps that generate images, like DALL-E integration.
+ *
+ * @see \Drupal\pipeline\Plugin\LLMService\OpenAIImageService
+ */
+
 namespace Drupal\pipeline\Service;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;

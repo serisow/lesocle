@@ -1,25 +1,47 @@
 <?php
 /**
- * Provides a base implementation for Step Type plugins.
+ * Provides base implementation for Step Type plugins.
  *
- * Step Types are plugins that define discrete operations within a pipeline.
- * This base class provides common functionality for all step types, including
- * configuration management, weight handling, and execution context.
+ * Step Types are the fundamental building blocks of pipeline execution, defining
+ * individual operations that can be chained together. This base class implements
+ * core plugin functionality and state management for all step types.
  *
- * Important considerations:
- * - Each step must have a unique UUID within its pipeline
- * - Steps can define their output format for subsequent steps
- * - Steps can require results from previous steps
- * - Step execution can be delegated to Go service based on configuration
+ * Core functionalities:
+ * - Plugin configuration management
+ * - Step execution state tracking
+ * - Weight-based ordering
+ * - Output key management
+ * - Step description handling
  *
- * Usage:
- * - Extend this class for basic step types
- * - Use ConfigurableStepTypeBase for steps needing configuration
- * - Use AbstractLLMStepType for LLM-integrated steps
+ * Important behaviors:
+ * - Maintains unique UUID within pipeline context
+ * - Handles step weights for execution ordering
+ * - Manages step output for subsequent steps
+ * - Provides AJAX integration support
+ * - Implements dependency calculation
  *
- * @see \Drupal\pipeline\ConfigurableStepTypeBase
- * @see \Drupal\pipeline\AbstractLLMStepType
+ * Configuration management:
+ * - Handles default configuration
+ * - Manages step-specific settings
+ * - Processes plugin dependencies
+ * - Supports configuration inheritance
+ *
+ * Key relationships:
+ * - Works with Pipeline entity for execution context
+ * - Integrates with StepTypeManager for plugin handling
+ * - Supports ConfigurableStepTypeInterface extensions
+ * - Uses EntityTypeManager for entity operations
+ *
+ * Integration points:
+ * - Plugin system for step type registration
+ * - Form API for configuration
+ * - Entity system for persistence
+ * - AJAX system for interactive updates
+ *
+ * @see \Drupal\pipeline\Plugin\StepType\Annotation\StepType
+ * @see \Drupal\pipeline\ConfigurableStepTypeInterface
  * @see \Drupal\pipeline\Plugin\StepTypeInterface
+ * @see \Drupal\pipeline\Plugin\StepTypeManager
  */
 namespace Drupal\pipeline;
 

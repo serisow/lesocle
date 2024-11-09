@@ -1,4 +1,41 @@
 <?php
+/**
+ * Defines an interface for Step type plugins.
+ *
+ * Step Type plugins are the fundamental units of pipeline execution, defining
+ * discrete operations that can be configured, ordered, and executed within
+ * a pipeline. Each step produces output that can be consumed by subsequent steps.
+ *
+ * Contract requirements:
+ * - Each step must have a unique UUID within its pipeline
+ * - Steps must support weight-based ordering
+ * - Steps must define their output type and key
+ * - Steps must be configurable
+ * - Steps must be able to process dependencies on previous steps
+ *
+ * Required behaviors:
+ * - Must provide output key for result access
+ * - Must define step description
+ * - Must support configuration inheritance
+ * - Must define output type for proper handling
+ *
+ * Key relationships:
+ * - Used by Pipeline entity for step management
+ * - Implemented by StepTypeBase for common functionality
+ * - Extended by ConfigurableStepTypeInterface for complex steps
+ * - Managed by StepTypeManager for plugin handling
+ *
+ * Common implementations:
+ * - LLMStep for language model interactions
+ * - ActionStep for external actions
+ * - GoogleSearchStep for search operations
+ * - DocumentSearchStep for RAG operations
+ *
+ * @see \Drupal\pipeline\StepTypeBase
+ * @see \Drupal\pipeline\ConfigurableStepTypeInterface
+ * @see \Drupal\pipeline\Plugin\StepTypeManager
+ */
+
 namespace Drupal\pipeline\Plugin;
 
 use Drupal\Component\Plugin\ConfigurableInterface;

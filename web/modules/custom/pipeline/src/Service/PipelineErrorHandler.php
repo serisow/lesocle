@@ -1,9 +1,48 @@
 <?php
+/**
+ * Service for handling pipeline execution errors and logs.
+ *
+ * Creates and manages log files for pipeline execution errors. Captures PHP errors
+ * during step execution and formats them into detailed log entries. Used primarily
+ * by PipelineBatch during step execution and PipelineExecutionController for Go
+ * service results.
+ *
+ * Core features:
+ * - Creates daily log files in private://pipeline_logs/YYYY/MM directory
+ * - Captures PHP errors during step execution
+ * - Formats step errors and PHP errors into readable log entries
+ * - Associates log files with PipelineRun entities
+ *
+ * Used in:
+ * - PipelineBatch::processStep() for capturing errors during step execution
+ * - PipelineExecutionController::receiveExecutionResult() for Go service results
+ *
+ * Error capture pattern:
+ * ```php
+ * $error_collector = $errorHandler->startErrorCapture($step_uuid);
+ * try {
+ *   // Step execution
+ * } finally {
+ *   $errorHandler->stopErrorCapture();
+ * }
+ * ```
+ *
+ * Log file format:
+ * [YYYY-MM-DD HH:mm:ss] Step Description (step_type): Error message
+ * [YYYY-MM-DD HH:mm:ss] PHP Error in step Description: message in file on line X
+ *
+ * @see \Drupal\pipeline\PipelineBatch
+ * @see \Drupal\pipeline\Controller\PipelineExecutionController
+ *
+ */
+
 namespace Drupal\pipeline\Service;
 
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\file\FileInterface;
 use Drupal\file\FileRepository;
 use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\StringTranslation\TranslationInterface;
@@ -13,6 +52,13 @@ use Drupal\Core\StringTranslation\TranslationInterface;
  */
 class PipelineErrorHandler {
   use StringTranslationTrait;
+
+  /**
+   * The entity_type manager service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * The file system service.
@@ -49,65 +95,68 @@ class PipelineErrorHandler {
     FileSystemInterface $file_system,
     FileRepository $file_repository,
     DateFormatter $date_formatter,
-    TranslationInterface $string_translation
+    TranslationInterface $string_translation,
+    EntityTypeManagerInterface $entity_type_manager
+
   ) {
     $this->fileSystem = $file_system;
     $this->fileRepository = $file_repository;
     $this->dateFormatter = $date_formatter;
     $this->setStringTranslation($string_translation);
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
    * Creates a log file for a pipeline run.
    */
-  public function createLogFile(array $step_results, $pipeline_run_id) {
-    $logs = [];
-    $error_collector = $this->errorCollector;
-
-    foreach ($step_results as $step_uuid => $step) {
-      // Capture step errors
-      if (!empty($step['error_message'])) {
-        $logs[] = sprintf(
-          "[%s] Step %s (%s): %s",
-          $this->dateFormatter->format($step['start_time'], 'custom', 'Y-m-d H:i:s'),
-          $step['step_description'],
-          $step['step_type'],
-          $step['error_message']
-        );
-      }
-
-      // Add collected PHP errors for this step if any
-      if (isset($error_collector[$step_uuid])) {
-        foreach ($error_collector[$step_uuid] as $error) {
-          $logs[] = sprintf(
-            "[%s] PHP %s in step %s: %s in %s on line %d",
-            $this->dateFormatter->format($error['time'], 'custom', 'Y-m-d H:i:s'),
-            $error['severity'],
-            $step['step_description'],
-            $error['message'],
-            $error['file'],
-            $error['line']
-          );
-        }
-      }
-    }
-
-    if (!empty($logs)) {
+  /**
+   * Creates a log file for a pipeline run.
+   */
+  public function createLogFile(array $step_results, $pipeline_run_id): ?FileInterface {
+    try {
+      $logs = [];
       // Create year/month directory structure
       $directory = 'private://pipeline_logs/' . date('Y') . '/' . date('m');
       $this->fileSystem->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
 
-      $filename = sprintf('pipeline_run_%d_%s.log', $pipeline_run_id, date('Y-m-d_His'));
+      // Change filename to be date-based instead of pipeline-run based
+      $filename = sprintf('pipeline_%s.log', date('Y-m-d'));
       $uri = $directory . '/' . $filename;
 
-      $file_contents = implode("\n", $logs);
+      foreach ($step_results as $step_uuid => $step) {
+        // Add pipeline run ID to log entries for traceability
+        if (!empty($step['error_message'])) {
+          $logs[] = sprintf(
+            "[%s] Pipeline Run %d - Step %s (%s): %s",
+            $this->dateFormatter->format(time(), 'custom', 'Y-m-d H:i:s'),
+            $pipeline_run_id,
+            $step['step_description'],
+            $step['step_type'],
+            $step['error_message']
+          );
+        }
+      }
 
-      try {
-        $file = $this->fileRepository->writeData(
-          $file_contents,
-          $uri,
-          FileExists::Replace
-        );
+      if (!empty($logs)) {
+        $log_content = implode("\n", $logs) . "\n";  // Add newline after entries
+
+        // Check if file exists
+        if (file_exists($uri)) {
+          // Append to existing file
+          file_put_contents($uri, $log_content, FILE_APPEND);
+          // Get existing file entity
+          $files = $this->entityTypeManager
+            ->getStorage('file')
+            ->loadByProperties(['uri' => $uri]);
+          $file = reset($files);
+        } else {
+          // Create new file
+          $file = $this->fileRepository->writeData(
+            $log_content,
+            $uri,
+            FileExists::Replace
+          );
+        }
 
         if ($file) {
           $file->setPermanent();
@@ -115,12 +164,12 @@ class PipelineErrorHandler {
           return $file;
         }
       }
-      catch (\Exception $e) {
-        \Drupal::logger('pipeline')->error('Failed to create log file: @message', ['@message' => $e->getMessage()]);
-      }
-    }
 
-    return NULL;
+      return NULL;
+    } catch (\Exception $e) {
+      \Drupal::logger('pipeline')->error('Failed to create log file: @message', ['@message' => $e->getMessage()]);
+      return NULL;
+    }
   }
 
   /**

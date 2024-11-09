@@ -36,6 +36,7 @@ services:
       - '@file.repository'
       - '@date.formatter'
       - '@string_translation'
+      - '@entity_type.manager'
 
 
   pipeline.batch:

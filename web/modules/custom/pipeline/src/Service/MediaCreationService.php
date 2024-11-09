@@ -1,4 +1,12 @@
 <?php
+/**
+ * Service for creating media entities from files.
+ *
+ * Simple service that creates a media entity of type 'image' from a file ID.
+ * Used after image files are created to make them available as media entities.
+ *
+ * @see \Drupal\pipeline\Service\ImageDownloadService
+ */
 namespace Drupal\pipeline\Service;
 
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;

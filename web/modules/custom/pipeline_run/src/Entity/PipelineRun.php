@@ -11,17 +11,35 @@
  * - Tracks execution timing and duration
  * - Maintains error logs and failure states
  * - Associates results with specific pipelines
+ * - Manages execution context data
  *
  * Important behaviors:
  * - Auto-generates log files for failed executions
  * - Maintains step execution order
  * - Stores context data between steps
  * - Handles both scheduled and manual triggers
+ * - Tracks execution duration and timing
  *
  * Storage considerations:
  * - Step results are stored as serialized JSON
  * - Log files are stored in private filesystem
  * - Supports cleanup of old execution records
+ * - Maintains execution metadata
+ * - Handles large result datasets
+ *
+ * Key relationships:
+ * - References Pipeline entity
+ * - Associates with User entity for ownership
+ * - Links to File entities for logs
+ * - Integrates with PipelineBatch system
+ * - Works with ErrorHandler service
+ *
+ * Error handling:
+ * - Captures PHP errors during execution
+ * - Stores detailed error logs
+ * - Maintains failure status
+ * - Supports error investigation
+ * - Provides debugging context
  *
  * @ContentEntityType(
  *   id = "pipeline_run",
@@ -31,6 +49,7 @@
  *
  * @see \Drupal\pipeline\Entity\Pipeline
  * @see \Drupal\pipeline\PipelineBatch
+ * @see \Drupal\pipeline\Service\PipelineErrorHandler
  */
 
 namespace Drupal\pipeline_run\Entity;
