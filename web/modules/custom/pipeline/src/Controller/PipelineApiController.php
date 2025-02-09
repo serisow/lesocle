@@ -324,22 +324,6 @@ class PipelineApiController extends ControllerBase {
             ];
             break;
 
-          case 'document_search':
-            $configuration = $step_type->getConfiguration();
-            $step_data['search_input'] = $configuration['data']['search_input'] ?? '';
-            // Add search settings
-            $step_data['document_search_settings'] = [
-              'similarity_threshold' => $configuration['data']['search_settings']['similarity_threshold'] ?? 0.8,
-              'max_results' => $configuration['data']['search_settings']['max_results'] ?? 5,
-              'similarity_metric' => $configuration['data']['search_settings']['similarity_metric'] ?? 'cosine',
-            ];
-            // Add content settings
-            $step_data['content_search_settings'] = [
-              'include_metadata' => $configuration['data']['content_settings']['include_metadata'] ?? TRUE,
-              'min_word_count' => $configuration['data']['content_settings']['min_word_count'] ?? 0,
-              'exclude_already_used' => $configuration['data']['content_settings']['exclude_already_used'] ?? FALSE,
-            ];
-            break;
         }
 
         // Remove the 'data' key as we've extracted its contents
@@ -353,49 +337,6 @@ class PipelineApiController extends ControllerBase {
     }
 
     return new JsonResponse($pipeline_data);
-  }
-
-  public function fetchDocuments(Request $request) {
-    $batch_size = $request->query->get('batch_size', 10);
-    $status = $request->query->get('status', 'pending');
-
-    $query = $this->entityTypeManager->getStorage('media')->getQuery()
-      ->accessCheck()
-      ->condition('bundle', 'document')
-      ->condition('field_rag_indexing_status', $status)
-      ->range(0, $batch_size)
-      ->sort('changed', 'ASC');
-
-    $document_ids = $query->execute();
-    $documents = [];
-
-    if (!empty($document_ids)) {
-      $media_entities = $this->entityTypeManager->getStorage('media')
-        ->loadMultiple($document_ids);
-
-      foreach ($media_entities as $media) {
-        $file = $media->get('field_media_document')->entity;
-        if ($file) {
-          $documents[] = [
-            'mid' => $media->id(),
-            'filename' => $file->getFilename(),
-            'uri' => $file->createFileUrl(),
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
-          ];
-
-          // Update status to processing
-          $media->set('field_rag_indexing_status', 'processing');
-          $media->save();
-        }
-      }
-    }
-
-    return new JsonResponse([
-      'documents' => $documents,
-      'count' => count($documents),
-      'timestamp' => \Drupal::time()->getCurrentTime(),
-    ]);
   }
 
 }

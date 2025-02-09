@@ -248,16 +248,6 @@ class PipelineBatch {
           '@category' => $category ?: 'N/A',
         ]);
 
-      case $step_type instanceof DocumentSearchStep:
-        $search_input = $config['data']['search_input'] ?? 'N/A';
-        $max_results = $config['data']['search_settings']['max_results'] ?? 5;
-        $threshold = $config['data']['search_settings']['similarity_threshold'] ?? 0.8;
-        return $this->t('(Input: @input, Max Results: @max, Threshold: @threshold)', [
-          '@input' => $search_input,
-          '@max' => $max_results,
-          '@threshold' => $threshold,
-        ]);
-
       default:
         return '';
     }

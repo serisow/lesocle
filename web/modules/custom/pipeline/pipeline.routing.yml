@@ -306,11 +306,3 @@ pipeline.dashboard:
   requirements:
     _permission: 'administer pipelines'
 
-pipeline.api.fetch_documents:
-  path: '/api/pipeline/documents'
-  defaults:
-    _controller: '\Drupal\pipeline\Controller\PipelineApiController::fetchDocuments'
-  requirements:
-    _permission: 'access content'
-  #options:
-  #  _auth: ['basic_auth']

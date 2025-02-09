@@ -180,7 +180,7 @@ parameters:
     # Specify allowed request methods, specify ['*'] to allow all possible ones.
     allowedMethods: ['POST', 'GET', 'OPTIONS', 'DELETE', 'PUT', 'PATCH']
     # Configure requests allowed from specific origins.
-    allowedOrigins: ['http://localhost:3000']  # Replace with your React app's domain and port
+    allowedOrigins: ['http://localhost:3000', 'http://localhost:5173']  # Replace with your React app's domain and port
     # Sets the Access-Control-Expose-Headers header.
     exposedHeaders: false
     # Sets the Access-Control-Max-Age header.

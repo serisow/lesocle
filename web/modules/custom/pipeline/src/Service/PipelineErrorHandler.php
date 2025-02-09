@@ -38,6 +38,7 @@
 
 namespace Drupal\pipeline\Service;
 
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
@@ -46,11 +47,12 @@ use Drupal\file\FileInterface;
 use Drupal\file\FileRepository;
 use Drupal\Core\Datetime\DateFormatter;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Service for handling pipeline execution errors and logs.
  */
-class PipelineErrorHandler {
+class PipelineErrorHandler implements ContainerInjectionInterface {
   use StringTranslationTrait;
 
   /**
@@ -104,6 +106,16 @@ class PipelineErrorHandler {
     $this->dateFormatter = $date_formatter;
     $this->setStringTranslation($string_translation);
     $this->entityTypeManager = $entity_type_manager;
+  }
+
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('file_system'),
+      $container->get('file.repository'),
+      $container->get('date.formatter'),
+      $container->get('string_translation'),
+      $container->get('entity_type.manager')
+    );
   }
 
   /**
