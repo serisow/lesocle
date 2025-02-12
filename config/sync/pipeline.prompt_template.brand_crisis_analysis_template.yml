@@ -1,0 +1,9 @@
+uuid: 7bf09ea0-bf3e-49e7-8c3a-da4bc92948f1
+langcode: en
+status: true
+dependencies: {  }
+id: brand_crisis_analysis_template
+label: 'Brand Crisis Analysis Template'
+description: 'Analyzes tweets for potential brand crises and provides severity assessment.'
+template: "Analyze these tweets for signs of brand crisis. Use the complete context of all tweets to determine if there's a legitimate crisis brewing or isolated complaints.\r\n\r\nCurrent tweets for analysis:\r\n{tweets_data}\r\n\r\nProvide your analysis in the following JSON structure:\r\n{\r\n  \"crisis_detected\": boolean,\r\n  \"severity_score\": number (1-10),\r\n  \"key_complaints\": [string],\r\n  \"sentiment_analysis\": {\r\n    \"negative_percentage\": number,\r\n    \"neutral_percentage\": number,\r\n    \"positive_percentage\": number\r\n  },\r\n  \"viral_potential\": number (1-10),\r\n  \"recommended_actions\": [string],\r\n  \"high_priority_tweets\": [\r\n    {\r\n      \"tweet_id\": string,\r\n      \"reason\": string\r\n    }\r\n  ]\r\n}\r\n\r\nConsider these factors in your analysis:\r\n- Volume and frequency of similar complaints\r\n- Influence of the authors (follower count, verified status)\r\n- Presence of media content\r\n- Engagement metrics (retweets, likes, replies)\r\n- Use of specific crisis-indicating keywords\r\n- Geographic clustering of complaints"
+output_format: json

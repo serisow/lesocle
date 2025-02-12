@@ -1,0 +1,64 @@
+uuid: 34c7cae5-667a-4139-acda-c2ecaeecc6f4
+langcode: en
+status: true
+dependencies: {  }
+id: brand_crisis_detection_pipeline
+label: 'Brand Crisis Detection Pipeline'
+instructions: 'Search twitter to look for patterns which might hint of the beginning of a crisis involving a brand.'
+created: 1739273155
+changed: 1739359598
+execution_type: scheduled
+scheduled_time: 1739359560
+schedule_type: one_time
+recurring_frequency: null
+recurring_time: null
+execution_failures: 1
+step_types:
+  f26f1d33-0d3b-4f41-a886-d6437325e7f8:
+    id: action_step
+    data:
+      step_description: 'Search tweets using tweeter api.'
+      required_steps: ''
+      step_output_key: tweeter_search_content
+      output_type: twitter_search_results
+      action_config: search_tweet_action
+      response: ''
+    weight: -10
+    uuid: f26f1d33-0d3b-4f41-a886-d6437325e7f8
+  847c8665-9cd3-4140-a7bd-62e71a5a10a8:
+    id: llm_step
+    data:
+      step_description: 'Crise detection from tweets.'
+      required_steps: tweeter_search_content
+      step_output_key: analysis_result
+      output_type: crisis_analysis_results
+      llm_config: gpt_4
+      prompt_template: 'Brand Crisis Analysis Template (brand_crisis_analysis_template)'
+      prompt: "Analyze these tweets for signs of brand crisis. Use the complete context of all tweets to determine if there's a legitimate crisis brewing or isolated complaints.\r\n\r\nCurrent tweets for analysis:\r\n{tweeter_search_content}\r\n\r\nProvide your analysis in the following JSON structure:\r\n{\r\n  \"crisis_detected\": boolean,\r\n  \"severity_score\": number (1-10),\r\n  \"key_complaints\": [string],\r\n  \"sentiment_analysis\": {\r\n    \"negative_percentage\": number,\r\n    \"neutral_percentage\": number,\r\n    \"positive_percentage\": number\r\n  },\r\n  \"viral_potential\": number (1-10),\r\n  \"recommended_actions\": [string],\r\n  \"high_priority_tweets\": [\r\n    {\r\n      \"tweet_id\": string,\r\n      \"reason\": string\r\n    }\r\n  ]\r\n}\r\n\r\nConsider these factors in your analysis:\r\n- Volume and frequency of similar complaints\r\n- Influence of the authors (follower count, verified status)\r\n- Presence of media content\r\n- Engagement metrics (retweets, likes, replies)\r\n- Use of specific crisis-indicating keywords\r\n- Geographic clustering of complaints"
+      response: ''
+    weight: -9
+    uuid: 847c8665-9cd3-4140-a7bd-62e71a5a10a8
+  9dfb7791-c201-4ed8-a083-4e381b21d075:
+    id: llm_step
+    data:
+      step_description: 'Generate crisis alert email'
+      required_steps: enriched_crisis_data
+      step_output_key: email_content
+      output_type: generic_content
+      llm_config: gemini_1_5_flash
+      prompt_template: 'Crisis Alert Email Template (crisis_alert_email_template)'
+      prompt: "Based on the enriched crisis data below, generate a professional alert email.\r\n\r\nEnriched Crisis Data:\r\n{enriched_crisis_data}\r\n\r\nFor each high-priority tweet, include:\r\n- Tweet URL\r\n- Author username and profile\r\n- Full tweet content\r\n- Engagement metrics\r\n- Time posted\r\n- Priority reason\r\n\r\nFollow this structure:\r\n1. Crisis Overview (metrics and severity)\r\n2. High Priority Incidents (with full context and links)\r\n3. Pattern Analysis\r\n4. Recommended Actions (categorized by urgency)\r\n5. Next Steps and Timeline"
+      response: ''
+    weight: -7
+    uuid: 9dfb7791-c201-4ed8-a083-4e381b21d075
+  75cec3a5-61e1-4d62-b2e9-b9ca4a35b492:
+    id: action_step
+    data:
+      step_description: 'Twitter Data enrichment'
+      required_steps: "tweeter_search_content\r\nanalysis_result"
+      step_output_key: enriched_crisis_data
+      output_type: generic_content
+      action_config: tweet_data_enricher
+      response: ''
+    weight: -8
+    uuid: 75cec3a5-61e1-4d62-b2e9-b9ca4a35b492

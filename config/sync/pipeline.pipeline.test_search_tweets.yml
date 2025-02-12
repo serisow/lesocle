@@ -1,0 +1,27 @@
+uuid: 5cdc4f63-8acd-4625-beef-e2b33006224a
+langcode: en
+status: true
+dependencies: {  }
+id: test_search_tweets
+label: 'Test Search Tweets'
+instructions: 'This is for testing  the search for tweets.'
+created: 1739195478
+changed: 1739268598
+execution_type: scheduled
+scheduled_time: 1739268575
+schedule_type: one_time
+recurring_frequency: null
+recurring_time: null
+execution_failures: 0
+step_types:
+  bf3261ea-6b27-4e78-96c8-a9037c3d058b:
+    id: action_step
+    data:
+      step_description: 'Search Tweets.'
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      action_config: search_tweet_action
+      response: ''
+    weight: 0
+    uuid: bf3261ea-6b27-4e78-96c8-a9037c3d058b

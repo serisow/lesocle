@@ -1,0 +1,9 @@
+uuid: 288fb711-82e8-4cf8-a64a-edb0055a1728
+langcode: en
+status: true
+dependencies: {  }
+id: crisis_alert_email_template
+label: 'Crisis Alert Email Template'
+description: 'Generates professional alert email from crisis analysis.'
+template: "Based on the enriched crisis data below, generate a professional alert email. The data is in JSON format where each high-priority tweet can be found in tweets.high_priority_tweets.\r\n\r\nEnriched Crisis Data:\r\n{enriched_crisis_data}\r\n\r\nStructure the email as follows:\r\n\r\nSubject: Brand Crisis Alert - Severity Level {crisis_metrics.severity_score}/10\r\n\r\n1. Crisis Overview\r\n- Severity Score: {crisis_metrics.severity_score}/10\r\n- Sentiment Analysis: {crisis_metrics.sentiment_analysis}\r\n- Viral Potential: {crisis_metrics.viral_potential}/10\r\n- Total Tweets Analyzed: {metadata.total_tweets}\r\n- High Priority Issues: {metadata.high_priority_count}\r\n\r\n2. High Priority Incidents:\r\n[For each tweet in tweets.high_priority_tweets, include:\r\n- Tweet Time: {created_at}\r\n- Author: @{author.username} (Profile: {author.profile_url})\r\n- Content: {text}\r\n- Tweet URL: {tweet_url}\r\n- Engagement: {metrics.retweets} retweets, {metrics.likes} likes, {metrics.replies} replies\r\n- Priority Reason: {priority_reason}\r\n]\r\n\r\n3. Recommended Actions:\r\n[List each action from recommended_actions]\r\n\r\n4. Next Steps:\r\n- Immediate response required for high-priority tweets\r\n- Monitor situation for escalation\r\n- Prepare customer service team for increased activity"
+output_format: json

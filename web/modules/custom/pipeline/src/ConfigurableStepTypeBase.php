@@ -193,7 +193,9 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       'featured_image'   => $this->t('Featured Image'),
       'seo_metadata'     => $this->t('SEO Metadata'),
       'taxonomy_term'    => $this->t('Taxonomy Term'),
-      'tweet_content'    => $this->t('Tweet Content'),
+      'tweet_content'    => $this->t('Tweet Content'), // used for posting tweet
+      'twitter_search_results' => $this->t('Twitter Search Results'), // used for twitter search results
+      'crisis_analysis_results' => $this->t('Twitter Crisis Analysis Results'),
       'sms_content'      => $this->t('Sms Content'),
       'bulk_sms_content' => $this->t('Bulk SMS Content'),
       'generic_webhook_content'  => $this->t('Generic Webhook Content'),
