@@ -76,6 +76,7 @@ use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
  *     "schedule_type",
  *     "recurring_frequency",
  *     "recurring_time",
+ *     "execution_interval",
  *     "execution_type",
  *     "execution_failures"
  *   }
@@ -126,6 +127,15 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    * @var int
    */
   protected $scheduled_time;
+
+  /**
+   * The execution interval of on-demand scheduled pipeline when they are executed by the cron.
+   *
+   * @var int
+   */
+
+  protected $execution_interval;
+
 
   /**
    * The schedule type.
@@ -437,6 +447,21 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    */
   public function setRecurringTime($recurring_time) {
     $this->recurring_time = $recurring_time;
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExecutionInterval() {
+    return $this->execution_interval;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setExecutionInterval($interval) {
+    $this->execution_interval = $interval;
     return $this;
   }
 

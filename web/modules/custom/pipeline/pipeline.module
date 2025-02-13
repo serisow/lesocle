@@ -103,6 +103,10 @@ function pipeline_toolbar() {
             'title' => t('Custom Google Search'),
             'url' => Url::fromRoute('pipeline.google_settings'),
           ],
+          'pipeline_global_settings' => [
+            'title' => t('Global Settings'),
+            'url' => Url::fromRoute('pipeline.settings'),
+          ],
         ],
         '#attributes' => [
           'class' => ['toolbar-menu'],
@@ -122,3 +126,80 @@ function pipeline_page_attachments(array &$attachments) {
   $attachments['#attached']['library'][] = 'pipeline/toolbar';
 }
 
+/**
+ * Callback for high frequency pipeline execution.
+ */
+/**
+ * Implements callback for ultimate_cron job pipeline_high_frequency_execution.
+ */
+
+function pipeline_execute_high_frequency_pipelines() {
+  $now = \Drupal::time()->getCurrentTime();
+  $logger = \Drupal::logger('pipeline');
+  $config_factory = \Drupal::configFactory();
+  $http_client = \Drupal::httpClient();
+
+  // Get all enabled on-demand pipelines
+  $storage = \Drupal::entityTypeManager()->getStorage('pipeline');
+  $query = $storage->getQuery()
+    ->condition('status', TRUE)
+    ->condition('execution_type', 'on_demand')
+    ->condition('execution_failures', 3, '<')
+    ->accessCheck(FALSE);
+
+  $pipeline_ids = $query->execute();
+
+  if (empty($pipeline_ids)) {
+    return;
+  }
+
+  $pipelines = $storage->loadMultiple($pipeline_ids);
+
+  foreach ($pipelines as $pipeline) {
+    try {
+      $interval = $pipeline->get('execution_interval');
+      if (empty($interval)) {
+        continue;
+      }
+
+      // Check if enough time has passed since last execution
+      $last_run = \Drupal::state()->get('pipeline.last_run.' . $pipeline->id(), 0);
+      $interval_seconds = $interval * 60;
+
+      if (($now - $last_run) >= $interval_seconds) {
+        // Call the Go service endpoint
+        $go_service_url = rtrim($config_factory->get('pipeline.settings')->get('go_service_url'), '/');
+        $endpoint = sprintf('%s/pipeline/%s/execute', $go_service_url, $pipeline->id());
+
+        $response = $http_client->post($endpoint, [
+          'json' => [
+            'triggered_by' => 'cron',
+          ],
+          'headers' => [
+            'Content-Type' => 'application/json',
+          ],
+        ]);
+
+        if ($response->getStatusCode() === 202) { // 202 Accepted
+          // Update last run time
+          \Drupal::state()->set('pipeline.last_run.' . $pipeline->id(), $now);
+          $logger->info('Successfully triggered pipeline @id execution via Go service', [
+            '@id' => $pipeline->id(),
+          ]);
+        } else {
+          throw new \Exception('Unexpected response status: ' . $response->getStatusCode());
+        }
+      }
+    }
+    catch (\Exception $e) {
+      $logger->error('Failed to execute pipeline @id: @error', [
+        '@id' => $pipeline->id(),
+        '@error' => $e->getMessage(),
+      ]);
+
+      // Increment failure count
+      $pipeline->incrementExecutionFailures();
+      $pipeline->save();
+    }
+  }
+}

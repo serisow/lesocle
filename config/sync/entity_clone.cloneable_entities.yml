@@ -47,3 +47,4 @@ cloneable_entities:
   - pipeline_run
   - pipeline_step_run
   - pathauto_pattern
+  - ultimate_cron_job

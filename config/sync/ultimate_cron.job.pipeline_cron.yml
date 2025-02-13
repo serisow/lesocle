@@ -1,0 +1,17 @@
+uuid: 0c03954c-6bdc-4666-a172-d5dae3893608
+langcode: en
+status: true
+dependencies:
+  module:
+    - pipeline
+title: 'Default cron handler'
+id: pipeline_cron
+weight: 0
+module: pipeline
+callback: 'pipeline#cron'
+scheduler:
+  id: simple
+launcher:
+  id: serial
+logger:
+  id: database

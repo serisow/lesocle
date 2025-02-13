@@ -191,6 +191,26 @@ interface PipelineInterface extends ConfigEntityInterface {
   public function setScheduledTime($timestamp);
 
   /**
+   * Gets the scheduled execution interval time for on-demand pipeline.
+   *
+   * @return int|null
+   *   The scheduled execution interval timestamp, or NULL if not set.
+   */
+  public function getExecutionInterval();
+
+  /**
+   * Sets the scheduled execution interval time for on-demand pipeline.
+   *
+   * @param int $timestamp
+   *   The scheduled execution interval time.
+   *
+   * @return $this
+   */
+  public function setExecutionInterval($interval);
+
+
+
+  /**
    * Gets the schedule type.
    *
    * @return string

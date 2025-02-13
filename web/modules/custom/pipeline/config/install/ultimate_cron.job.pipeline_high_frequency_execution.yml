@@ -1,0 +1,32 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - pipeline
+title: 'Executes high frequency pipelines'
+id: pipeline_high_frequency_execution
+module: pipeline
+callback: pipeline_execute_high_frequency_pipelines
+scheduler:
+  id: simple
+  configuration:
+    rules:
+      - '*/3 * * * *'   # This wasn't being parsed correctly
+    catch_up: 0         # Don't catch up missed jobs
+timing:
+  rules:
+    - '*/3 * * * *'     # Adding it here as well for compatibility
+launcher:
+  id: serial
+  configuration:
+    timeouts:
+      lock_timeout: 3600
+      max_execution_time: 900
+    launcher:
+      max_threads: 1
+logger:
+  id: database
+  configuration:
+    method: '3'
+    expire: 604800
+    retain: 1000

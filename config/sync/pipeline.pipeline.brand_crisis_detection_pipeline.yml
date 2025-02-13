@@ -1,18 +1,19 @@
 uuid: 34c7cae5-667a-4139-acda-c2ecaeecc6f4
 langcode: en
-status: true
+status: false
 dependencies: {  }
 id: brand_crisis_detection_pipeline
 label: 'Brand Crisis Detection Pipeline'
 instructions: 'Search twitter to look for patterns which might hint of the beginning of a crisis involving a brand.'
 created: 1739273155
-changed: 1739359598
+changed: 1739392234
 execution_type: scheduled
 scheduled_time: 1739359560
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
-execution_failures: 1
+execution_interval: null
+execution_failures: 3
 step_types:
   f26f1d33-0d3b-4f41-a886-d6437325e7f8:
     id: action_step

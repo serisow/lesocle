@@ -1,1 +1,47 @@
 <?php
+
+use Drupal\Core\Config\FileStorage;
+
+/**
+ * Implements hook_install().
+ */
+function pipeline_install() {
+  $extension_path_resolver = \Drupal::service('extension.path.resolver');
+  $config_path = $extension_path_resolver->getPath('module', 'pipeline') . '/config/install';
+
+  $source = new FileStorage($config_path);
+  $config_storage = \Drupal::service('config.storage');
+  $config_name = 'ultimate_cron.job.pipeline_high_frequency_execution';
+
+  if ($source->exists($config_name)) {
+    $config_storage->write($config_name, $source->read($config_name));
+    \Drupal::logger('pipeline')->notice('Pipeline high frequency cron job configuration has been imported.');
+  }
+}
+
+/**
+ * Updates Ultimate Cron job configuration for high frequency pipeline execution.
+ */
+function pipeline_update_9002() {
+  $extension_path_resolver = \Drupal::service('extension.path.resolver');
+  $config_path = $extension_path_resolver->getPath('module', 'pipeline') . '/config/install';
+
+  $source = new FileStorage($config_path);
+  $config_name = 'ultimate_cron.job.pipeline_high_frequency_execution';
+
+  if ($source->exists($config_name)) {
+    $config_storage = \Drupal::service('config.storage');
+    $config_storage->write($config_name, $source->read($config_name));
+    return t('Pipeline high frequency cron job configuration has been updated.');
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function pipeline_uninstall() {
+  // Remove the Ultimate Cron job configuration
+  \Drupal::configFactory()
+    ->getEditable('ultimate_cron.job.pipeline_high_frequency_execution')
+    ->delete();
+}

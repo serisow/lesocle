@@ -306,3 +306,11 @@ pipeline.dashboard:
   requirements:
     _permission: 'administer pipelines'
 
+
+pipeline.settings:
+  path: '/admin/config/pipeline/settings'
+  defaults:
+    _form: '\Drupal\pipeline\Form\PipelineSettingsForm'
+    _title: 'Pipeline Settings'
+  requirements:
+    _permission: 'administer pipeline settings'

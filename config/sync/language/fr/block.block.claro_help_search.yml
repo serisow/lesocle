@@ -1,2 +1,3 @@
 settings:
   label: "Rechercher dans l'aide"
+  label_display: visible

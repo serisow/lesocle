@@ -38,6 +38,10 @@ pipeline.pipeline.*:
     recurring_time:
       type: string
       label: 'Recurring Time'
+    execution_interval:
+      type: integer
+      label: 'Execution Interval'
+      nullable: true
     execution_failures:
       type: integer
       label: 'Execution Failures Count'

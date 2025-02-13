@@ -1,0 +1,29 @@
+uuid: null
+langcode: en
+status: true
+dependencies:
+  module:
+    - pipeline
+title: 'Executes high frequency pipelines'
+id: pipeline_high_frequency_execution
+weight: 0
+module: pipeline
+callback: pipeline_execute_high_frequency_pipelines
+scheduler:
+  id: simple
+  configuration:
+    rules:
+      - '*/5+@ * * * *'
+launcher:
+  id: serial
+  configuration:
+    timeouts:
+      lock_timeout: 3600
+    launcher:
+      thread: 0
+logger:
+  id: database
+  configuration:
+    method: '3'
+    expire: 604800
+    retain: 1000

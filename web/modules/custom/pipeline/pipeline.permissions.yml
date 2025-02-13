@@ -17,3 +17,4 @@ administer prompt templates:
 access pipeline api:
   title: 'Access Pipeline API'
   description: 'Allow access to the Pipeline API endpoints'
+

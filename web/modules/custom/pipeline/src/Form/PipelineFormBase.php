@@ -192,6 +192,20 @@ abstract class PipelineFormBase extends EntityForm {
         '#type' => 'item',
         '#markup' => $this->t('This pipeline will be executed manually or through an API call.'),
       ];
+      $form['execution_settings']['execution_interval'] = [
+        '#type' => 'number',
+        '#title' => $this->t('Execution Interval'),
+        '#description' => $this->t('How often should this pipeline run (in minutes). Minimum 3 minutes.'),
+        '#min' => 3,
+        '#step' => 1,
+        '#default_value' => $this->entity->get('execution_interval'),
+        '#required' => FALSE,
+        '#states' => [
+          'visible' => [
+            ':input[name="execution_type"]' => ['value' => 'on_demand'],
+          ],
+        ],
+      ];
     }
 
     $form['langcode'] = [
@@ -274,6 +288,9 @@ abstract class PipelineFormBase extends EntityForm {
       $this->entity->setScheduledTime(NULL);
       $this->entity->setRecurringFrequency(NULL);
       $this->entity->setRecurringTime(NULL);
+      // Add this line to handle the interval
+      $interval = $form_state->getValue(['execution_settings', 'execution_interval']);
+      $this->entity->setExecutionInterval($interval);
     }
 
     parent::submitForm($form, $form_state);
