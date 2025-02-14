@@ -1,0 +1,28 @@
+uuid: 3dcbd018-1886-4d41-bbc2-bdbebd957219
+langcode: en
+status: true
+dependencies: {  }
+id: fetch_monster_page
+label: 'Fetch monster page'
+instructions: 'Test fetch monster web page'
+created: 1739478986
+changed: 1739479013
+execution_type: scheduled
+scheduled_time: null
+schedule_type: none
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  8a8bc27b-a09f-49f5-a533-34cc3fa90940:
+    id: action_step
+    data:
+      step_description: 'Fetch the page'
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      action_config: fetch_monster_page
+      response: ''
+    weight: 0
+    uuid: 8a8bc27b-a09f-49f5-a533-34cc3fa90940

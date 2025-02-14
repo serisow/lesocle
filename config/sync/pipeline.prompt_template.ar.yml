@@ -1,0 +1,9 @@
+uuid: 714d0110-5a9d-46bc-b0af-fa6148976a68
+langcode: en
+status: true
+dependencies: {  }
+id: ar
+label: 'Full article body'
+description: 'Common template for a full article body.'
+template: "Your task is to format the provided content into clean, semantic HTML suitable for a content management system's WYSIWYG editor. Follow these guidelines:\r\n\r\n1. Format the content using only essential HTML tags:\r\n   - Use <h2> for section headings (not h1, as the title will be handled separately)\r\n   - Use <p> for paragraphs\r\n   - Use <ul> and <li> for lists\r\n   - Use <strong> and <em> for emphasis where appropriate\r\n   - NO body tags, style tags, or inline CSS\r\n   - NO div containers or other structural elements\r\n   - NO classes or IDs\r\n\r\n2. The content should be well-structured but minimal, allowing the CMS's styling to handle the presentation.\r\n\r\n3. Ensure proper spacing and organization of content.\r\n\r\nHere is the content to format:\r\n\r\n###\r\n{step2}\r\n###\r\n\r\nPlease provide your response in the following JSON structure. Do not add anything else, only the JSON structure:\r\n\r\n{\r\n  \"title\": \"Your generated title here\",\r\n  \"body\": \"Your clean HTML content here (NO body tags, NO styling)\"\r\n}\r\n\r\nImportant:\r\n1. The \"title\" field should contain plain text only (no HTML tags)\r\n2. The \"body\" field should contain only essential HTML tags\r\n3. All quotes must be properly escaped for valid JSON\r\n4. The entire response must be valid JSON\r\n5. Do NOT include any styling or structural HTML elements"
+output_format: json
