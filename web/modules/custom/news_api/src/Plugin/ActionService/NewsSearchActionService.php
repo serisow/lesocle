@@ -268,8 +268,8 @@ class NewsSearchActionService extends PluginBase implements ActionServiceInterfa
     $content = preg_replace('/^(Share|Comments|Published|By|Author).+?\n/im', '', $content);
 
     // Trim length while respecting word boundaries
-    if (strlen($content) > 800) {
-      $content = substr($content, 0, 800);
+    if (strlen($content) > 2000) {
+      $content = substr($content, 0, 2000);
       $content = substr($content, 0, strrpos($content, '.') + 1);
     }
 
