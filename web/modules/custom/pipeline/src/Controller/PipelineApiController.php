@@ -324,6 +324,21 @@ class PipelineApiController extends ControllerBase {
             ];
             break;
 
+          case 'news_api_search':
+            $step_data['news_api_config'] = [
+              'query' => $configuration['data']['query'] ?? '',
+              'advanced_params' => [
+                'language' => $configuration['data']['advanced_params']['language'] ?? 'en',
+                'sort_by' => $configuration['data']['advanced_params']['sort_by'] ?? 'publishedAt',
+                'page_size' => $configuration['data']['advanced_params']['page_size'] ?? 20,
+                'date_range' => [
+                  'from' => $configuration['data']['advanced_params']['date_range']['from'] ?? null,
+                  'to' => $configuration['data']['advanced_params']['date_range']['to'] ?? null,
+                ],
+              ],
+            ];
+            break;
+
         }
 
         // Remove the 'data' key as we've extracted its contents

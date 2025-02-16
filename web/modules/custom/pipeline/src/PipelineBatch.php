@@ -44,9 +44,9 @@ use Drupal\Core\State\StateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\pipeline\Plugin\StepType\ActionStep;
-use Drupal\pipeline\Plugin\StepType\DocumentSearchStep;
 use Drupal\pipeline\Plugin\StepType\GoogleSearchStep;
 use Drupal\pipeline\Plugin\StepType\LLMStep;
+use Drupal\pipeline\Plugin\StepType\NewsApiSearchStep;
 use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
 use Drupal\pipeline\Service\PipelineErrorHandler;
 
@@ -246,6 +246,14 @@ class PipelineBatch {
         return $this->t('(Query: @query, Category: @category)', [
           '@query' => $query,
           '@category' => $category ?: 'N/A',
+        ]);
+
+      case $step_type instanceof NewsApiSearchStep:
+        $query = $config['data']['query'] ?? 'N/A';
+        $language = $config['data']['language'] ?? 'en';
+        return $this->t('(Query: @query, Language: @language)', [
+          '@query' => $query,
+          '@language' => $language,
         ]);
 
       default:

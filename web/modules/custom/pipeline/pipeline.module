@@ -107,6 +107,10 @@ function pipeline_toolbar() {
             'title' => t('Global Settings'),
             'url' => Url::fromRoute('pipeline.settings'),
           ],
+          'news_api_settings' => [
+            'title' => t('News API Settings'),
+            'url' => Url::fromRoute('pipeline.news_api_settings'),
+          ],
         ],
         '#attributes' => [
           'class' => ['toolbar-menu'],

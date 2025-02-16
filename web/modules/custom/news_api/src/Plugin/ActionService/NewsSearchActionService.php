@@ -60,6 +60,7 @@ class NewsSearchActionService extends PluginBase implements ActionServiceInterfa
       '#default_value' => $configuration['query'] ?? '',
       '#description' => $this->t('Keywords or phrases to search for in the news.'),
       '#required' => TRUE,
+      '#maxlength' => 400
     ];
 
     $form['language'] = [

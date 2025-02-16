@@ -314,3 +314,11 @@ pipeline.settings:
     _title: 'Pipeline Settings'
   requirements:
     _permission: 'administer pipeline settings'
+
+pipeline.news_api_settings:
+  path: '/admin/config/pipeline/news-api-settings'
+  defaults:
+    _form: '\Drupal\pipeline\Form\NewsApiSettingsForm'
+    _title: 'News API Settings'
+  requirements:
+    _permission: 'administer pipeline settings'
