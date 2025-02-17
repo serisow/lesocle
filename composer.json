@@ -43,7 +43,9 @@
         "drupal/webp": "^1.0@RC",
         "drush/drush": "^13.0",
         "twilio/sdk": "^8.3",
-        "vlucas/phpdotenv": "^5.6"
+        "vlucas/phpdotenv": "^5.6",
+        "ext-libxml": "*",
+        "ext-dom": "*"
     },
     "conflict": {
         "drupal/drupal": "*"
