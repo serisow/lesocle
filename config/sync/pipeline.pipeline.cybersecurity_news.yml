@@ -1,0 +1,117 @@
+uuid: fb012e14-344d-441e-855d-9dbb42ccf1d1
+langcode: en
+status: true
+dependencies: {  }
+id: cybersecurity_news
+label: 'Cybersecurity news'
+instructions: 'Create an informative article about climate change with an accompanying image.'
+created: 1739619612
+changed: 1739812417
+execution_type: scheduled
+scheduled_time: 1739806800
+schedule_type: one_time
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  7189804a-467e-4a05-b6a8-1a0e187e4270:
+    id: llm_step
+    data:
+      step_description: 'Generation based on news api'
+      required_steps: "step1\r\n"
+      step_output_key: step2
+      output_type: generic_content
+      llm_config: gpt_4o_mini
+      prompt_template: 'Cybersecurity Newsletters (cybersecurity_newsletters)'
+      prompt: "### **Ultimate Cybersecurity Brief Prompt**  \r\n**Role**: You are the lead analyst at a top-tier cybersecurity intelligence firm. Your task is to produce a **premium, decision-critical weekly brief** for CTOs, CISOs, and enterprise risk teams.  \r\n\r\n**Input**:  \r\n- Raw news data: {step1}  \r\n\r\n**Core Objectives**:  \r\n1. **Strategic Threat Analysis**:  \r\n   - Rank the **top 3 critical threats** (e.g., zero-days, ransomware) by severity, including:  \r\n     - **Business impact**: Financial, reputational, or operational consequences.  \r\n     - **Geopolitical context**: Link incidents to nation-state actors or regional conflicts (e.g., \"AI satellite vulnerabilities align with rising US-China cyber tensions\").  \r\n   - Predict **future scenarios** (e.g., \"Expect ransomware groups to exploit Palo Alto’s CVE-2025-0108 within 14 days\").  \r\n\r\n2. **Actionable Intelligence with Authority**:  \r\n   - For every threat/vulnerability, add:  \r\n     - **\"Response Playbook\"**: Step-by-step mitigations (e.g., \"Block IOCs X, Y, Z at the firewall\").  \r\n     - **\"Free Tools\"**: Links to scanners, patch guides, or templates (e.g., \"CISA’s Known Exploited Vulnerabilities catalog: [link]\").  \r\n   - **Synthesize expert quotes** if absent in raw data (e.g., \"As [Vendor] CTO [Name] states: 'Third-party breaches will dominate 2025’\").  \r\n\r\n3. **Depth and Differentiation**:  \r\n   - **Link trends**: Connect incidents to broader patterns (e.g., \"Microsoft’s zero-days mirror a 60% YoY rise in edge device exploits\").  \r\n   - **Add mini-case studies**: Summarize real-world mitigations (e.g., \"How [Company] patched CVE-2025-21418 in 48 hours\").  \r\n   - **Embed text visualizations**: Use stats creatively (e.g., \"Fortinet’s stock ↑55% ↔ 32% revenue growth in Q4 2025\").  \r\n\r\n4. **Structure and Usability**:  \r\n   - **Mandatory Sections**:  \r\n     1. **Executive Summary** (4 bullets: Critical threats, urgent actions, market shifts, regulatory updates).  \r\n     2. **Threat Deep Dives** (ranked threats with: Severity, Impact Analysis, Response Playbook, Trend Linkage).  \r\n     3. **Vulnerability Alerts** (CVE-ID, patch deadline, exploit status, direct vendor patch link).  \r\n     4. **Strategic Forecasts** (3 predictions with timeframes, e.g., \"AI phishing campaigns will spike by March 2025\").  \r\n     5. **Resources Hub** (linked tools, glossaries, training).  \r\n   - **Style Rules**:  \r\n     - **Bold headers**, bullet points, hyperlinks (never \"Download Here\"—use \"[Toolkit Link]\").  \r\n     - **Mini-glossaries**: Define acronyms/terms in brackets (e.g., \"TPRM (Third-Party Risk Management)\").  \r\n     - **Flag unverified claims**: (e.g., \"Reported by [Source]; independent confirmation pending\").  \r\n\r\n5. **Monetization Hooks**:  \r\n   - Include **1-2 premium teases** (e.g., \"For sector-specific threat actor profiles, upgrade to Pro\").  \r\n   - Add **analyst commentary** (e.g., \"Our Threat Intel team observes [Trend]—contact us for a custom report\").  \r\n\r\n**Deliverable**: A polished, **executive-ready brief** that enables readers to mitigate risks within 1 hour. Prioritize **action over summary**.  "
+      response: ''
+    weight: -9
+    uuid: 7189804a-467e-4a05-b6a8-1a0e187e4270
+  831e5667-1433-4700-834d-5e2b3dd3cf77:
+    id: llm_step
+    data:
+      step_description: 'Generate image prompt'
+      required_steps: "step2\r\n"
+      step_output_key: step3
+      output_type: generic_content
+      llm_config: gpt_4o_mini
+      prompt_template: ''
+      prompt: "Using the text below on cybersecurity news, create a visually stunning and professional image prompt that captures the essence of digital security and technology. Focus on elements like:\r\n\r\n- Network security visualizations\r\n- Digital protection concepts\r\n- Professional tech environment\r\n- Modern cybersecurity themes\r\n\r\nText:\r\n{step2}\r\n\r\nCreate a DALL-E prompt that's professional, modern, and suitable for a news summary."
+      response: ''
+    weight: -8
+    uuid: 831e5667-1433-4700-834d-5e2b3dd3cf77
+  792126d9-282e-42c5-8c66-52b0588b24c2:
+    id: llm_step
+    data:
+      step_description: 'Generate an image'
+      required_steps: "step3\r\n"
+      step_output_key: image_data
+      output_type: featured_image
+      response: '{"file_id":"91","uri":"public:\/\/generated_images\/dalle_1728685554.png","filename":"dalle_1728685554.png","mime":"image\/png"}'
+      llm_config: dall_e_3
+      prompt: "{step3}\r\n"
+      prompt_template: ''
+    weight: -7
+    uuid: 792126d9-282e-42c5-8c66-52b0588b24c2
+  91760aaf-5d68-40b7-a19c-605332185e26:
+    id: llm_step
+    data:
+      step_description: 'Optimize article title and generate SEO-friendly summary'
+      required_steps: "step2\r\n"
+      step_output_key: seo_optimized
+      output_type: seo_metadata
+      llm_config: gemini_1_5_flash
+      prompt_template: ''
+      prompt: "Based on the following article content, generate an SEO-optimized title and meta description that will attract readers interested in cybersecurity news.\r\n\r\nTitle Requirements:\r\n- Maximum 60 characters\r\n- Include key terms like \"cybersecurity\" and \"weekly update\"\r\n- Make it compelling and clickable\r\n\r\nMeta Description Requirements:\r\n- 150-160 characters\r\n- Summarize the key news items\r\n- Include a call to action\r\n- Use engaging language\r\n\r\nPlease output your response in the following JSON structure:\r\n\r\n{\r\n  \"title\": \"Your generated title here\",\r\n  \"summary\": \"Your meta description here\"\r\n}\r\n\r\nArticle Content:\r\n{step2}\r\n"
+      response: ''
+    weight: -6
+    uuid: 91760aaf-5d68-40b7-a19c-605332185e26
+  1189ca36-ab04-4af9-a6ed-b6d50d8e67d5:
+    id: llm_step
+    data:
+      step_description: 'Format the article'
+      required_steps: "step2\r\n"
+      step_output_key: step4
+      output_type: article_content
+      llm_config: gemini_1_5_pro_002
+      prompt_template: ''
+      prompt: "Create a professionally formatted HTML version of this cybersecurity news summary. Follow these formatting requirements:\r\n\r\n1. Structure:\r\n   - Main title with date range\r\n   - Executive summary section\r\n   - Individual news sections with:\r\n     * Publication date\r\n     * Source attribution\r\n     * Article summary\r\n     * \"Read more\" links\r\n\r\n2. HTML Requirements:\r\n   - Use semantic HTML5 tags\r\n   - Include proper heading hierarchy\r\n   - Add CSS classes for styling\r\n   - Ensure mobile-friendly structure\r\n\r\n3. Format as JSON:\r\n{\r\n  \"title\": \"Your title here\",\r\n  \"body\": \"Your HTML content here\"\r\n}\r\n\r\nContent to format:\r\n{step2}"
+      response: ''
+    weight: -5
+    uuid: 1189ca36-ab04-4af9-a6ed-b6d50d8e67d5
+  1b73e22b-1523-4691-8090-6b0bb66afa2a:
+    id: action_step
+    data:
+      step_description: 'Create the climate change article'
+      required_steps: "step4\r\n"
+      step_output_key: step5
+      output_type: article_content
+      response: |-
+        ```json
+        {
+        "title": "Climate Change: A Comprehensive Look at Our Planet's Greatest Challenge",
+        "body": "<h1>Climate Change: A Comprehensive Look at Our Planet's Greatest Challenge</h1>\n<p>Climate change has emerged as one of the most pressing issues of our time, affecting everything from weather patterns to public health. With significant global attention focused on this crisis, scientists, policymakers, and activists work tirelessly to mitigate its effects. In this article, we explore the latest research, innovative solutions, and challenges surrounding climate change, while also delving into its broader societal implications.</p>\n<h2>The Current State of Climate Change</h2>\n<p>Recent reports underscore the urgency of addressing climate change. The Fifth National Climate Assessment (NCA5) by the U.S. Environmental Protection Agency (EPA) provides a comprehensive analysis of the state of climate change in the United States. It highlights the undeniable impacts climate change has on human health, ecosystems, and air quality (<a href=\"https://www.epa.gov/climate-research\">EPA</a>). For instance, a common consequence of climate change is the heightened frequency and intensity of extreme weather events, including hurricanes, heatwaves, and floods.</p>\n<p>\"Climate change is no longer a distant threat; it is impacting lives today,\" says Dr. Patricia Romero, a climate scientist at the Yale School of the Environment. This sentiment resonates with numerous studies indicating the immediate repercussions of our changing climate.</p>\n<h2>The Role of Natural Solutions</h2>\n<p>One promising avenue to combat climate change involves enhancing the carbon storage capacity of forests. Researchers at Yale have mapped out pathways in U.S. forests that could potentially remove up to 1 billion tonnes of carbon dioxide per year. These strategies include regenerative silviculture practices, fire management techniques, and the planting of new forests (<a href=\"https://environment.yale.edu/\">Yale School of the Environment</a>).</p>\n<p>\"Nature can be our ally in this fight,\" states Sara Kuebbing, a research scientist focused on forest restoration. Increasing forest resilience is crucial not only for carbon storage but also for maintaining biodiversity and supporting local ecosystems.</p>\n<h2>Community Involvement and Co-management Efforts</h2>\n<p>Community engagement is essential for effective climate action. The Yale Center for Environmental Justice (YCEJ) is at the forefront of initiatives that emphasize Tribal co-management of public lands. Collaborating with Indigenous communities can enhance conservation efforts and leverage traditional ecological knowledge (<a href=\"https://environment.yale.edu/\">Yale School of the Environment</a>).</p>\n<p>\"Tribal co-management is a force multiplier,\" explains Pat Gonzales Rogers, co-author of a pivotal white paper on this topic. When local communities are empowered to manage their land, the results can be remarkably effective in terms of conservation and restoration.</p>\n<h2>The Intersection of Science and Policy</h2>\n<p>Collaborative efforts among scientists and policymakers are vital in framing effective climate strategies. Events conducted by the Intergovernmental Panel on Climate Change (IPCC), such as workshops on carbon dioxide removal technologies, aim to bring scientific findings into actionable policy frameworks (<a href=\"https://www.ipcc.ch/\">IPCC</a>).</p>\n<p>\"Assessing options for mitigating climate change requires comprehensive input across various sectors,\" highlights Dr. Joy William, a climate policy analyst involved with the IPCC. The more interdisciplinary the dialogue, the better equipped we are to tackle climate challenges.</p>\n<h2>Health Implications of Climate Change</h2>\n<p>Climate change poses significant risks to human health, influencing air quality and increasing exposure to pollutants. The National Institute of Environmental Health Sciences (NIEHS) is researching how environmental factors contribute to diseases across different life stages (<a href=\"https://www.niehs.nih.gov/\">NIEHS</a>).</p>\n<p>\"Understanding how climate change impacts health will help us develop targeted interventions,\" asserts NIEHS Director Rick Woychik. Communities that prioritize health research and inform the public are better prepared to face the unfolding climate crisis.</p>\n<h2>Economic Considerations and Innovations</h2>\n<p>Economically, the transition to sustainable practices poses both challenges and opportunities. For instance, electric vehicle (EV) subsidies under the Inflation Reduction Act have resulted in decreased climate pollution, partially offsetting costs of taxpayer investment (<a href=\"https://sustainability.stanford.edu/\">Stanford Doerr School of Sustainability</a>). However, discussions continue on optimizing these policies to yield the maximum environmental benefit at sustainable costs.</p>\n<p>\"We must be strategic about where our money goes in the fight against climate change,\" says Dr. Roman Grant, an economist examining the implications of green subsidies.</p>\n<h2>The Ethical Dimensions of Climate Action</h2>\n<p>The moral ramifications of climate change are profound. As climate impacts disproportionately affect marginalized communities, ethical considerations are paramount in forming policies. \"Climate justice must accompany climate action,\" emphasizes Dr. Ingrid Frey, an advocate for equitable climate policies.</p>\n<p>This involves not only minimizing environmental injustice but also ensuring that vulnerable communities are involved in decision-making processes about their futures.</p>\n<h2>Looking Forward: The Path Ahead</h2>\n<p>The road ahead in addressing climate change is fraught with complexity. New research continues to emerge, providing insights into areas like groundwater-dependent ecosystems, which are crucial for sustaining biodiversity (<a href=\"https://www.nature.com/subjects/climate-change\">Nature</a>). As scientists study these ecosystems, it becomes increasingly clear that preserving biodiversity is intertwined with our fight against climate change.</p>\n<p>\"Protecting vital ecosystems is not simply an environmental issue; it's a survival issue,\" emphasizes Dr. Ling Tang, leading a recent study on ecological sustainability.</p>\n<h2>Conclusion</h2>\n<p>Climate change transcends scientific discourse; it affects all aspects of our life, from our health and environment to our economics and ethics. By fostering collaboration among communities, scientists, and policymakers, we can build a more sustainable future. The time to act is now, and across the globe, initiatives are underway to place our planet on a healthier trajectory.</p>\n<p>Together, we can navigate the challenges of climate change, taking steps to mitigate its effects and preserve our world for future generations.</p>\n<h3>References</h3>\n<ul>\n<li><a href=\"https://environment.yale.edu/\">Yale School of the Environment</a></li>\n<li><a href=\"https://www.ipcc.ch/\">IPCC — Intergovernmental Panel on Climate Change</a></li>\n<li><a href=\"https://www.epa.gov/climate-research\">Climate Change Research | US EPA</a></li>\n<li><a href=\"https://sustainability.stanford.edu/\">Stanford Doerr School of Sustainability</a></li>\n<li><a href=\"https://www.niehs.nih.gov/\">National Institute of Environmental Health Sciences: NIEHS Home</a></li>\n<li><a href=\"https://www.nature.com/subjects/climate-change\">Climate change - Latest research and news | Nature</a></li>\n</ul>"
+        }
+        ```
+      action_config: create_article_action
+    weight: -4
+    uuid: 1b73e22b-1523-4691-8090-6b0bb66afa2a
+  b60ee741-70f4-4e51-b957-14481d4da37d:
+    id: news_api_search
+    data:
+      step_description: 'Fetch latest Cybersecurity news'
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      query: 'cybersecurity OR "cyber security" OR "data breach" OR "cyber attack"'
+      advanced_params:
+        language: en
+        sort_by: publishedAt
+        page_size: '10'
+        date_range:
+          from: ''
+          to: ''
+      response: ''
+    weight: -10
+    uuid: b60ee741-70f4-4e51-b957-14481d4da37d

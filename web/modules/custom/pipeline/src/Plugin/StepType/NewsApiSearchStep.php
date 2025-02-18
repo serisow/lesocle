@@ -364,6 +364,8 @@ class NewsApiSearchStep extends ConfigurableStepTypeBase implements StepTypeExec
         '//*[contains(@class, "cookie")]',
         '//*[contains(@class, "modal")]',
         '//*[contains(@class, "newsletter")]',
+        '//*[contains(@class, "yns-")]',          // Target Yahoo notification classes
+        '//*[contains(@class, "ybar-")]',         // Target Yahoo bar classes
         '//*[contains(@id, "ad")]',
         '//*[contains(@id, "banner")]',
         '//*[contains(@id, "sidebar")]',
@@ -371,9 +373,11 @@ class NewsApiSearchStep extends ConfigurableStepTypeBase implements StepTypeExec
         '//*[contains(@id, "cookie")]',
         '//*[contains(@id, "modal")]',
         '//*[contains(@id, "newsletter")]',
+        '//*[contains(@id, "notification")]',     // Target notification IDs
         '//*[@role="navigation"]',
         '//*[@role="banner"]',
         '//*[@role="complementary"]',
+        '//*[@role="dialog"]',                    // Remove dialogs/alerts
         '//*[@role="search"]',
       ];
 
@@ -432,164 +436,6 @@ class NewsApiSearchStep extends ConfigurableStepTypeBase implements StepTypeExec
     }
   }
 
-
-  /*function fetchExpandedContent(string $url): string {
-    if (str_contains($url, 'consent.yahoo.com')) {
-      return "Content unavailable - requires consent";
-    }
-
-    $response = $this->httpClient->get($url, [
-      'headers' => [
-        'User-Agent' => 'Mozilla/5.0 (compatible; Drupal/10.0; +http://example.com)',
-      ],
-      'timeout' => 10,
-    ]);
-    $html = $response->getBody()->getContents();
-    // Configure DOMDocument with error suppression
-    $dom = new \DOMDocument();
-    libxml_use_internal_errors(true);
-
-    // Load HTML with proper encoding handling
-    $dom->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'), LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-
-    // First pass: Remove obviously unwanted elements by tag name
-    $tagsToRemove = [
-      'script', 'style', 'iframe', 'noscript', 'nav',
-      'footer', 'header', 'form', 'button', 'input',
-      'select', 'textarea', 'svg', 'img', 'meta',
-      'link', 'object', 'embed', 'applet', 'frame',
-      'frameset', 'map', 'area', 'audio', 'video',
-      'source', 'track', 'canvas', 'datalist', 'keygen',
-      'output', 'progress', 'time'
-    ];
-
-    foreach ($tagsToRemove as $tag) {
-      $elements = $dom->getElementsByTagName($tag);
-      while ($element = $elements->item(0)) {
-        $element->parentNode->removeChild($element);
-      }
-    }
-
-    // Second pass: Remove elements by class/id patterns using XPath
-    $xpath = new \DOMXPath($dom);
-    $unwantedPatterns = [
-      '//comment()',  // Remove all comments
-      '//*[contains(@class, "ad")]',
-      '//*[contains(@class, "banner")]',
-      '//*[contains(@class, "sidebar")]',
-      '//*[contains(@class, "popup")]',
-      '//*[contains(@class, "cookie")]',
-      '//*[contains(@class, "modal")]',
-      '//*[contains(@class, "newsletter")]',
-      '//*[contains(@id, "ad")]',
-      '//*[contains(@id, "banner")]',
-      '//*[contains(@id, "sidebar")]',
-      '//*[contains(@id, "popup")]',
-      '//*[contains(@id, "cookie")]',
-      '//*[contains(@id, "modal")]',
-      '//*[contains(@id, "newsletter")]',
-      '//*[@role="navigation"]',
-      '//*[@role="banner"]',
-      '//*[@role="complementary"]',
-      '//*[@role="search"]',
-    ];
-
-    foreach ($unwantedPatterns as $pattern) {
-      $elements = $xpath->query($pattern);
-      foreach ($elements as $element) {
-        $element->parentNode->removeChild($element);
-      }
-    }
-
-    // Third pass: Content heuristics
-    $allElements = $xpath->query('//*');
-    $MIN_TEXT_LENGTH = 120;  // Minimum characters to consider as content
-    $MAX_LINK_DENSITY = 0.25; // Maximum links per character ratio
-
-    // Process in reverse order to safely remove parent elements
-    for ($i = $allElements->length - 1; $i >= 0; $i--) {
-      $element = $allElements->item($i);
-      if (!$element->parentNode) continue;
-
-      $text = trim(preg_replace('/\s+/', ' ', $element->textContent));
-      $textLength = mb_strlen($text);
-      $links = $element->getElementsByTagName('a');
-      $linkCount = $links->length;
-      $linkDensity = ($textLength > 0) ? ($linkCount / $textLength) : 0;
-
-      // Remove elements with:
-      // - Too short text
-      // - Too many links
-      // - Empty content
-      if ($textLength < $MIN_TEXT_LENGTH ||
-        $linkDensity > $MAX_LINK_DENSITY ||
-        empty($text)) {
-        $element->parentNode->removeChild($element);
-      }
-    }
-
-    // Final content extraction and cleanup
-    $body = $dom->getElementsByTagName('body')->item(0);
-    $textContent = $body ? $body->textContent : '';
-
-    // Advanced cleanup
-    $textContent = html_entity_decode($textContent);
-    $textContent = preg_replace('/\s+/', ' ', $textContent); // Collapse whitespace
-    $textContent = preg_replace('/\[\d+\]/', '', $textContent); // Remove citation numbers [1]
-    $textContent = preg_replace('/\bhttps?:\/\/\S+/i', '', $textContent); // Remove URLs
-    return trim($textContent);
-  }*/
-  /**
-   * Fetches and extracts expanded content from article URL.
-   */
-  protected function fetchExpandedContent_orig($url)
-  {
-    try {
-      if (str_contains($url, 'consent.yahoo.com')) {
-        return "Content unavailable - requires consent";
-      }
-
-      $response = $this->httpClient->get($url, [
-        'headers' => [
-          'User-Agent' => 'Mozilla/5.0 (compatible; Drupal/10.0; +http://example.com)',
-        ],
-        'timeout' => 10,
-      ]);
-
-      $html = $response->getBody()->getContents();
-      $dom = new \DOMDocument();
-      @$dom->loadHTML($html, LIBXML_NOERROR);
-      $xpath = new \DOMXPath($dom);
-
-      $contentSelectors = [
-        '//article[contains(@class, "article-content")]',
-        '//div[contains(@class, "article-body")]',
-        '//div[contains(@class, "story-content")]',
-        '//div[contains(@class, "post-content")]',
-        '//main/article',
-        '//div[@role="main"]',
-      ];
-
-      foreach ($contentSelectors as $selector) {
-        $nodes = $xpath->query($selector);
-        if ($nodes->length > 0) {
-          $content = $this->cleanContent($nodes->item(0)->textContent);
-          if (strlen($content) > 100) {
-            return $content;
-          }
-        }
-      }
-
-      $content_nodes = $xpath->query('//article | //div[@class="content"]');
-      if ($content_nodes->length > 0) {
-        return $this->cleanContent($content_nodes->item(0)->textContent);
-      }
-
-      return "No article content found.";
-    } catch (\Exception $e) {
-      return "Error fetching content: " . $e->getMessage();
-    }
-  }
 
   /**
    * Cleans and formats extracted content.

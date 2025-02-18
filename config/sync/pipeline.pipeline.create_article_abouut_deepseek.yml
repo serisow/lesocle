@@ -1,12 +1,12 @@
 uuid: 2f59ba25-015f-430f-b05c-8c6f63503daf
 langcode: en
-status: true
+status: false
 dependencies: {  }
 id: create_article_abouut_deepseek
 label: 'Create article about deepseek'
 instructions: 'Create an informative article about climate change with an accompanying image.'
 created: 1738187367
-changed: 1739536579
+changed: 1739554167
 execution_type: on_demand
 scheduled_time: null
 schedule_type: null

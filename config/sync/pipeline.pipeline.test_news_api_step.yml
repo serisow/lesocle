@@ -1,0 +1,35 @@
+uuid: bf508870-398f-4ea7-b96c-e220dd5ec074
+langcode: en
+status: false
+dependencies: {  }
+id: test_news_api_step
+label: 'Test news api step'
+instructions: 'Test news api step'
+created: 1739711947
+changed: 1739816667
+execution_type: scheduled
+scheduled_time: null
+schedule_type: none
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  59329723-c0f1-4e4e-9e98-6b7dd05815d5:
+    id: news_api_search
+    data:
+      step_description: 'Test query news API '
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      query: '("AI in healthcare" OR "medical AI" OR "healthtech startup" OR "diagnostic algorithms" OR "precision medicine")  AND  ("investment" OR "funding" OR "FDA approval" OR "clinical trial" OR "healthcare innovation" OR "telemedicine")  NOT  ("stock market" OR "earnings report" OR "crypto")'
+      advanced_params:
+        language: en
+        sort_by: relevancy
+        page_size: '20'
+        date_range:
+          from: ''
+          to: ''
+      response: ''
+    weight: 0
+    uuid: 59329723-c0f1-4e4e-9e98-6b7dd05815d5

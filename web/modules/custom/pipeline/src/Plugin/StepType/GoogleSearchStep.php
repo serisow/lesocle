@@ -68,6 +68,7 @@ class GoogleSearchStep extends ConfigurableStepTypeBase implements StepTypeExecu
       '#default_value' => $this->configuration['query'],
       '#description' => $this->t('Enter the search query.'),
       '#required' => TRUE,
+      '#maxlength' => 300,
     ];
 
     $form['category'] = [

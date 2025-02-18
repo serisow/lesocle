@@ -1,0 +1,38 @@
+uuid: b7aeaee5-fc47-41b5-8748-5b1bc3f198ae
+langcode: en
+status: false
+dependencies: {  }
+id: test_google_search
+label: 'Test Google Search'
+instructions: 'Test Google Search'
+created: 1739820693
+changed: 1739820797
+execution_type: scheduled
+scheduled_time: null
+schedule_type: none
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  2dbe2049-a74a-4ff8-87dd-3cce99f040c1:
+    id: google_search
+    data:
+      step_description: 'Query google'
+      required_steps: ''
+      step_output_key: ''
+      output_type: generic_content
+      query: '("AI in healthcare" OR "medical AI" OR "healthtech startup" OR "diagnostic algorithms" OR "precision medicine") AND ("investment" OR "funding" OR "FDA approval" OR "clinical trial" OR "healthcare innovation" OR "telemedicine") NOT ("stock market" OR "earnings report" OR "crypto")'
+      category: ''
+      advanced_params:
+        num_results: '10'
+        date_restrict: w1
+        sort: ''
+        language: ''
+        country: ''
+        site_search: ''
+        file_type: ''
+        safe_search: ''
+      response: ''
+    weight: 0
+    uuid: 2dbe2049-a74a-4ff8-87dd-3cce99f040c1

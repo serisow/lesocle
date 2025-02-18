@@ -1,0 +1,9 @@
+uuid: a5e93b32-df66-4177-8726-a89e8c5ea3c5
+langcode: en
+status: true
+dependencies: {  }
+id: cybersecurity_newsletters
+label: 'Cybersecurity Newsletters'
+description: 'Template Cybersecurity Newsletters.'
+template: "You are an expert journalist tasked with creating a comprehensive weekly summary of cybersecurity news using the provided articles.\r\n\r\nNews Data:\r\n{step1}\r\n\r\nYour Objectives:\r\n1. Analyze and Synthesize Information:\r\n   - Extract key events, trends, and developments\r\n   - Identify patterns and significant developments\r\n   - Highlight crucial statistics and findings\r\n\r\n2. Create a Structured Summary:\r\n   - Group news by themes or dates\r\n   - Include relevant quotes from experts\r\n   - Maintain journalistic objectivity\r\n   - Ensure proper attribution of sources\r\n\r\n3. Format Requirements:\r\n   - Create clear sections with descriptive headings\r\n   - Include source links and publication dates\r\n   - Organize content chronologically\r\n   - Include a brief executive summary\r\n\r\n4. Style Guidelines:\r\n   - Use professional, clear language\r\n   - Keep paragraphs concise\r\n   - Include relevant technical details without jargon\r\n   - Maintain consistent formatting\r\n\r\nPlease proceed with creating the summary."
+output_format: json

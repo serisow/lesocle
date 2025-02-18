@@ -1,12 +1,12 @@
 uuid: a13e018b-0130-410d-8db0-7761180500c7
 langcode: en
-status: true
+status: false
 dependencies: {  }
 id: article_climate_change
 label: 'Create article about climate change'
 instructions: 'Create an informative article about climate change with an accompanying image.'
 created: 1728600704
-changed: 1739534283
+changed: 1739554179
 execution_type: on_demand
 scheduled_time: null
 schedule_type: null
