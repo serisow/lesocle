@@ -6,7 +6,7 @@ id: test_news_api_step
 label: 'Test news api step'
 instructions: 'Test news api step'
 created: 1739711947
-changed: 1739816667
+changed: 1739902851
 execution_type: scheduled
 scheduled_time: null
 schedule_type: none
@@ -22,13 +22,13 @@ step_types:
       required_steps: ''
       step_output_key: step1
       output_type: generic_content
-      query: '("AI in healthcare" OR "medical AI" OR "healthtech startup" OR "diagnostic algorithms" OR "precision medicine")  AND  ("investment" OR "funding" OR "FDA approval" OR "clinical trial" OR "healthcare innovation" OR "telemedicine")  NOT  ("stock market" OR "earnings report" OR "crypto")'
+      query: '("changement de législation" OR "nouvelle loi" OR "réforme législative" OR "vote parlementaire" OR "décret gouvernemental"  OR "amendement constitutionnel" OR "Assemblée Nationale" OR "Conseil Constitutionnel" OR "projet de loi")  AND (France)'
       advanced_params:
-        language: en
+        language: fr
         sort_by: relevancy
         page_size: '20'
         date_range:
-          from: ''
+          from: '2025-02-12'
           to: ''
       response: ''
     weight: 0

@@ -424,6 +424,11 @@ class NewsApiSearchStep extends ConfigurableStepTypeBase implements StepTypeExec
       $textContent = preg_replace('/\s+/', ' ', $textContent); // Collapse whitespace
       $textContent = preg_replace('/\[\d+\]/', '', $textContent); // Remove citation numbers [1]
       $textContent = preg_replace('/\bhttps?:\/\/\S+/i', '', $textContent); // Remove URLs
+
+      if (strlen($textContent) > 800) {
+        $textContent = substr($textContent, 0, 2000);
+        $textContent = substr($textContent, 0, strrpos($textContent, '.') + 1);
+      }
       return trim($textContent);
 
     } catch (\Exception $e) {
@@ -434,22 +439,5 @@ class NewsApiSearchStep extends ConfigurableStepTypeBase implements StepTypeExec
       ]);
       return "Error fetching content";
     }
-  }
-
-
-  /**
-   * Cleans and formats extracted content.
-   */
-  private function cleanContent($content)
-  {
-    $content = preg_replace('/\s+/', ' ', $content);
-    $content = preg_replace('/^(Share|Comments|Published|By|Author).+?\n/im', '', $content);
-
-    if (strlen($content) > 2000) {
-      $content = substr($content, 0, 2000);
-      $content = substr($content, 0, strrpos($content, '.') + 1);
-    }
-
-    return trim($content);
   }
 }

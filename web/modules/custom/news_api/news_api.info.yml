@@ -1,5 +1,0 @@
-name: 'News API'
-type: module
-description: 'Integrate with the News API plateform.'
-package: Custom
-core_version_requirement: ^10 || ^11

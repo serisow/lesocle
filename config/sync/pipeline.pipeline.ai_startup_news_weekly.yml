@@ -1,0 +1,111 @@
+uuid: 540cba19-144a-42e9-8e7e-4df8263c50ca
+langcode: en
+status: true
+dependencies: {  }
+id: ai_startup_news_weekly
+label: 'AI Startup News Weekly'
+instructions: 'Create an informative article about climate change with an accompanying image.'
+created: 1739912328
+changed: 1739914828
+execution_type: scheduled
+scheduled_time: 1739914620
+schedule_type: one_time
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  7189804a-467e-4a05-b6a8-1a0e187e4270:
+    id: llm_step
+    data:
+      step_description: 'Generate newsletter content'
+      required_steps: "step1\r\n"
+      step_output_key: step2
+      output_type: generic_content
+      llm_config: gemini_2_0_pro_0205
+      prompt_template: 'Cybersecurity Newsletters (cybersecurity_newsletters)'
+      prompt: "You are a tech industry analyst creating a weekly newsletter about AI startups and funding.\r\n\r\nNews Data:\r\n{step1}\r\n\r\nCreate a professional newsletter with:\r\n1. Industry Highlights:\r\n  - Major funding rounds\r\n  - New startups launches\r\n  - Notable acquisitions\r\n\r\n2. Technology Trends:\r\n  - Emerging AI technologies\r\n  - Innovation highlights\r\n  - Technical breakthroughs\r\n\r\n3. Market Analysis:\r\n  - Investment patterns\r\n  - Industry trends\r\n  - Market opportunities\r\n\r\nFormat Requirements:\r\n- Clear section headings\r\n- Source attribution\r\n- Brief company descriptions\r\n- Funding amounts where relevant\r\n- Links to original sources"
+      response: ''
+    weight: -9
+    uuid: 7189804a-467e-4a05-b6a8-1a0e187e4270
+  831e5667-1433-4700-834d-5e2b3dd3cf77:
+    id: llm_step
+    data:
+      step_description: 'Generate image prompt'
+      required_steps: "step2\r\n"
+      step_output_key: step3
+      output_type: generic_content
+      llm_config: gpt_4o_mini
+      prompt_template: ''
+      prompt: "Based on this week's AI startup news:\r\n{step2}\r\n\r\nCreate a DALL-E prompt for a professional header image that represents:\r\n- Innovation and technology\r\n- AI and machine learning concepts\r\n- Business growth and success\r\n- Modern, professional aesthetic\r\n\r\nThe image should be suitable for a tech newsletter header.\r\n"
+      response: ''
+    weight: -8
+    uuid: 831e5667-1433-4700-834d-5e2b3dd3cf77
+  792126d9-282e-42c5-8c66-52b0588b24c2:
+    id: llm_step
+    data:
+      step_description: 'Generate newsletter header image'
+      required_steps: "step3\r\n"
+      step_output_key: image_data
+      output_type: featured_image
+      llm_config: dall_e_3
+      prompt_template: ''
+      prompt: "{step3}\r\n"
+      response: ''
+    weight: -7
+    uuid: 792126d9-282e-42c5-8c66-52b0588b24c2
+  91760aaf-5d68-40b7-a19c-605332185e26:
+    id: llm_step
+    data:
+      step_description: 'Generate SEO metadata'
+      required_steps: "step2\r\n"
+      step_output_key: seo_optimized
+      output_type: seo_metadata
+      llm_config: gemini_1_5_flash
+      prompt_template: ''
+      prompt: "Based on this AI startup newsletter:\r\n{step2}\r\n\r\nGenerate SEO-optimized metadata in JSON format:\r\n{\r\n  \"title\": \"60-character SEO title with key terms: AI, startups, funding\",\r\n  \"summary\": \"150-160 character compelling description of this week's AI startup news and funding updates\"\r\n}\r\n"
+      response: ''
+    weight: -6
+    uuid: 91760aaf-5d68-40b7-a19c-605332185e26
+  1189ca36-ab04-4af9-a6ed-b6d50d8e67d5:
+    id: llm_step
+    data:
+      step_description: 'Format newsletter into responsive HTML with inline styles'
+      required_steps: "step2\r\nseo_optimized\r\nimage_data"
+      step_output_key: step4
+      output_type: article_content
+      llm_config: gemini_1_5_pro_002
+      prompt_template: ''
+      prompt: "Convert this AI startup newsletter content into a beautifully formatted HTML email with inline styles. \r\nUse the provided SEO metadata and featured image.\r\n\r\nContent: {step2}\r\nSEO Data: {seo_optimized}\r\nImage: {image_data}\r\n\r\nRequirements:\r\n\r\n1. HTML Structure:\r\n  - Use semantic HTML5\r\n  - Make it email-client friendly\r\n  - Include responsive meta tags\r\n  - All styles must be inline (no external CSS)\r\n\r\n2. Design Elements:\r\n  - Professional color scheme (navy blue #1a365d for headers, dark gray #2d3748 for text)\r\n  - Clean typography (14px Helvetica/Arial for body, 24px for main title)\r\n  - Proper spacing (20px padding between sections)\r\n  - White background with subtle section separators\r\n  - Format links as buttons where appropriate\r\n\r\n3. Components:\r\n  - Header with newsletter logo/image\r\n  - Issue date and number\r\n  - Table of contents with jump links\r\n  - Section headers with consistent styling\r\n  - Call-to-action buttons for important links\r\n  - Footer with subscription/contact info\r\n\r\n4. Specific Styling Requirements:\r\n  - Main container: max-width: 600px, padding: 20px\r\n  - Headers: font-family: Helvetica, Arial; color: #1a365d\r\n  - Body text: font-family: Arial; color: #2d3748; line-height: 1.6\r\n  - Links: color: #3182ce\r\n  - Buttons: padding: 12px 24px; background: #3182ce; color: white\r\n  - Quote blocks: border-left: 4px solid #e2e8f0; padding-left: 16px\r\n  - Lists: margin: 16px 0; padding-left: 20px\r\n  - Images: max-width: 100%; height: auto\r\n\r\n5. Section Formatting:\r\n  - Clear visual hierarchy\r\n  - Consistent spacing between elements\r\n  - Highlighted key statistics or numbers\r\n  - Boxed/card style for featured items\r\n  - Source attributions in a subtle style\r\n\r\n6. Mobile Responsiveness:\r\n  - Stack elements on smaller screens\r\n  - Adjust font sizes for readability\r\n  - Maintain padding proportions\r\n  - Ensure button sizes are touch-friendly\r\n\r\nOutput as JSON:\r\n{\r\n  \"title\": \"Newsletter title from SEO data\",\r\n  \"body\": \"Complete HTML with inline styles\",\r\n  \"issue_number\": \"Generated based on date\",\r\n  \"date\": \"Current date formatted\"\r\n}\r\n\r\nImportant: All CSS must be inline. Do not use <style> tags or external stylesheets.\r\nExample of inline styling:\r\n<div style=\"margin: 20px; padding: 15px; font-family: Arial; color: #2d3748;\">\r\n\r\nEnsure the output is complete, valid HTML that will render correctly in email clients."
+      response: ''
+    weight: -5
+    uuid: 1189ca36-ab04-4af9-a6ed-b6d50d8e67d5
+  1b73e22b-1523-4691-8090-6b0bb66afa2a:
+    id: action_step
+    data:
+      step_description: 'Create newsletter article'
+      required_steps: "step4\r\n"
+      step_output_key: step5
+      output_type: article_content
+      action_config: create_article_action
+      response: ''
+    weight: -4
+    uuid: 1b73e22b-1523-4691-8090-6b0bb66afa2a
+  b60ee741-70f4-4e51-b957-14481d4da37d:
+    id: news_api_search
+    data:
+      step_description: 'Fetch latest AI startup news'
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      query: 'artificial intelligence startup OR AI funding OR AI technology OR machine learning company'
+      advanced_params:
+        language: en
+        sort_by: publishedAt
+        page_size: '10'
+        date_range:
+          from: ''
+          to: ''
+      response: ''
+    weight: -10
+    uuid: b60ee741-70f4-4e51-b957-14481d4da37d
