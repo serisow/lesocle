@@ -1,0 +1,9 @@
+uuid: 759252e2-98aa-4869-b3f8-9f26c663d89e
+langcode: en
+status: true
+dependencies: {  }
+id: l
+label: 'Linkedin Share '
+description: "Linkedin share template allow you to share text and optionnaly media to linkedin.\r\nYou can remove remove the media part if you only want to share text."
+template: "Generate a deep insight about agentic workflow in 200 words and format the response as JSON to share on LinkedIn with text and an image from the provided article. The image should illustrate the concept. Format:\r\n{\r\n  \"text\": \"YOUR INSIGHT HERE\",\r\n  \"media\": {\r\n    \"url\": \"https://blog.promptlayer.com/content/images/size/w1200/2024/12/How-a-Prompt-Engineering-Tool-Improves-AI-Model-Performance--40-.png\",\r\n    \"title\": \"The Agentic Workflow Concept\",\r\n    \"description\": \"A visual representation of how agentic workflows connect human intention with AI capabilities\",\r\n    \"thumbnail\": \"https://blog.promptlayer.com/content/images/size/w1200/2024/12/How-a-Prompt-Engineering-Tool-Improves-AI-Model-Performance--40-.png\"\r\n  }\r\n}"
+output_format: json

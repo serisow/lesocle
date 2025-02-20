@@ -1,0 +1,41 @@
+uuid: 3389e222-49b5-43a1-ae4d-2db1ae75a5bc
+langcode: en
+status: true
+dependencies: {  }
+id: test_linkedin_share
+label: 'Test Linkedin share'
+instructions: 'Test Linkedin share'
+created: 1740008531
+changed: 1740048106
+execution_type: scheduled
+scheduled_time: 1740048000
+schedule_type: one_time
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  70afd93f-bc25-4623-8f1e-c61642babc28:
+    id: action_step
+    data:
+      step_description: 'Share linkedin text'
+      required_steps: step1
+      step_output_key: step1
+      output_type: generic_content
+      action_config: linkedin_share_action_config
+      response: ''
+    weight: -9
+    uuid: 70afd93f-bc25-4623-8f1e-c61642babc28
+  2d308bac-9d4c-476d-9ad1-5d3a0a1f05d2:
+    id: llm_step
+    data:
+      step_description: 'Generate short text'
+      required_steps: ''
+      step_output_key: step1
+      output_type: linkedin_content
+      llm_config: gemini_2_0_flash
+      prompt_template: ''
+      prompt: "Generate a deep insight about agentic workflow in 100 words and format the response as JSON with a 'text' field. For example:\r\n{\r\n  \"text\": \"YOUR INSIGHT HERE\",\r\n  \"media\": {\r\n    \"url\": \"https://blog.promptlayer.com/content/images/size/w1200/2024/12/How-a-Prompt-Engineering-Tool-Improves-AI-Model-Performance--40-.png\",\r\n    \"title\": \"The Agentic Workflow Concept\",\r\n    \"description\": \"A visual representation of how agentic workflows connect human intention with AI capabilities\",\r\n    \"thumbnail\": \"https://blog.promptlayer.com/content/images/size/w1200/2024/12/How-a-Prompt-Engineering-Tool-Improves-AI-Model-Performance--40-.png\"\r\n  }\r\n}"
+      response: ''
+    weight: -10
+    uuid: 2d308bac-9d4c-476d-9ad1-5d3a0a1f05d2
