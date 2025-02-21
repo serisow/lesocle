@@ -47,6 +47,7 @@ use Drupal\pipeline\Plugin\StepType\ActionStep;
 use Drupal\pipeline\Plugin\StepType\GoogleSearchStep;
 use Drupal\pipeline\Plugin\StepType\LLMStep;
 use Drupal\pipeline\Plugin\StepType\NewsApiSearchStep;
+use Drupal\pipeline\Plugin\StepType\SocialMediaStep;
 use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
 use Drupal\pipeline\Service\PipelineErrorHandler;
 
@@ -255,6 +256,16 @@ class PipelineBatch {
           '@query' => $query,
           '@language' => $language,
         ]);
+
+      case $step_type instanceof SocialMediaStep:
+        $refNode = trim($config['data']['article'], '"');
+        $refNode = !empty($refNode) ? $refNode : 'N/A';
+        // Extract node ID if available
+        $nid = 'N/A';
+        if (preg_match('/\((\d+)\)$/', $refNode, $matches)) {
+          $nid = $matches[1];
+        }
+        return $this->t('(Article ID: @nid)', ['@nid' => $nid]);
 
       default:
         return '';

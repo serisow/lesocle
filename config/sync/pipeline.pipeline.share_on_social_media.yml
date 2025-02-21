@@ -1,0 +1,50 @@
+uuid: f74b20f0-fe72-4729-aa28-b5042d70c6e4
+langcode: en
+status: true
+dependencies: {  }
+id: share_on_social_media
+label: 'Share on social media'
+instructions: 'Share on social media'
+created: 1740098207
+changed: 1740144344
+execution_type: scheduled
+scheduled_time: 1740144300
+schedule_type: one_time
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  205f7628-b7ee-43e3-b4bc-44d092d57dcc:
+    id: action_step
+    data:
+      step_description: 'Post content on tweeter'
+      required_steps: step1
+      step_output_key: step2
+      output_type: generic_content
+      action_config: post_tweet_action
+      response: ''
+    weight: -9
+    uuid: 205f7628-b7ee-43e3-b4bc-44d092d57dcc
+  8247b8a0-6490-4375-83ef-f60753a06846:
+    id: action_step
+    data:
+      step_description: 'Post on Linkedin'
+      required_steps: step1
+      step_output_key: step3
+      output_type: generic_content
+      action_config: linkedin_share_action_config
+      response: ''
+    weight: -8
+    uuid: 8247b8a0-6490-4375-83ef-f60753a06846
+  7fc3011a-bc1f-4315-87ec-30a04f4c664b:
+    id: social_media_step
+    data:
+      step_description: 'Prepare content for social media step'
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      article: 'Cybersecurity Weekly Update: Phishing Threats Rise (292)'
+      response: ''
+    weight: -10
+    uuid: 7fc3011a-bc1f-4315-87ec-30a04f4c664b
