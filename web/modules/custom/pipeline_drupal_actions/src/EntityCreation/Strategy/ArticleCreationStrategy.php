@@ -57,6 +57,8 @@ class ArticleCreationStrategy extends EntityCreationStrategyBase {
         'summary' => $seo_content['summary'] ?? '',
       ],
       'field_category' => $selected_terms,
+      // Set status to unpublished by default
+      'status' => 0,  // This ensures human review before publishing
     ]);
 
     if ($media_id) {
