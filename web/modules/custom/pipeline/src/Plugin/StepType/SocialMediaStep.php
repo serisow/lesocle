@@ -167,6 +167,9 @@ class SocialMediaStep extends ConfigurableStepTypeBase implements StepTypeExecut
         $linkedin_content['media']['thumbnail'] = $image_url;
       }
 
+      // Prepare Facebook content
+      $facebook_content = $this->generateFacebookPost($metadata);
+
       // Store platform-specific content in context with output types matching action service expectations
       $context['results'][$this->getStepOutputKey() . '_twitter'] = [
         'output_type' => 'tweet_content',
@@ -176,6 +179,12 @@ class SocialMediaStep extends ConfigurableStepTypeBase implements StepTypeExecut
       $context['results'][$this->getStepOutputKey() . '_linkedin'] = [
         'output_type' => 'linkedin_content',
         'data' => json_encode($linkedin_content)
+      ];
+
+      // Store Facebook content in context
+      $context['results'][$this->getStepOutputKey() . '_facebook'] = [
+        'output_type' => 'facebook_content',
+        'data' => json_encode($facebook_content)
       ];
 
       // Store article metadata for potential use by other steps
@@ -190,6 +199,7 @@ class SocialMediaStep extends ConfigurableStepTypeBase implements StepTypeExecut
         'platforms' => [
           'twitter' => $twitter_content,
           'linkedin' => $linkedin_content,
+          'facebook' => $facebook_content,
         ],
         'metadata' => $metadata,
       ]);
@@ -240,6 +250,32 @@ class SocialMediaStep extends ConfigurableStepTypeBase implements StepTypeExecut
     ];
 
     return implode("\n", $post);
+  }
+
+  /**
+   * Generates a Facebook post from article metadata.
+   */
+  protected function generateFacebookPost(array $metadata): array {
+    // Generate engaging Facebook text
+    $summary = $this->generateSummary($metadata['summary'], 400); // Longer for Facebook
+    $text = sprintf(
+      "%s\n\n%s\n\n🔍 Read the full article for more details.",
+      $metadata['title'],
+      $summary
+    );
+
+    if ($metadata['image_url']) {
+      return [
+        'text' => $text,
+        'image_url' => $metadata['image_url']
+      ];
+    }
+    else {
+      return [
+        'text' => $text,
+        'url' => $metadata['url']
+      ];
+    }
   }
 
   /**

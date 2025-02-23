@@ -350,7 +350,6 @@ class PipelineApiController extends ControllerBase {
                   $step_data['article_data'] = [
                     'nid' => $node->id(),
                     'title' => $node->getTitle(),
-                    'body' => $node->get('body')->value,
                     'summary' => $node->hasField('field_summary') && !$node->get('field_summary')->isEmpty() ?
                       $node->get('field_summary')->value :
                       (!$node->get('body')->isEmpty() ? $node->get('body')->summary : $node->get('body')->value),
