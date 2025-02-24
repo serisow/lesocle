@@ -322,3 +322,10 @@ pipeline.news_api_settings:
     _title: 'News API Settings'
   requirements:
     _permission: 'administer pipeline settings'
+
+pipeline.voice_preview:
+  path: '/voice-preview/{file}'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\VoicePreviewController::downloadPreview'
+  requirements:
+    _permission: 'administer llm config'

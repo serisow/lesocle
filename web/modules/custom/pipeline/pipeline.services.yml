@@ -50,3 +50,8 @@ services:
       - '@logger.factory'
       - '@pipeline.error_handler'
 
+  pipeline.voice_preview_cleanup:
+    class: Drupal\pipeline\Service\VoicePreviewCleanup
+    arguments:
+      - '@entity_type.manager'
+      - '@tempstore.private'

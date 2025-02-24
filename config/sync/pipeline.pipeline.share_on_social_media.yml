@@ -6,9 +6,9 @@ id: share_on_social_media
 label: 'Share on social media'
 instructions: 'Share on social media'
 created: 1740098207
-changed: 1740144344
+changed: 1740327026
 execution_type: scheduled
-scheduled_time: 1740144300
+scheduled_time: 1740327000
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -44,7 +44,18 @@ step_types:
       required_steps: ''
       step_output_key: step1
       output_type: generic_content
-      article: 'Cybersecurity Weekly Update: Phishing Threats Rise (292)'
+      article: 'Cybersecurity Weekly Update: Phishing & Election Security Insights (293)'
       response: ''
     weight: -10
     uuid: 7fc3011a-bc1f-4315-87ec-30a04f4c664b
+  1e0b5894-c03c-40e3-be04-a3fcc123cbf7:
+    id: action_step
+    data:
+      step_description: 'Post on Facebook page'
+      required_steps: step1
+      step_output_key: step4
+      output_type: generic_content
+      action_config: facebook_share_config
+      response: ''
+    weight: 3
+    uuid: 1e0b5894-c03c-40e3-be04-a3fcc123cbf7

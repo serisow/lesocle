@@ -58,10 +58,8 @@ class OpenAIService  extends PluginBase implements LLMServiceInterface, Containe
   /**
    * Calls the OpenAI API.
    *
-   * @param string $api_url
-   *   The OpenAI API URL.
-   * @param string $api_key
-   *   The OpenAI API key.
+   * @param array $config
+   *   The LLM Config.
    * @param string $prompt
    *   The prompt to send to the API.
    *

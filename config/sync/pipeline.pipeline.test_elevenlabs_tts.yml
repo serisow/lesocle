@@ -1,0 +1,43 @@
+uuid: ed0a3ea1-e99f-40d4-b774-a29cc86a9d2b
+langcode: en
+status: null
+dependencies: {  }
+id: test_elevenlabs_tts
+label: 'Test ElevenLabs TTS'
+instructions: 'Test ElevenLabs TTS'
+created: 1740389601
+changed: 1740390607
+execution_type: null
+scheduled_time: null
+schedule_type: null
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  590cf2fd-5f45-429f-baaf-fe1b7f3a1288:
+    id: llm_step
+    data:
+      step_description: 'Generate audio'
+      required_steps: step1
+      step_output_key: step2
+      output_type: generic_content
+      llm_config: elevenlabs_v2
+      prompt_template: ''
+      prompt: '{step1}'
+      response: ''
+    weight: -9
+    uuid: 590cf2fd-5f45-429f-baaf-fe1b7f3a1288
+  2e391cf5-7a19-43f0-a091-557319c812c6:
+    id: llm_step
+    data:
+      step_description: 'Generate a very short poem'
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      llm_config: gemini_2_0_flash
+      prompt_template: ''
+      prompt: "You are a super genius poet.\r\nCraft a very short poem 200 words maximum.\r\nDo not add in the output any extra characters, only the poem."
+      response: ''
+    weight: -10
+    uuid: 2e391cf5-7a19-43f0-a091-557319c812c6

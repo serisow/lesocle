@@ -207,3 +207,11 @@ function pipeline_execute_high_frequency_pipelines() {
     }
   }
 }
+
+/**
+ * Implements hook_cron().
+ */
+function pipeline_cron() {
+  // Clean up voice previews older than 1 hour ??????
+  \Drupal::service('pipeline.voice_preview_cleanup')->cleanup();
+}

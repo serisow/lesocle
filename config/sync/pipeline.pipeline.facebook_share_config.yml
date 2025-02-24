@@ -1,0 +1,41 @@
+uuid: e3fa43f1-9072-48fa-bb92-61cfe0027917
+langcode: en
+status: null
+dependencies: {  }
+id: facebook_share_config
+label: 'Facebook share config'
+instructions: 'Share content on facebook page.'
+created: 1740304104
+changed: 1740307575
+execution_type: null
+scheduled_time: null
+schedule_type: null
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  7acb9bd4-e4ab-451e-8034-7911fc27f29f:
+    id: action_step
+    data:
+      step_description: 'Share on Facebook'
+      required_steps: ''
+      step_output_key: step1
+      output_type: facebook_content
+      action_config: facebook_share_config
+      response: ''
+    weight: -9
+    uuid: 7acb9bd4-e4ab-451e-8034-7911fc27f29f
+  1654aa6c-4a36-4b91-ad76-29aab6febcf0:
+    id: llm_step
+    data:
+      step_description: 'Generate Facebook post'
+      required_steps: ''
+      step_output_key: step1
+      output_type: facebook_content
+      llm_config: gemini_2_0_flash
+      prompt_template: ''
+      prompt: " Generate an engaging insight about AI and human collaboration in 200 words and format the response as JSON. \r\n  {\r\n    \"text\": \"YOUR INSIGHT HERE\",\r\n    \"url\": \"https://yourblog.com/ai-human-collaboration\"\r\n  }"
+      response: ''
+    weight: -10
+    uuid: 1654aa6c-4a36-4b91-ad76-29aab6febcf0
