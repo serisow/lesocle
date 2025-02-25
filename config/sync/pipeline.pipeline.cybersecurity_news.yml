@@ -5,8 +5,8 @@ dependencies: {  }
 id: cybersecurity_news
 label: 'Cybersecurity news'
 instructions: 'Create an informative article about climate change with an accompanying image.'
-created: 1739619612
-changed: 1739812417
+created: 1740406614
+changed: 1740406614
 execution_type: scheduled
 scheduled_time: 1739806800
 schedule_type: one_time

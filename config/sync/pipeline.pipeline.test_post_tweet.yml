@@ -6,12 +6,13 @@ id: test_post_tweet
 label: 'Test Post Tweet'
 instructions: 'Only for testing tweet'
 created: 1729808615
-changed: 1739117455
+changed: 1740406614
 execution_type: scheduled
 scheduled_time: 1739117280
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
+execution_interval: null
 execution_failures: 0
 step_types:
   a1c5eff4-054b-48e2-8727-f8e2ab084f03:

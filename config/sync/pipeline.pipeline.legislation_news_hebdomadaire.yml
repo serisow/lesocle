@@ -5,8 +5,8 @@ dependencies: {  }
 id: legislation_news_hebdomadaire
 label: 'Legislation news hebdomadaire'
 instructions: 'Create an informative article about climate change with an accompanying image.'
-created: 1739902639
-changed: 1739904406
+created: 1740406614
+changed: 1740406614
 execution_type: scheduled
 scheduled_time: 1739904060
 schedule_type: one_time

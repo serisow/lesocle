@@ -1,14 +1,14 @@
-uuid: ed0a3ea1-e99f-40d4-b774-a29cc86a9d2b
+uuid: 071a0aba-8778-48d1-a04b-030bf6195c87
 langcode: en
 status: true
 dependencies: {  }
-id: test_elevenlabs_tts
-label: 'Test ElevenLabs TTS'
+id: test_aws_polly
+label: 'Test AWS Polly'
 instructions: 'Test ElevenLabs TTS'
-created: 1740406614
-changed: 1740409664
+created: 1740433889
+changed: 1740472715
 execution_type: scheduled
-scheduled_time: 1740409500
+scheduled_time: 1740472500
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -22,7 +22,7 @@ step_types:
       required_steps: step1
       step_output_key: step2
       output_type: generic_content
-      llm_config: elevenlabs_v2
+      llm_config: aws_polly
       prompt_template: ''
       prompt: '{step1}'
       response: ''

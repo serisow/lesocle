@@ -5,8 +5,8 @@ dependencies: {  }
 id: fetch_monster_page
 label: 'Fetch monster page'
 instructions: 'Test fetch monster web page'
-created: 1739478986
-changed: 1739479013
+created: 1740406614
+changed: 1740406614
 execution_type: scheduled
 scheduled_time: null
 schedule_type: none

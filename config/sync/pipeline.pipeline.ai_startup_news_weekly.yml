@@ -5,8 +5,8 @@ dependencies: {  }
 id: ai_startup_news_weekly
 label: 'AI Startup News Weekly'
 instructions: 'Create an informative article about climate change with an accompanying image.'
-created: 1739912328
-changed: 1739914828
+created: 1740406614
+changed: 1740406614
 execution_type: scheduled
 scheduled_time: 1739914620
 schedule_type: one_time

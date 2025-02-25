@@ -5,8 +5,8 @@ dependencies: {  }
 id: test_news_api_step
 label: 'Test news api step'
 instructions: 'Test news api step'
-created: 1739711947
-changed: 1739902851
+created: 1740406614
+changed: 1740406614
 execution_type: scheduled
 scheduled_time: null
 schedule_type: none

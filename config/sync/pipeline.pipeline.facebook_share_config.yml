@@ -5,8 +5,8 @@ dependencies: {  }
 id: facebook_share_config
 label: 'Facebook share config'
 instructions: 'Share content on facebook page.'
-created: 1740304104
-changed: 1740307575
+created: 1740406614
+changed: 1740406614
 execution_type: null
 scheduled_time: null
 schedule_type: null

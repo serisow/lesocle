@@ -5,13 +5,14 @@ dependencies: {  }
 id: test_search_tweets
 label: 'Test Search Tweets'
 instructions: 'This is for testing  the search for tweets.'
-created: 1739195478
-changed: 1739268598
+created: 1740406614
+changed: 1740406614
 execution_type: scheduled
 scheduled_time: 1739268575
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
+execution_interval: null
 execution_failures: 0
 step_types:
   bf3261ea-6b27-4e78-96c8-a9037c3d058b:

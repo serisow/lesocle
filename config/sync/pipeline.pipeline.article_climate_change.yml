@@ -6,9 +6,9 @@ id: article_climate_change
 label: 'Create article about climate change'
 instructions: 'Create an informative article about climate change with an accompanying image.'
 created: 1728600704
-changed: 1740178215
+changed: 1740482972
 execution_type: scheduled
-scheduled_time: 1740178080
+scheduled_time: 1740482280
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -56,7 +56,7 @@ step_types:
       required_steps: "step2\r\n"
       step_output_key: step3
       output_type: generic_content
-      llm_config: gpt_4o_mini
+      llm_config: gemini_2_0_flash
       prompt_template: ''
       prompt: "Using the text below on climate change, create a visually stunning and highly realistic image that illustrates the impact of climate change on the environment. Ensure all elements appear entirely natural and organic, avoiding any synthetic or artificial-looking features such as synthetic grass or unnatural textures. Depict authentic environmental changes, such as melting glaciers, drought-affected landscapes, wildfires, or altered ecosystems, to convey the message effectively without exaggeration. Incorporate lush greenery alongside affected areas to highlight contrast and realism. Accompany the image with a captivating caption derived from the main ideas, ensuring it resonates with common human sense and psychological insights. Keep the entire output, including the caption, within 800 characters for clarity and impact.\r\n\r\nText:\r\n\r\n{step2}"
       response: ''

@@ -5,8 +5,8 @@ dependencies: {  }
 id: create_article_abouut_deepseek
 label: 'Create article about deepseek'
 instructions: 'Create an informative article about climate change with an accompanying image.'
-created: 1738187367
-changed: 1739554167
+created: 1740406614
+changed: 1740406614
 execution_type: on_demand
 scheduled_time: null
 schedule_type: null

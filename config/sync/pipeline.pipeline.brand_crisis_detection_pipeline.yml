@@ -5,8 +5,8 @@ dependencies: {  }
 id: brand_crisis_detection_pipeline
 label: 'Brand Crisis Detection Pipeline'
 instructions: 'Search twitter to look for patterns which might hint of the beginning of a crisis involving a brand.'
-created: 1739273155
-changed: 1739392234
+created: 1740406614
+changed: 1740406614
 execution_type: scheduled
 scheduled_time: 1739359560
 schedule_type: one_time

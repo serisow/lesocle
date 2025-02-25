@@ -1,1 +1,2 @@
 label: 'Date moyenne par défaut'
+pattern: 'D, m/d/Y - H:i'
