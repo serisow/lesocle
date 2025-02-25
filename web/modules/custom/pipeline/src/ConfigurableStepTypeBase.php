@@ -201,6 +201,8 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       'generic_webhook_content'  => $this->t('Generic Webhook Content'),
       'linkedin_content'  => $this->t('LinkedIn Content'),
       'facebook_content'  => $this->t('Facebook Content'),
+      'audio_content'  => $this->t('Audio Content'),
+      'video_content'  => $this->t('Video Content'),
     ];
   }
 }

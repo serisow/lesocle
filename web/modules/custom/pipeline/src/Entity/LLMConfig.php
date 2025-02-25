@@ -69,6 +69,7 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
  *     "id",
  *     "label",
  *     "api_key",
+ *     "api_secret",
  *     "model_name",
  *     "api_url",
  *     "parameters"
@@ -106,6 +107,13 @@ class LLMConfig extends ConfigEntityBase {
   protected $api_key;
 
   /**
+   * The API Secret.
+   *
+   * @var string
+   */
+  protected $api_secret;
+
+  /**
    * The LLM model name.
    *
    * @var string
@@ -136,6 +144,15 @@ class LLMConfig extends ConfigEntityBase {
 
   public function setApiKey($api_key) {
     $this->api_key = $api_key;
+    return $this;
+  }
+
+  public function getApiSecret() {
+    return $this->api_secret;
+  }
+
+  public function setApiSecret($api_secret) {
+    $this->api_secret = $api_secret;
     return $this;
   }
 

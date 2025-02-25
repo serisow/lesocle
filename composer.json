@@ -15,7 +15,10 @@
         }
     ],
     "require": {
+        "ext-dom": "*",
+        "ext-libxml": "*",
         "abraham/twitteroauth": "^7.0",
+        "aws/aws-sdk-php": "^3.340",
         "composer/installers": "^2.0",
         "cweagans/composer-patches": "^1.7",
         "dompdf/dompdf": "^3.0",
@@ -43,9 +46,7 @@
         "drupal/webp": "^1.0@RC",
         "drush/drush": "^13.0",
         "twilio/sdk": "^8.3",
-        "vlucas/phpdotenv": "^5.6",
-        "ext-libxml": "*",
-        "ext-dom": "*"
+        "vlucas/phpdotenv": "^5.6"
     },
     "conflict": {
         "drupal/drupal": "*"

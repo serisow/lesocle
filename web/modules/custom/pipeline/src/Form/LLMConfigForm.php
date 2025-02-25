@@ -112,6 +112,17 @@ class LLMConfigForm extends EntityForm {
       '#required' => TRUE,
     ];
 
+    // THIS IS NOT A TRUE MODEL, BUT CHEAP ENOUGH  FOR DEV ENVIRONMENT
+    if ($llm_config->get('model_name') === 'aws_polly_standard') {
+      $form['api_secret'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('AWS Secret Key'),
+        '#default_value' => $llm_config->getApiSecret() ?? '',
+        '#required' => TRUE,
+        '#description' => $this->t('The AWS Secret Access Key associated with your account.'),
+      ];
+    }
+
     $form['model_name'] = [
       '#type' => 'select',
       '#title' => $this->t('Model'),
@@ -225,6 +236,94 @@ class LLMConfigForm extends EntityForm {
         ];
       }
 
+      // Add AWS Polly specific fields: @TODO:SSOW move into a function
+      if ($plugin->getServiceId() === 'aws_polly') {
+        $form['parameters']['region'] = [
+          '#type' => 'select',
+          '#title' => $this->t('AWS Region'),
+          '#options' => [
+            'us-east-1' => 'US East (N. Virginia)',
+            'us-east-2' => 'US East (Ohio)',
+            'us-west-1' => 'US West (N. California)',
+            'us-west-2' => 'US West (Oregon)',
+            'eu-west-1' => 'EU (Ireland)',
+            'eu-central-1' => 'EU (Frankfurt)',
+            'eu-north-1'   =>  'EU (Stockholm)',
+            // Add other AWS regions as needed
+          ],
+          '#default_value' => $current_params['region'] ?? 'us-west-2',
+          '#required' => TRUE,
+        ];
+
+        $form['parameters']['voice_selection'] = [
+          '#type' => 'details',
+          '#title' => $this->t('Voice Settings'),
+          '#open' => TRUE,
+        ];
+
+        $form['parameters']['voice_selection']['voice_id'] = [
+          '#type' => 'select',
+          '#title' => $this->t('Voice'),
+          '#options' => $this->getAWSPollyVoices($current_params),
+          '#default_value' => $current_params['voice_id'] ?? 'Joanna',
+          '#required' => TRUE,
+        ];
+
+        $form['parameters']['voice_selection']['engine'] = [
+          '#type' => 'select',
+          '#title' => $this->t('Voice Engine'),
+          '#options' => [
+            'standard' => $this->t('Standard'),
+            'neural' => $this->t('Neural (higher quality)'),
+          ],
+          '#default_value' => $current_params['engine'] ?? 'standard',
+          '#description' => $this->t('Neural voices provide higher quality but are only available in certain regions and languages.'),
+        ];
+
+        $form['parameters']['voice_selection']['output_format'] = [
+          '#type' => 'select',
+          '#title' => $this->t('Output Format'),
+          '#options' => [
+            'mp3' => 'MP3',
+            'ogg_vorbis' => 'OGG',
+            'pcm' => 'PCM',
+          ],
+          '#default_value' => $current_params['output_format'] ?? 'mp3',
+        ];
+
+        $form['parameters']['voice_selection']['sample_rate'] = [
+          '#type' => 'select',
+          '#title' => $this->t('Sample Rate'),
+          '#options' => [
+            '8000' => '8000 Hz',
+            '16000' => '16000 Hz',
+            '22050' => '22050 Hz',
+            '24000' => '24000 Hz',
+          ],
+          '#default_value' => $current_params['sample_rate'] ?? '22050',
+          '#description' => $this->t('The audio frequency specified in Hz.'),
+        ];
+
+        // Add preview container for AJAX updates
+        $form['parameters']['voice_selection']['preview_container'] = [
+          '#type' => 'container',
+          '#attributes' => ['class' => ['voice-preview-wrapper']],
+        ];
+
+        $form['parameters']['voice_selection']['preview'] = [
+          '#type' => 'button',
+          '#value' => $this->t('Preview Voice'),
+          '#ajax' => [
+            'callback' => '::previewAWSPollyVoice',
+            'wrapper' => 'voice-preview-wrapper',
+            'event' => 'click',
+            'progress' => [
+              'type' => 'throbber',
+              'message' => $this->t('Generating preview...'),
+            ],
+          ],
+        ];
+      }
 
       foreach ($default_params as $key => $default_value) {
         $form['parameters'][$key] = [
@@ -286,7 +385,7 @@ class LLMConfigForm extends EntityForm {
 
     // Process voice settings if they exist
     $parameters = $form_state->getValue('parameters');
-    if (isset($parameters['voice_selection'])) {
+    if ($model_name == 'eleven_multilingual_v2' && isset($parameters['voice_selection'])) {
       $parameters = [
         'voice_id' => $parameters['voice_selection']['voice_id'],
         'stability' => $parameters['voice_selection']['stability'] / 100,
@@ -294,13 +393,16 @@ class LLMConfigForm extends EntityForm {
         'style' => 0,
         'use_speaker_boost' => true
       ];
-
     }
 
     $llm_config->setModelName($model_name);
     $llm_config->setApiKey($form_state->getValue('api_key'));
     $llm_config->setParameters($parameters);
     $llm_config->setApiUrl($plugin->getApiUrl());
+
+    if ($model_name == 'aws_polly_standard') {
+      $llm_config->setApiSecret($form_state->getValue('api_secret'));
+    }
   }
 
 
@@ -399,6 +501,139 @@ class LLMConfigForm extends EntityForm {
             ['type' => 'status']
           ));
         }
+      }
+    }
+    catch (\Exception $e) {
+      $response->addCommand(new MessageCommand(
+        $this->t('Failed to generate preview: @error', ['@error' => $e->getMessage()]),
+        '.voice-preview-messages',
+        ['type' => 'error']
+      ));
+    }
+
+    return $response;
+  }
+
+  /**
+   * Gets available AWS Polly voices.
+   */
+  protected function getAWSPollyVoices($current_params) {
+    try {
+      // If api_key and api_secret are not yet set, return a placeholder
+      $api_key = $this->entity->getApiKey();
+      $api_secret = $this->entity->getApiSecret();
+      $region = $current_params['region'] ?? 'us-west-2';
+
+      if (empty($api_key) || empty($api_secret)) {
+        return ['Joanna' => 'Joanna (Default - configure AWS credentials for more)'];
+      }
+
+      // Create Polly client
+      $client = new \Aws\Polly\PollyClient([
+        'version' => 'latest',
+        'region' => $region,
+        'credentials' => [
+          'key' => $api_key,
+          'secret' => $api_secret,
+        ],
+      ]);
+
+      // Fetch available voices
+      $result = $client->describeVoices();
+      $voices = [];
+
+      foreach ($result['Voices'] as $voice) {
+        $engine_type = isset($voice['SupportedEngines']) ?
+          ' (' . implode(', ', $voice['SupportedEngines']) . ')' : '';
+        $voices[$voice['Id']] = $voice['Name'] . ' - ' . $voice['LanguageCode'] . $engine_type;
+      }
+
+      return $voices;
+    }
+    catch (\Exception $e) {
+      $this->logger->error('Failed to fetch AWS Polly voices: @error', ['@error' => $e->getMessage()]);
+      return ['Joanna' => 'Joanna (Default - error fetching voices)'];
+    }
+  }
+
+  /**
+   * Ajax callback to preview AWS Polly voice.
+   */
+  public function previewAWSPollyVoice(array &$form, FormStateInterface $form_state) {
+    $response = new AjaxResponse();
+
+    try {
+      $voice_id = $form_state->getValue(['parameters', 'voice_selection', 'voice_id']);
+      $api_key = $form_state->getValue('api_key');
+      $api_secret = $form_state->getValue('api_secret');;
+      $region = $form_state->getValue(['parameters', 'region']) ?? 'us-west-2';
+      $engine = $form_state->getValue(['parameters', 'voice_selection', 'engine']) ?? 'standard';
+      $output_format = $form_state->getValue(['parameters', 'voice_selection', 'output_format']) ?? 'mp3';
+      $sample_rate = $form_state->getValue(['parameters', 'voice_selection', 'sample_rate']) ?? '22050';
+
+      $preview_text = $this->t('This is a preview of the selected AWS Polly voice.');
+
+      // Create Polly client
+      $client = new \Aws\Polly\PollyClient([
+        'version' => 'latest',
+        'region' => $region,
+        'credentials' => [
+          'key' => $api_key,
+          'secret' => $api_secret,
+        ],
+      ]);
+
+      // Set up parameters for speech synthesis
+      $params = [
+        'Text' => $preview_text,
+        'VoiceId' => $voice_id,
+        'OutputFormat' => $output_format,
+        'SampleRate' => $sample_rate,
+        'Engine' => $engine,
+      ];
+
+      // Synthesize speech
+      $result = $client->synthesizeSpeech($params);
+
+      // Save preview file temporarily
+      $directory = 'private://voice-previews';
+      \Drupal::service('file_system')->prepareDirectory($directory, FileSystemInterface::CREATE_DIRECTORY);
+
+      $filename = 'preview_' . $voice_id . '_' . uniqid() . '.mp3';
+      $uri = $directory . '/' . $filename;
+
+      $file = \Drupal::service('file.repository')->writeData(
+        $result->get('AudioStream')->getContents(),
+        $uri,
+        FileExists::Replace
+      );
+
+      if ($file) {
+        // Store file ID in tempstore for cleanup
+        $tempstore = $this->tempStoreFactory->get('pipeline_voice_previews');
+        $fids = $tempstore->get('voice_previews') ?? [];
+        $fids[] = $file->id();
+        $tempstore->set('voice_previews', $fids);
+
+        $url = Url::fromRoute('pipeline.voice_preview', ['file' => $filename])
+          ->setAbsolute()
+          ->toString();
+
+        // Create container with unique timestamp to force audio reload
+        $timestamp = time();
+        $container_id = 'voice-preview-wrapper-' . $timestamp;
+        $markup = '<div class="voice-preview-wrapper" id="' . $container_id . '">';
+        $markup .= '<div class="voice-preview-messages"></div>';
+        $markup .= '<audio controls><source src="' . $url . '?t=' . $timestamp . '" type="audio/mpeg"></audio>';
+        $markup .= '</div>';
+
+        // Replace the entire preview container
+        $response->addCommand(new ReplaceCommand('.voice-preview-wrapper', $markup));
+        $response->addCommand(new MessageCommand(
+          $this->t('Preview generated successfully.'),
+          '.voice-preview-messages',
+          ['type' => 'status']
+        ));
       }
     }
     catch (\Exception $e) {
