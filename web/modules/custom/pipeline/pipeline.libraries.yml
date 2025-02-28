@@ -8,7 +8,7 @@ admin:
 step_type_modal:
   js:
     js/pipeline-step-type-modal.js: {}
-    js/multiple-choice-step.js: { }
+    js/pipeline-file-upload.js: {}
   dependencies:
     - core/jquery
     - core/drupal
