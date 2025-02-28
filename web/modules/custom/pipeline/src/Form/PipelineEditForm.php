@@ -289,7 +289,7 @@ class PipelineEditForm extends PipelineFormBase {
         ->set('pipeline', $this->entity)
         ->set('step_type', $step_type);
       $form = $this->formBuilder->buildForm('Drupal\pipeline\Form\PipelineStepTypeAddForm', $form_state);
-      $form['actions']['submit']['#submit'] = ['::handleSubmit'];
+      //$form['actions']['submit']['#submit'] = ['::handleSubmit'];
 
       // Make the dialog title
       $step_type_manager = \Drupal::service('plugin.manager.step_type');

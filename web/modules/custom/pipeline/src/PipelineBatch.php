@@ -48,6 +48,8 @@ use Drupal\pipeline\Plugin\StepType\GoogleSearchStep;
 use Drupal\pipeline\Plugin\StepType\LLMStep;
 use Drupal\pipeline\Plugin\StepType\NewsApiSearchStep;
 use Drupal\pipeline\Plugin\StepType\SocialMediaStep;
+use Drupal\pipeline\Plugin\StepType\UploadAudioStep;
+use Drupal\pipeline\Plugin\StepType\UploadImageStep;
 use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
 use Drupal\pipeline\Service\PipelineErrorHandler;
 
@@ -266,6 +268,24 @@ class PipelineBatch {
           $nid = $matches[1];
         }
         return $this->t('(Article ID: @nid)', ['@nid' => $nid]);
+
+      case $step_type instanceof UploadImageStep:
+        $file_id = $config['data']['image_file_id'] ?? 'N/A';
+        $file = null;
+        if (is_numeric($file_id)) {
+          $file = $this->entityTypeManager->getStorage('file')->load($file_id);
+        }
+        $filename = $file ? $file->getFilename() : 'N/A';
+        return $this->t('(Image: @filename)', ['@filename' => $filename]);
+
+      case $step_type instanceof UploadAudioStep:
+        $file_id = $config['data']['audio_file_id'] ?? 'N/A';
+        $file = null;
+        if (is_numeric($file_id)) {
+          $file = $this->entityTypeManager->getStorage('file')->load($file_id);
+        }
+        $filename = $file ? $file->getFilename() : 'N/A';
+        return $this->t('(Audio: @filename)', ['@filename' => $filename]);
 
       default:
         return '';

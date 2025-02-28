@@ -55,3 +55,6 @@ services:
     arguments:
       - '@entity_type.manager'
       - '@tempstore.private'
+
+  pipeline.file_manager:
+    class: Drupal\pipeline\Service\PipelineFileManager

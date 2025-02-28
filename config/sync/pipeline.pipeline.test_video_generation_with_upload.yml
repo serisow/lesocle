@@ -1,0 +1,50 @@
+uuid: 82117e8c-e095-482a-bd0b-bf86121ee7fb
+langcode: en
+status: null
+dependencies: {  }
+id: test_video_generation_with_upload
+label: 'Test video generation with upload'
+instructions: 'Let the user upload image and audio and create a short video.'
+created: 1740601318
+changed: 1740678945
+execution_type: null
+scheduled_time: null
+schedule_type: null
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  14aa1394-aab5-4a82-aa13-ae6178fc4879:
+    id: action_step
+    data:
+      step_description: 'Generate a short video'
+      required_steps: "step1\r\nstep2"
+      step_output_key: step3
+      output_type: video_content
+      action_config: video_generation
+      response: ''
+    weight: -8
+    uuid: 14aa1394-aab5-4a82-aa13-ae6178fc4879
+  cf71ef7c-2d97-4638-a6f5-954ca43f1e35:
+    id: upload_image_step
+    data:
+      step_description: 'Upload image'
+      required_steps: ''
+      step_output_key: step1
+      output_type: featured_image
+      image_file_id: 356
+      response: ''
+    weight: -10
+    uuid: cf71ef7c-2d97-4638-a6f5-954ca43f1e35
+  943fa8d9-8c8d-4da8-9f65-4c73430468c2:
+    id: upload_audio_step
+    data:
+      step_description: 'Upload audio'
+      required_steps: ''
+      step_output_key: step2
+      output_type: audio_content
+      audio_file_id: 360
+      response: ''
+    weight: -9
+    uuid: 943fa8d9-8c8d-4da8-9f65-4c73430468c2

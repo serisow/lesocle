@@ -329,3 +329,11 @@ pipeline.voice_preview:
     _controller: '\Drupal\pipeline\Controller\VoicePreviewController::downloadPreview'
   requirements:
     _permission: 'administer llm config'
+
+pipeline.file_upload:
+  path: '/admin/structure/pipelines/file-upload'
+  defaults:
+    _controller: '\Drupal\pipeline\Controller\PipelineFileUploadController::handleFileUpload'
+    _title: 'File Upload'
+  requirements:
+    _permission: 'administer pipelines'

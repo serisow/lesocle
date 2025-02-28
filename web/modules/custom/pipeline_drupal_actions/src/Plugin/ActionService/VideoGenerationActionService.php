@@ -217,6 +217,9 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
         mkdir($tempDirectory, 0755, true);
       }
 
+      // Ensure image dimensions are compatible with video encoding
+      $processedImagePath = $this->ensureCompatibleDimensions($imageFilePath, $tempDirectory);
+
       $tempFilename = 'video_temp_' . uniqid() . '.' . $outputFormat;
       $outputFilePath = $tempDirectory . '/' . $tempFilename;
 
@@ -231,7 +234,7 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       // Build the FFmpeg command
       $ffmpegCommand = "ffmpeg";
       $ffmpegCommand .= " -loop 1";
-      $ffmpegCommand .= " -i " . escapeshellarg($imageFilePath);
+      $ffmpegCommand .= " -i " . escapeshellarg($processedImagePath);
       $ffmpegCommand .= " -i " . escapeshellarg($audioFilePath);
       $ffmpegCommand .= " -c:v libx264";
       $ffmpegCommand .= " -c:a aac";
@@ -395,5 +398,56 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
   {
     json_decode($string);
     return json_last_error() === JSON_ERROR_NONE;
+  }
+
+  /**
+   * Ensures dimensions are compatible with video encoding requirements.
+   *
+   * @param string $imagePath
+   *   Path to the image file.
+   * @param string $tempDir
+   *   Temporary directory for output.
+   *
+   * @return string
+   *   Path to the processed image with compatible dimensions.
+   */
+  protected function ensureCompatibleDimensions($imagePath, $tempDir) {
+    // Get image dimensions
+    $command = "ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 " . escapeshellarg($imagePath);
+    $dimensions = trim(shell_exec($command));
+
+    // If dimensions couldn't be obtained or are already even, return original
+    if (empty($dimensions)) {
+      return $imagePath;
+    }
+
+    list($width, $height) = explode('x', $dimensions);
+    $width = (int)$width;
+    $height = (int)$height;
+
+    // Check if both dimensions are even
+    if ($width % 2 === 0 && $height % 2 === 0) {
+      return $imagePath;
+    }
+
+    // Make dimensions even by reducing by 1 if needed
+    $newWidth = $width % 2 === 0 ? $width : $width - 1;
+    $newHeight = $height % 2 === 0 ? $height : $height - 1;
+
+    // Create adjusted image
+    $outputPath = $tempDir . '/adjusted_' . basename($imagePath);
+    $resizeCommand = "ffmpeg -i " . escapeshellarg($imagePath) .
+      " -vf scale=" . $newWidth . ":" . $newHeight .
+      " -y " . escapeshellarg($outputPath);
+
+    exec($resizeCommand, $output, $returnCode);
+
+    if ($returnCode !== 0 || !file_exists($outputPath)) {
+      // Log the error but return original path as fallback
+      \Drupal::logger('pipeline')->error('Failed to resize image to even dimensions: @command', ['@command' => $resizeCommand]);
+      return $imagePath;
+    }
+
+    return $outputPath;
   }
 }
