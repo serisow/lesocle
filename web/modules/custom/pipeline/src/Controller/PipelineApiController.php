@@ -378,6 +378,37 @@ class PipelineApiController extends ControllerBase {
               }
             }
             break;
+          case 'upload_image_step':
+            // Add image file information if available
+            if (!empty($configuration['data']['image_file_id'])) {
+              $file_id = $configuration['data']['image_file_id'];
+              $file = $this->entityTypeManager->getStorage('file')->load($file_id);
+              if ($file) {
+                $step_data['image_file_id'] = $file_id;
+                $step_data['image_file_url'] = $file->createFileUrl(FALSE);
+                $step_data['image_file_uri'] = $file->getFileUri();
+                $step_data['image_file_mime'] = $file->getMimeType();
+                $step_data['image_file_name'] = $file->getFilename();
+                $step_data['image_file_size'] = $file->getSize();
+              }
+            }
+            break;
+          case 'upload_audio_step':
+            // Add audio file information if available
+            if (!empty($configuration['data']['audio_file_id'])) {
+              $file_id = $configuration['data']['audio_file_id'];
+              $file = $this->entityTypeManager->getStorage('file')->load($file_id);
+              if ($file) {
+                $step_data['audio_file_id'] = $file_id;
+                $step_data['audio_file_url'] = $file->createFileUrl(FALSE);
+                $step_data['audio_file_uri'] = $file->getFileUri();
+                $step_data['audio_file_mime'] = $file->getMimeType();
+                $step_data['audio_file_name'] = $file->getFilename();
+                $step_data['audio_file_duration'] = $this->getAudioDuration($file);
+                $step_data['audio_file_size'] = $file->getSize();
+              }
+            }
+            break;
 
         }
 
@@ -392,6 +423,32 @@ class PipelineApiController extends ControllerBase {
     }
 
     return new JsonResponse($pipeline_data);
+  }
+
+  /**
+   * Gets the duration of an audio file in seconds.
+   *
+   * @param \Drupal\file\FileInterface $file
+   *   The audio file.
+   *
+   * @return float|null
+   *   The duration in seconds, or NULL if it couldn't be determined.
+   */
+  protected function getAudioDuration($file) {
+    // Use ffprobe if available
+    $real_path = \Drupal::service('file_system')->realpath($file->getFileUri());
+    if (function_exists('exec') && is_executable('/usr/bin/ffprobe')) {
+      $command = "/usr/bin/ffprobe -i " . escapeshellarg($real_path) . " -show_entries format=duration -v quiet -of csv=\"p=0\"";
+      $output = [];
+      exec($command, $output, $return_var);
+
+      if ($return_var === 0 && !empty($output[0]) && is_numeric($output[0])) {
+        return (float) $output[0];
+      }
+    }
+
+    // Fallback: Return null if we can't determine duration
+    return null;
   }
 
 }
