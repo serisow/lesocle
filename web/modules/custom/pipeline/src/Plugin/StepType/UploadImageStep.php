@@ -1,15 +1,12 @@
 <?php
 namespace Drupal\pipeline\Plugin\StepType;
 
-use Drupal\Core\Ajax\AjaxResponse;
-use Drupal\Core\Ajax\AlertCommand;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\file\Element\ManagedFile;
 use Drupal\file\FileInterface;
 use Drupal\pipeline\ConfigurableStepTypeBase;
 use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Provides an image upload step type.
@@ -38,6 +35,9 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
   {
     return [
       'image_file_id' => NULL,
+      'video_settings' => [
+        'duration' => 5.0,
+      ],
     ];
   }
 
@@ -67,13 +67,31 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
       ],
     ];
 
+    // Add video settings fieldset
+    $form['video_settings'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Video Settings'),
+      '#open' => TRUE,
+      '#description' => $this->t('Configure how this image will be used in video generation.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="data[output_type]"]' => ['value' => 'featured_image'],
+        ],
+      ],
+    ];
+
+    $form['video_settings']['duration'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Duration (seconds)'),
+      '#default_value' => $this->configuration['video_settings']['duration'] ?? 5.0,
+      '#step' => 0.1,
+      '#min' => 0.5,
+      '#max' => 60,
+      '#description' => $this->t('How long this image should appear in generated videos.'),
+    ];
+
     return $form;
   }
-
-  /**
-   * Update the UploadImageStep.php processManagedFile method to completely remove AJAX.
-   * This is a more robust solution to ensure no AJAX behavior is attached.
-   */
 
   /**
    * Process callback for managed file to completely remove default AJAX behavior.
@@ -103,6 +121,7 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
+
     // Handle file upload
     $image_file = $form_state->getValue(['data', 'image_file']);
     if (!empty($image_file) && !empty($image_file[0])) {
@@ -114,6 +133,11 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
         $file->save();
       }
     }
+
+    // Save video settings
+    $this->configuration['video_settings'] = [
+      'duration' => (float) $form_state->getValue(['data', 'video_settings', 'duration']),
+    ];
   }
 
   /**
@@ -139,6 +163,10 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
         'mime_type' => $file->getMimeType(),
         'size' => $file->getSize(),
         'timestamp' => \Drupal::time()->getCurrentTime(),
+        // Add video settings
+        'video_settings' => [
+          'duration' => $this->configuration['video_settings']['duration'],
+        ],
       ];
       // Add the result to the context with the appropriate output type
       $context['results'][$this->getStepOutputKey()] = [

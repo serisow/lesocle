@@ -1,0 +1,67 @@
+uuid: a1478b94-41eb-404f-a70b-cbefe004f548
+langcode: en
+status: null
+dependencies: {  }
+id: generate_video_using_upload
+label: 'Generate video using upload'
+instructions: 'Generate video using upload'
+created: 1740931404
+changed: 1741028534
+execution_type: null
+scheduled_time: null
+schedule_type: null
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  2f52a65b-07ae-45e4-ba26-54f02520ea75:
+    id: upload_image_step
+    data:
+      step_description: 'Image 1'
+      required_steps: ''
+      video_settings:
+        duration: '8'
+        sequence: '1'
+      step_output_key: image_data_1
+      output_type: featured_image
+      image_file_id: 338
+      response: ''
+    weight: -9
+    uuid: 2f52a65b-07ae-45e4-ba26-54f02520ea75
+  4f570c60-f0ea-46f2-bc12-d5c2c9b50f09:
+    id: upload_audio_step
+    data:
+      step_description: Audio
+      required_steps: ''
+      step_output_key: audio_data
+      output_type: audio_content
+      audio_file_id: 341
+      response: ''
+    weight: -8
+    uuid: 4f570c60-f0ea-46f2-bc12-d5c2c9b50f09
+  64cb464d-751a-4ae5-9828-66bb9ceeac2c:
+    id: action_step
+    data:
+      step_description: 'Generate video'
+      required_steps: "image_data_1\r\nimage_data_2\r\naudio_data"
+      step_output_key: video_content
+      output_type: video_content
+      action_config: video_generation
+      response: ''
+    weight: -7
+    uuid: 64cb464d-751a-4ae5-9828-66bb9ceeac2c
+  21a21c43-8365-47ca-8b7f-079a0163b0dc:
+    id: upload_image_step
+    data:
+      step_description: 'Image 2'
+      required_steps: ''
+      video_settings:
+        duration: '7'
+        sequence: '2'
+      step_output_key: image_data_2
+      output_type: featured_image
+      image_file_id: 342
+      response: ''
+    weight: -10
+    uuid: 21a21c43-8365-47ca-8b7f-079a0163b0dc

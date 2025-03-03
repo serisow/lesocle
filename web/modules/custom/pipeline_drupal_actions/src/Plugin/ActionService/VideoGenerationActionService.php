@@ -176,11 +176,11 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
   public function executeAction(array $config, array &$context): string {
     try {
       // 1. Extract image and audio file information from context
-      $imageFileInfo = $this->findFileInfo($context, 'featured_image');
+      $imageFiles = $this->findImageFiles($context);
       $audioFileInfo = $this->findFileInfo($context, 'audio_content');
 
-      if (!$imageFileInfo) {
-        throw new \Exception("Image file information not found in context. Make sure a previous step has output_type 'featured_image'.");
+      if (empty($imageFiles)) {
+        throw new \Exception("No images found in context. Make sure previous steps have output_type 'featured_image'.");
       }
 
       if (!$audioFileInfo) {
@@ -188,19 +188,21 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       }
 
       // 2. Validate files exist
-      $imageFile = $this->entityTypeManager->getStorage('file')->load($imageFileInfo['file_id']);
-      $audioFile = $this->entityTypeManager->getStorage('file')->load($audioFileInfo['file_id']);
-
-      if (!$imageFile) {
-        throw new \Exception("Image file not found with ID: " . $imageFileInfo['file_id']);
+      $imageEntities = [];
+      $imagePaths = [];
+      foreach ($imageFiles as $index => $imageFile) {
+        $file = $this->entityTypeManager->getStorage('file')->load($imageFile['file_id']);
+        if (!$file) {
+          throw new \Exception("Image file not found with ID: " . $imageFile['file_id']);
+        }
+        $imageEntities[$index] = $file;
+        $imagePaths[$index] = \Drupal::service('file_system')->realpath($file->getFileUri());
       }
 
+      $audioFile = $this->entityTypeManager->getStorage('file')->load($audioFileInfo['file_id']);
       if (!$audioFile) {
         throw new \Exception("Audio file not found with ID: " . $audioFileInfo['file_id']);
       }
-
-      // Get file system paths
-      $imageFilePath = \Drupal::service('file_system')->realpath($imageFile->getFileUri());
       $audioFilePath = \Drupal::service('file_system')->realpath($audioFile->getFileUri());
 
       // 3. Prepare output directory and filename
@@ -217,9 +219,6 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
         mkdir($tempDirectory, 0755, true);
       }
 
-      // Ensure image dimensions are compatible with video encoding
-      $processedImagePath = $this->ensureCompatibleDimensions($imageFilePath, $tempDirectory);
-
       $tempFilename = 'video_temp_' . uniqid() . '.' . $outputFormat;
       $outputFilePath = $tempDirectory . '/' . $tempFilename;
 
@@ -231,23 +230,25 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
         throw new \Exception("Failed to determine audio duration: " . $duration);
       }
 
-      // Build the FFmpeg command
-      $ffmpegCommand = "ffmpeg";
-      $ffmpegCommand .= " -loop 1";
-      $ffmpegCommand .= " -i " . escapeshellarg($processedImagePath);
-      $ffmpegCommand .= " -i " . escapeshellarg($audioFilePath);
-      $ffmpegCommand .= " -c:v libx264";
-      $ffmpegCommand .= " -c:a aac";
-      $ffmpegCommand .= " -t " . $duration;
-      $ffmpegCommand .= " -pix_fmt yuv420p";
-      $ffmpegCommand .= " -shortest";
-      $ffmpegCommand .= " " . escapeshellarg($outputFilePath);
-      $ffmpegCommand .= " -y";
+      // Calculate total duration of all images
+      $totalImageDuration = 0;
+      foreach ($imageFiles as $imageFile) {
+        $totalImageDuration += $imageFile['video_settings']['duration'];
+      }
 
-      // Log the command for debugging
+      // 4. Build the FFmpeg command for multiple images
+      $ffmpegCommand = $this->buildMultiImageFFmpegCommand(
+        $imagePaths,
+        $imageFiles,
+        $audioFilePath,
+        $outputFilePath,
+        $config['configuration']
+      );
+
+      // 5. Log the command for debugging
       $this->loggerFactory->get('pipeline')->notice('Executing FFmpeg command: @command', ['@command' => $ffmpegCommand]);
 
-      // Execute FFmpeg and capture output
+      // 6. Execute FFmpeg and capture output
       $outputAndErrors = [];
       $returnCode = 0;
       exec($ffmpegCommand . " 2>&1", $outputAndErrors, $returnCode);
@@ -256,12 +257,12 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
         throw new \Exception("FFmpeg execution failed: " . implode("\n", $outputAndErrors));
       }
 
-      // Check if the file was created
+      // 7. Check if the file was created
       if (!file_exists($outputFilePath)) {
         throw new \Exception("FFmpeg did not create an output file.");
       }
 
-      // 6. Create and save file entity
+      // 8. Create and save file entity
       $file = $this->fileRepository->writeData(
         file_get_contents($outputFilePath),
         $outputUri,
@@ -278,10 +279,10 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       $file->setPermanent();
       $file->save();
 
-      // 7. Create media entity
+      // 9. Create media entity
       $mediaId = $this->createMediaEntity($file);
 
-      // 8. Return video information
+      // 10. Return video information with slide data
       return json_encode([
         'file_id' => $file->id(),
         'media_id' => $mediaId,
@@ -292,6 +293,12 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
         'duration' => (float) $duration,
         'size' => $file->getSize(),
         'timestamp' => \Drupal::time()->getCurrentTime(),
+        'slides' => array_map(function($img) {
+          return [
+            'file_id' => $img['file_id'],
+            'duration' => $img['video_settings']['duration'],
+          ];
+        }, $imageFiles),
       ]);
 
     } catch (\Exception $e) {
@@ -300,6 +307,100 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
     }
   }
 
+  /**
+   * Builds FFmpeg command for multiple image slideshow.
+   *
+   * @param array $imagePaths
+   *   Array of image file paths.
+   * @param array $imageFiles
+   *   Array of image file information.
+   * @param string $audioPath
+   *   Path to the audio file.
+   * @param string $outputPath
+   *   Path where the output video should be saved.
+   * @param array $config
+   *   Configuration options.
+   *
+   * @return string
+   *   The FFmpeg command.
+   */
+  protected function buildMultiImageFFmpegCommand(array $imagePaths, array $imageFiles, string $audioPath, string $outputPath, array $config = []): string {
+    $ffmpegCommand = "ffmpeg";
+
+    // Add inputs for each image
+    foreach ($imagePaths as $index => $path) {
+      $ffmpegCommand .= " -loop 1 -i " . escapeshellarg($path);
+    }
+
+    // Add audio input
+    $ffmpegCommand .= " -i " . escapeshellarg($audioPath);
+
+    // Get resolution for scaling
+    $resolution = $this->getResolution($config['video_quality'] ?? 'medium');
+
+    // Build filter complex for concatenating images
+    $filterComplex = "";
+    $segments = [];
+
+    // Process each image with its duration and apply scaling with SAR correction
+    for ($i = 0; $i < count($imagePaths); $i++) {
+      $duration = $imageFiles[$i]['video_settings']['duration'] ?? 5;
+      // Add 'setsar=1' to normalize Sample Aspect Ratio and 'force_divisible_by=2' for compatibility
+      $filterComplex .= "[{$i}:v]trim=duration={$duration},setpts=PTS-STARTPTS,scale={$resolution}:force_divisible_by=2,setsar=1[v{$i}];";
+      $segments[] = "[v{$i}]";
+    }
+
+    // Concatenate all segments
+    $filterComplex .= implode('', $segments) . "concat=n=" . count($imagePaths) . ":v=1:a=0[outv]";
+
+    // Set video quality based on configuration
+    $bitrate = $config['bitrate'] ?? '1500k';
+    $framerate = $config['framerate'] ?? 24;
+
+    // Complete the command
+    $ffmpegCommand .= " -filter_complex " . escapeshellarg($filterComplex);
+    $ffmpegCommand .= " -map \"[outv]\" -map " . count($imagePaths) . ":a";
+    $ffmpegCommand .= " -c:v libx264 -c:a aac -pix_fmt yuv420p";
+    $ffmpegCommand .= " -r " . $framerate . " -b:v " . $bitrate;
+    $ffmpegCommand .= " -shortest " . escapeshellarg($outputPath);
+    $ffmpegCommand .= " -y";
+
+    return $ffmpegCommand;
+  }
+
+  /**
+   * Finds all image file information in the context.
+   *
+   * @param array $context
+   *   The pipeline execution context.
+   *
+   * @return array
+   *   An array of image file information.
+   */
+  protected function findImageFiles(array $context): array {
+    $images = [];
+
+    foreach ($context['results'] as $stepKey => $stepResult) {
+      if (isset($stepResult['output_type']) && $stepResult['output_type'] === 'featured_image') {
+        $data = $stepResult['data'];
+
+        // If it's a JSON string, decode it
+        if (is_string($data) && $this->isJson($data)) {
+          $imageData = json_decode($data, TRUE);
+          // Add the step key as an identifier
+          $imageData['step_key'] = $stepKey;
+          $images[] = $imageData;
+        }
+        // If it's already an array, add it
+        elseif (is_array($data)) {
+          $data['step_key'] = $stepKey;
+          $images[] = $data;
+        }
+      }
+    }
+    
+    return $images;
+  }
 
   /**
    * Finds file information in the context based on output type.
@@ -398,56 +499,5 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
   {
     json_decode($string);
     return json_last_error() === JSON_ERROR_NONE;
-  }
-
-  /**
-   * Ensures dimensions are compatible with video encoding requirements.
-   *
-   * @param string $imagePath
-   *   Path to the image file.
-   * @param string $tempDir
-   *   Temporary directory for output.
-   *
-   * @return string
-   *   Path to the processed image with compatible dimensions.
-   */
-  protected function ensureCompatibleDimensions($imagePath, $tempDir) {
-    // Get image dimensions
-    $command = "ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 " . escapeshellarg($imagePath);
-    $dimensions = trim(shell_exec($command));
-
-    // If dimensions couldn't be obtained or are already even, return original
-    if (empty($dimensions)) {
-      return $imagePath;
-    }
-
-    list($width, $height) = explode('x', $dimensions);
-    $width = (int)$width;
-    $height = (int)$height;
-
-    // Check if both dimensions are even
-    if ($width % 2 === 0 && $height % 2 === 0) {
-      return $imagePath;
-    }
-
-    // Make dimensions even by reducing by 1 if needed
-    $newWidth = $width % 2 === 0 ? $width : $width - 1;
-    $newHeight = $height % 2 === 0 ? $height : $height - 1;
-
-    // Create adjusted image
-    $outputPath = $tempDir . '/adjusted_' . basename($imagePath);
-    $resizeCommand = "ffmpeg -i " . escapeshellarg($imagePath) .
-      " -vf scale=" . $newWidth . ":" . $newHeight .
-      " -y " . escapeshellarg($outputPath);
-
-    exec($resizeCommand, $output, $returnCode);
-
-    if ($returnCode !== 0 || !file_exists($outputPath)) {
-      // Log the error but return original path as fallback
-      \Drupal::logger('pipeline')->error('Failed to resize image to even dimensions: @command', ['@command' => $resizeCommand]);
-      return $imagePath;
-    }
-
-    return $outputPath;
   }
 }

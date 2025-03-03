@@ -6,9 +6,9 @@ id: test_video_generation
 label: 'Test video generation '
 instructions: 'Test video generation '
 created: 1740416251
-changed: 1740490526
+changed: 1740844390
 execution_type: scheduled
-scheduled_time: 1740490320
+scheduled_time: 1740843660
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
