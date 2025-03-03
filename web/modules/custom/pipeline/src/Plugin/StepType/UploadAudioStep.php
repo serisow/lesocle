@@ -3,6 +3,7 @@
 namespace Drupal\pipeline\Plugin\StepType;
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\file\Element\ManagedFile;
 use Drupal\file\FileInterface;
 use Drupal\pipeline\ConfigurableStepTypeBase;
 use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
@@ -74,25 +75,34 @@ class UploadAudioStep extends ConfigurableStepTypeBase implements StepTypeExecut
    * Process callback for managed file to remove default AJAX behavior.
    */
   public static function processManagedFile($element, FormStateInterface $form_state, &$complete_form) {
-    // Use Drupal's default process but remove the AJAX settings
-    $element = \Drupal\file\Element\ManagedFile::processManagedFile($element, $form_state, $complete_form);
-    unset($element['upload']['#ajax']);
-    unset($element['remove_button']['#ajax']);
+    // Get the standard element with all its defaults
+    $element = ManagedFile::processManagedFile($element, $form_state, $complete_form);
+    // Remove all AJAX related attributes from upload button
+    if (isset($element['upload_button'])) {
+      unset($element['upload_button']['#ajax']);
+      // Add a custom class to mark this as our custom upload
+      $element['upload_button']['#attributes']['class'][] = 'custom-file-upload';
+      // Prevent triggering Drupal's ajax
+      $element['upload_button']['#attributes']['data-disable-ajax'] = 'true';
+    }
+    // Remove all AJAX from remove button
+    if (isset($element['remove_button'])) {
+      //unset($element['remove_button']['#ajax']);
+      $element['remove_button']['#attributes']['class'][] = 'custom-file-remove';
+      $element['remove_button']['#attributes']['data-disable-ajax'] = 'true';
+    }
     return $element;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state)
-  {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
-
     // Handle file upload
     $audio_file = $form_state->getValue(['data', 'audio_file']);
     if (!empty($audio_file) && !empty($audio_file[0])) {
       $this->configuration['audio_file_id'] = $audio_file[0];
-
       // Make file permanent
       $file = $this->entityTypeManager->getStorage('file')->load($this->configuration['audio_file_id']);
       if ($file instanceof FileInterface) {

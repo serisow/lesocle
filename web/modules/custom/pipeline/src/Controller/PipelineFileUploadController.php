@@ -2,6 +2,7 @@
 namespace Drupal\pipeline\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\file\Entity\File;
@@ -31,17 +32,26 @@ class PipelineFileUploadController extends ControllerBase
   protected $fileSystem;
 
   /**
+   * The entity type manager.
+   *
+   * @var EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
    * Constructs a new PipelineFileUploadController.
    *
    * @param \Drupal\file\FileRepositoryInterface $file_repository
    *   The file repository service.
    * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The file system service.
+   * @param EntityTypeManagerInterface $entity_type_manager
    */
-  public function __construct(FileRepositoryInterface $file_repository, FileSystemInterface $file_system)
+  public function __construct(FileRepositoryInterface $file_repository, FileSystemInterface $file_system, EntityTypeManagerInterface $entity_type_manager)
   {
     $this->fileRepository = $file_repository;
     $this->fileSystem = $file_system;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -51,7 +61,8 @@ class PipelineFileUploadController extends ControllerBase
   {
     return new static(
       $container->get('file.repository'),
-      $container->get('file_system')
+      $container->get('file_system'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -76,10 +87,14 @@ class PipelineFileUploadController extends ControllerBase
 
     // Determine the field name and pipeline information
     $fieldName = $request->get('field_name');
-    if (!$fieldName) {
+    $pipelineId = $request->get('pipeline_id');
+    $stepType = $request->get('step_type');
+    $uuid = $request->get('uuid');
+
+    if (!$fieldName || !$pipelineId) {
       return new JsonResponse([
         'status' => 'error',
-        'message' => 'Missing field name.',
+        'message' => 'Missing required parameters.',
       ]);
     }
 
@@ -88,12 +103,15 @@ class PipelineFileUploadController extends ControllerBase
     if (strpos($fieldName, 'image_file') !== FALSE) {
       $uploadDirectory .= 'images';
       $extensions = 'png gif jpg jpeg webp';
+      $configKey = 'image_file_id';
     } elseif (strpos($fieldName, 'audio_file') !== FALSE) {
       $uploadDirectory .= 'audio';
       $extensions = 'mp3 wav ogg';
+      $configKey = 'audio_file_id';
     } else {
       $uploadDirectory .= 'files';
       $extensions = 'jpg jpeg png gif pdf doc docx xls xlsx mp3 wav ogg mp4';
+      $configKey = 'file_id';
     }
 
     // Ensure the upload directory exists
@@ -135,6 +153,28 @@ class PipelineFileUploadController extends ControllerBase
       $filesize_bytes = $file->getSize();
       $filesize = $this->formatFileSize($filesize_bytes);
 
+      // Save the file ID to the pipeline configuration
+      if ($pipelineId && $uuid) {
+        $pipeline = $this->entityTypeManager->getStorage('pipeline')->load($pipelineId);
+        if ($pipeline) {
+          $step_type = $pipeline->getStepType($uuid);
+          if ($step_type) {
+            $configuration = $step_type->getConfiguration();
+            $configuration['data'][$configKey] = $file->id();
+            $step_type->setConfiguration($configuration);
+            $pipeline->save();
+
+            // Log successful config update
+            $this->getLogger('pipeline')->notice('Updated file ID (@fid) for @field_name in pipeline @pipeline, step @uuid', [
+              '@fid' => $file->id(),
+              '@field_name' => $fieldName,
+              '@pipeline' => $pipelineId,
+              '@uuid' => $uuid,
+            ]);
+          }
+        }
+      }
+
       // Return file information
       return new JsonResponse([
         'status' => 'success',
@@ -144,6 +184,7 @@ class PipelineFileUploadController extends ControllerBase
         'mime' => $file->getMimeType(),
         'url' => $file->createFileUrl(FALSE),
         'field_name' => $fieldName,
+        'config_updated' => isset($pipeline),
       ]);
     }
     catch (\Exception $e) {

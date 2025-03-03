@@ -384,12 +384,12 @@ class PipelineApiController extends ControllerBase {
               $file_id = $configuration['data']['image_file_id'];
               $file = $this->entityTypeManager->getStorage('file')->load($file_id);
               if ($file) {
-                $step_data['image_file_id'] = $file_id;
-                $step_data['image_file_url'] = $file->createFileUrl(FALSE);
-                $step_data['image_file_uri'] = $file->getFileUri();
-                $step_data['image_file_mime'] = $file->getMimeType();
-                $step_data['image_file_name'] = $file->getFilename();
-                $step_data['image_file_size'] = $file->getSize();
+                $step_data['upload_image_config']['image_file_id'] = $file_id;
+                $step_data['upload_image_config']['image_file_url'] = $file->createFileUrl(FALSE);
+                $step_data['upload_image_config']['image_file_uri'] = $file->getFileUri();
+                $step_data['upload_image_config']['image_file_mime'] = $file->getMimeType();
+                $step_data['upload_image_config']['image_file_name'] = $file->getFilename();
+                $step_data['upload_image_config']['image_file_size'] = $file->getSize();
               }
             }
             break;
@@ -399,13 +399,13 @@ class PipelineApiController extends ControllerBase {
               $file_id = $configuration['data']['audio_file_id'];
               $file = $this->entityTypeManager->getStorage('file')->load($file_id);
               if ($file) {
-                $step_data['audio_file_id'] = $file_id;
-                $step_data['audio_file_url'] = $file->createFileUrl(FALSE);
-                $step_data['audio_file_uri'] = $file->getFileUri();
-                $step_data['audio_file_mime'] = $file->getMimeType();
-                $step_data['audio_file_name'] = $file->getFilename();
-                $step_data['audio_file_duration'] = $this->getAudioDuration($file);
-                $step_data['audio_file_size'] = $file->getSize();
+                $step_data['upload_audio_config']['audio_file_id'] = $file_id;
+                $step_data['upload_audio_config']['audio_file_url'] = $file->createFileUrl(FALSE);
+                $step_data['upload_audio_config']['audio_file_uri'] = $file->getFileUri();
+                $step_data['upload_audio_config']['audio_file_mime'] = $file->getMimeType();
+                $step_data['upload_audio_config']['audio_file_name'] = $file->getFilename();
+                $step_data['upload_audio_config']['audio_file_duration'] = $this->getAudioDuration($file);
+                $step_data['upload_audio_config']['audio_file_size'] = $file->getSize();
               }
             }
             break;

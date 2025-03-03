@@ -84,6 +84,13 @@ class PipelineFileManager {
       if (isset($requestData[$paths['add_path']])) {
         unset($requestData[$paths['add_path']]);
       }
+      if (isset($requestData['data']['image_file'])) {
+        unset($requestData['data']['image_file']);
+      }
+      if (isset($requestData['data']['audio_file'])) {
+        unset($requestData['data']['audio_file']);
+      }
+
 
       if ($this->getNestedValue($requestData, $paths['update_path'])) {
         $this->unsetNestedValue($requestData, $paths['update_path']);

@@ -189,11 +189,10 @@ class PipelineStepTypeController extends ControllerBase implements ContainerInje
         $response->addCommand(new ReplaceCommand('.ui-dialog-content', $form));
         $response->addCommand(new InvokeCommand(NULL, 'showFormErrors', [$errors]));
       } else {
-        // Get cleaned values from form state
-        $cleaned_values = $form_state->getValues();
-        // Handle file-based step types
         if ($this->fileManager->isFileBasedStepType($step_type->getPluginId())) {
-          $cleaned_values = $this->fileManager->handleFileBasedStepType($form_state, $step_type->getPluginId());
+          $cleaned_values = $requestData;
+        } else{
+          $cleaned_values = $form_state->getValues();
         }
 
         $step_type->setConfiguration($cleaned_values);

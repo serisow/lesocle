@@ -80,8 +80,7 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
    */
   public static function processManagedFile($element, FormStateInterface $form_state, &$complete_form) {
     // Get the standard element with all its defaults
-    $element = \Drupal\file\Element\ManagedFile::processManagedFile($element, $form_state, $complete_form);
-
+    $element = ManagedFile::processManagedFile($element, $form_state, $complete_form);
     // Remove all AJAX related attributes from upload button
     if (isset($element['upload_button'])) {
       unset($element['upload_button']['#ajax']);
@@ -90,29 +89,24 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
       // Prevent triggering Drupal's ajax
       $element['upload_button']['#attributes']['data-disable-ajax'] = 'true';
     }
-
     // Remove all AJAX from remove button
     if (isset($element['remove_button'])) {
-      unset($element['remove_button']['#ajax']);
+      //unset($element['remove_button']['#ajax']);
       $element['remove_button']['#attributes']['class'][] = 'custom-file-remove';
       $element['remove_button']['#attributes']['data-disable-ajax'] = 'true';
     }
-
     return $element;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state)
-  {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
-
     // Handle file upload
     $image_file = $form_state->getValue(['data', 'image_file']);
     if (!empty($image_file) && !empty($image_file[0])) {
       $this->configuration['image_file_id'] = $image_file[0];
-
       // Make file permanent
       $file = $this->entityTypeManager->getStorage('file')->load($this->configuration['image_file_id']);
       if ($file instanceof FileInterface) {
@@ -125,20 +119,17 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
   /**
    * {@inheritdoc}
    */
-  public function execute(array &$context): string
-  {
+  public function execute(array &$context): string {
     try {
       // Validate file exists
       if (empty($this->configuration['image_file_id'])) {
         throw new \Exception('No image file has been uploaded.');
       }
-
       // Load the file
       $file = $this->entityTypeManager->getStorage('file')->load($this->configuration['image_file_id']);
       if (!$file instanceof FileInterface) {
         throw new \Exception('Invalid image file: File not found.');
       }
-
       // Create the result in the same format as the LLM image generation
       $result = [
         'file_id' => $file->id(),
@@ -149,13 +140,11 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
         'size' => $file->getSize(),
         'timestamp' => \Drupal::time()->getCurrentTime(),
       ];
-
       // Add the result to the context with the appropriate output type
       $context['results'][$this->getStepOutputKey()] = [
         'output_type' => 'featured_image',
         'data' => json_encode($result),
       ];
-
       return json_encode($result);
     } catch (\Exception $e) {
       throw new \Exception('Error processing uploaded image: ' . $e->getMessage());
