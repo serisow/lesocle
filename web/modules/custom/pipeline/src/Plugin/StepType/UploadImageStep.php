@@ -73,21 +73,16 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
       '#title' => $this->t('Video Settings'),
       '#open' => TRUE,
       '#description' => $this->t('Configure how this image will be used in video generation.'),
-      '#states' => [
-        'visible' => [
-          ':input[name="data[output_type]"]' => ['value' => 'featured_image'],
-        ],
-      ],
     ];
 
     $form['video_settings']['duration'] = [
       '#type' => 'number',
-      '#title' => $this->t('Duration (seconds)'),
+      '#title' => $this->t('Duration (minutes)'),
       '#default_value' => $this->configuration['video_settings']['duration'] ?? 5.0,
       '#step' => 0.1,
-      '#min' => 0.5,
+      '#min' => 0.1,
       '#max' => 60,
-      '#description' => $this->t('How long this image should appear in generated videos.'),
+      '#description' => $this->t('How long this image should appear in generated videos (in minutes).'),
     ];
 
     return $form;
@@ -154,6 +149,10 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
       if (!$file instanceof FileInterface) {
         throw new \Exception('Invalid image file: File not found.');
       }
+
+      // Convert minutes to seconds for the result
+      $durationInSeconds = $this->configuration['video_settings']['duration'] * 60;
+
       // Create the result in the same format as the LLM image generation
       $result = [
         'file_id' => $file->id(),
@@ -165,7 +164,8 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
         'timestamp' => \Drupal::time()->getCurrentTime(),
         // Add video settings
         'video_settings' => [
-          'duration' => $this->configuration['video_settings']['duration'],
+          'duration' => $durationInSeconds,
+          'duration_minutes' => $this->configuration['video_settings']['duration'],
         ],
       ];
       // Add the result to the context with the appropriate output type

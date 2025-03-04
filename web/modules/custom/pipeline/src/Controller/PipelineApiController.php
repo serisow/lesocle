@@ -390,6 +390,7 @@ class PipelineApiController extends ControllerBase {
                 $step_data['upload_image_config']['image_file_mime'] = $file->getMimeType();
                 $step_data['upload_image_config']['image_file_name'] = $file->getFilename();
                 $step_data['upload_image_config']['image_file_size'] = $file->getSize();
+                $step_data['upload_image_config']['duration'] = (float) $configuration['data']['video_settings']['duration'] * 60;
               }
             }
             break;

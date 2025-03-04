@@ -344,7 +344,14 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
 
     // Process each image with its duration and apply scaling with SAR correction
     for ($i = 0; $i < count($imagePaths); $i++) {
+      // Get duration in seconds - either from duration or duration_minutes property
       $duration = $imageFiles[$i]['video_settings']['duration'] ?? 5;
+
+      // Check if we need to convert from minutes
+      if (isset($imageFiles[$i]['video_settings']['duration_minutes'])) {
+        $duration = $imageFiles[$i]['video_settings']['duration_minutes'] * 60;
+      }
+
       // Add 'setsar=1' to normalize Sample Aspect Ratio and 'force_divisible_by=2' for compatibility
       $filterComplex .= "[{$i}:v]trim=duration={$duration},setpts=PTS-STARTPTS,scale={$resolution}:force_divisible_by=2,setsar=1[v{$i}];";
       $segments[] = "[v{$i}]";
@@ -398,7 +405,7 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
         }
       }
     }
-    
+
     return $images;
   }
 
