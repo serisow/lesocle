@@ -6,9 +6,9 @@ id: generate_video_using_upload
 label: 'Generate video using upload'
 instructions: 'Generate video using upload'
 created: 1740931404
-changed: 1741105070
+changed: 1741190126
 execution_type: scheduled
-scheduled_time: 1741104900
+scheduled_time: 1741190100
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -21,7 +21,7 @@ step_types:
       step_description: 'Alan watts with orange kimono'
       required_steps: ''
       video_settings:
-        duration: '8'
+        duration: '0.3'
       step_output_key: image_data_1
       output_type: featured_image
       image_file_id: 338
@@ -33,10 +33,9 @@ step_types:
     data:
       step_description: Audio
       required_steps: ''
-      description: "The audio describe the Tao philosophie.\r\n"
       step_output_key: audio_data
       output_type: audio_content
-      audio_file_id: 352
+      audio_file_id: 367
       response: ''
     weight: -7
     uuid: 4f570c60-f0ea-46f2-bc12-d5c2c9b50f09
@@ -57,7 +56,7 @@ step_types:
       step_description: 'Alan watts in a nice garden'
       required_steps: ''
       video_settings:
-        duration: '10'
+        duration: '0.3'
       step_output_key: image_data_2
       output_type: featured_image
       image_file_id: 350
@@ -70,7 +69,7 @@ step_types:
       step_description: 'Alan watts with crossing arms'
       required_steps: ''
       video_settings:
-        duration: '8.6'
+        duration: '0.3'
       step_output_key: image_data_3
       output_type: featured_image
       image_file_id: 351

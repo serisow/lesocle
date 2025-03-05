@@ -130,6 +130,58 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       '#description' => $this->t('Select the output format for the video.'),
     ];
 
+    // Add transition settings
+    $form['transition_settings'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Transition Settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    ];
+
+    $form['transition_settings']['transition_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Transition Type'),
+      '#options' => [
+        'fade' => $this->t('Fade'),
+        'fadeblack' => $this->t('Fade through black'),
+        'fadewhite' => $this->t('Fade through white'),
+        'distance' => $this->t('Distance'),
+        'wipeleft' => $this->t('Wipe left'),
+        'wiperight' => $this->t('Wipe right'),
+        'wipeup' => $this->t('Wipe up'),
+        'wipedown' => $this->t('Wipe down'),
+        'slideleft' => $this->t('Slide left'),
+        'slideright' => $this->t('Slide right'),
+        'slideup' => $this->t('Slide up'),
+        'slidedown' => $this->t('Slide down'),
+        'circlecrop' => $this->t('Circle crop'),
+        'rectcrop' => $this->t('Rectangle crop'),
+        'circleopen' => $this->t('Circle open'),
+        'circleclose' => $this->t('Circle close'),
+        'horzclose' => $this->t('Horizontal close'),
+        'horzopen' => $this->t('Horizontal open'),
+        'vertclose' => $this->t('Vertical close'),
+        'vertopen' => $this->t('Vertical open'),
+        'diagbl' => $this->t('Diagonal bottom-left'),
+        'diagbr' => $this->t('Diagonal bottom-right'),
+        'diagtl' => $this->t('Diagonal top-left'),
+        'diagtr' => $this->t('Diagonal top-right'),
+      ],
+      '#default_value' => $configuration['transition_type'] ?? 'fade',
+      '#description' => $this->t('Select the transition effect between images.'),
+    ];
+
+    $form['transition_settings']['transition_duration'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Transition Duration (seconds)'),
+      '#default_value' => $configuration['transition_duration'] ?? 1,
+      '#min' => 0.1,
+      '#max' => 5,
+      '#step' => 0.1,
+      '#description' => $this->t('Duration of the transition effect in seconds.'),
+    ];
+
+
     // Advanced settings.
     $form['advanced'] = [
       '#type' => 'details',
@@ -165,8 +217,10 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
     return [
       'video_quality' => $form_state->getValue('video_quality'),
       'output_format' => $form_state->getValue('output_format'),
-      'bitrate' => $form_state->getValue(['advanced', 'bitrate']),
-      'framerate' => $form_state->getValue(['advanced', 'framerate']),
+      'transition_type' => $form_state->getValue('transition_type'),
+      'transition_duration' => $form_state->getValue('transition_duration'),
+      'bitrate' => $form_state->getValue('bitrate'),
+      'framerate' => $form_state->getValue('framerate'),
     ];
   }
 
@@ -308,7 +362,7 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
   }
 
   /**
-   * Builds FFmpeg command for multiple image slideshow.
+   * Builds FFmpeg command for multiple image slideshow with transitions.
    *
    * @param array $imagePaths
    *   Array of image file paths.
@@ -325,56 +379,95 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
    *   The FFmpeg command.
    */
   protected function buildMultiImageFFmpegCommand(array $imagePaths, array $imageFiles, string $audioPath, string $outputPath, array $config = []): string {
-    $ffmpegCommand = "ffmpeg";
-
-    // Add inputs for each image
-    foreach ($imagePaths as $index => $path) {
-      $ffmpegCommand .= " -loop 1 -i " . escapeshellarg($path);
-    }
-
-    // Add audio input
-    $ffmpegCommand .= " -i " . escapeshellarg($audioPath);
-
-    // Get resolution for scaling
+    // Get configuration
+    $transitionType = $config['transition_type'] ?? 'fade';
+    $transitionDuration = $config['transition_duration'] ?? 1;
     $resolution = $this->getResolution($config['video_quality'] ?? 'medium');
-
-    // Build filter complex for concatenating images
-    $filterComplex = "";
-    $segments = [];
-
-    // Process each image with its duration and apply scaling with SAR correction
-    for ($i = 0; $i < count($imagePaths); $i++) {
-      // Get duration in seconds - either from duration or duration_minutes property
-      $duration = $imageFiles[$i]['video_settings']['duration'] ?? 5;
-
-      // Check if we need to convert from minutes
-      if (isset($imageFiles[$i]['video_settings']['duration_minutes'])) {
-        $duration = $imageFiles[$i]['video_settings']['duration_minutes'] * 60;
-      }
-
-      // Add 'setsar=1' to normalize Sample Aspect Ratio and 'force_divisible_by=2' for compatibility
-      $filterComplex .= "[{$i}:v]trim=duration={$duration},setpts=PTS-STARTPTS,scale={$resolution}:force_divisible_by=2,setsar=1[v{$i}];";
-      $segments[] = "[v{$i}]";
-    }
-
-    // Concatenate all segments
-    $filterComplex .= implode('', $segments) . "concat=n=" . count($imagePaths) . ":v=1:a=0[outv]";
-
-    // Set video quality based on configuration
     $bitrate = $config['bitrate'] ?? '1500k';
     $framerate = $config['framerate'] ?? 24;
 
+    // Build the ffmpeg command
+    $ffmpegCmd = "ffmpeg";
+
+    // Add input images
+    foreach ($imagePaths as $index => $path) {
+      $ffmpegCmd .= " -loop 1 -i " . escapeshellarg($path);
+    }
+
+    // Add audio input
+    $ffmpegCmd .= " -i " . escapeshellarg($audioPath);
+
+    // Start building filter complex
+    $filterComplex = "";
+
+    // Scale all images to the same size
+    for ($i = 0; $i < count($imagePaths); $i++) {
+      $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p[v%d];",
+        $i, $resolution, $i);
+    }
+
+    // Create transitions between images
+    $inputs = [];
+    $transitions = [];
+
+    // Calculate durations
+    $durations = [];
+    $totalDuration = 0;
+    for ($i = 0; $i < count($imageFiles); $i++) {
+      if (isset($imageFiles[$i]['video_settings']['duration_minutes'])) {
+        $durations[$i] = $imageFiles[$i]['video_settings']['duration_minutes'] * 60;
+      } else {
+        $durations[$i] = $imageFiles[$i]['video_settings']['duration'] ?? 5;
+      }
+      $totalDuration += $durations[$i];
+    }
+
+    // Log the durations for debugging
+    $this->loggerFactory->get('pipeline')->debug(
+      sprintf("Image durations: %s, Total duration: %s",
+        json_encode($durations), $totalDuration)
+    );
+
+    // First image
+    $filterComplex .= sprintf("[v0]trim=duration=%s,setpts=PTS-STARTPTS[hold0];",
+      $durations[0]);
+    $lastOutput = "hold0";
+
+    // Before the loop, initialize the offset
+    $currentOffset = $durations[0] - $transitionDuration;
+
+    // Process remaining images with transitions
+    for ($i = 1; $i < count($imagePaths); $i++) {
+      $filterComplex .= sprintf("[v%d]trim=duration=%s,setpts=PTS-STARTPTS[hold%d];",
+        $i, $durations[$i], $i);
+
+      $offsetTime = $currentOffset;
+      if ($offsetTime < 0) $offsetTime = 0;
+
+      $filterComplex .= sprintf("[%s][hold%d]xfade=transition=%s:duration=%s:offset=%s[trans%d];",
+        $lastOutput, $i, $transitionType, $transitionDuration, $offsetTime, $i);
+
+      $lastOutput = sprintf("trans%d", $i);
+
+      // Update the offset for the next transition
+      $currentOffset += $durations[$i] - $transitionDuration;
+    }
+
     // Complete the command
-    $ffmpegCommand .= " -filter_complex " . escapeshellarg($filterComplex);
-    $ffmpegCommand .= " -map \"[outv]\" -map " . count($imagePaths) . ":a";
-    $ffmpegCommand .= " -c:v libx264 -c:a aac -pix_fmt yuv420p";
-    $ffmpegCommand .= " -r " . $framerate . " -b:v " . $bitrate;
-    $ffmpegCommand .= " -shortest " . escapeshellarg($outputPath);
-    $ffmpegCommand .= " -y";
+    $ffmpegCmd .= " -filter_complex " . escapeshellarg($filterComplex);
+    $ffmpegCmd .= " -map \"[" . $lastOutput . "]\" -map " . count($imagePaths) . ":a";
+    $ffmpegCmd .= " -c:v libx264 -c:a aac -pix_fmt yuv420p";
+    $ffmpegCmd .= " -r " . $framerate . " -b:v " . $bitrate;
+    $ffmpegCmd .= " -shortest " . escapeshellarg($outputPath);
+    $ffmpegCmd .= " -y";
 
-    return $ffmpegCommand;
+    // Log the full command for debugging
+    $this->loggerFactory->get('pipeline')->debug(
+      sprintf("FFmpeg command: %s", $ffmpegCmd)
+    );
+
+    return $ffmpegCmd;
   }
-
   /**
    * Finds all image file information in the context.
    *
