@@ -414,12 +414,30 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
     $durations = [];
     $totalDuration = 0;
     for ($i = 0; $i < count($imageFiles); $i++) {
-      if (isset($imageFiles[$i]['video_settings']['duration_minutes'])) {
-        $durations[$i] = $imageFiles[$i]['video_settings']['duration_minutes'] * 60;
-      } else {
-        $durations[$i] = $imageFiles[$i]['video_settings']['duration'] ?? 5;
-      }
+      $durations[$i] = $imageFiles[$i]['video_settings']['duration'] ?? 5;
       $totalDuration += $durations[$i];
+    }
+
+    // Add duration adjustment to match audio
+    $audioDuration = $this->getAudioDuration($audioPath);
+    $totalTransitionTime = ($transitionDuration * (count($imagePaths) - 1));
+
+    // Log the timing calculations for debugging
+    $this->loggerFactory->get('pipeline')->debug(
+      sprintf("Timing details:\n- Audio duration: %.2f\n- Total image duration: %.2f\n- Transition time: %.2f",
+        $audioDuration, $totalDuration, $totalTransitionTime)
+    );
+
+    // Adjust image durations to precisely match audio duration
+    if ($audioDuration > 0 && abs($totalDuration - $totalTransitionTime - $audioDuration) > 0.1) {
+      $scaleFactor = $audioDuration / ($totalDuration - $totalTransitionTime);
+      for ($i = 0; $i < count($durations); $i++) {
+        $durations[$i] = $durations[$i] * $scaleFactor;
+      }
+      $this->loggerFactory->get('pipeline')->debug(
+        sprintf("Adjusted durations: %s, Total after adjustment: %.2f",
+          json_encode($durations), array_sum($durations))
+      );
     }
 
     // Log the durations for debugging
@@ -562,6 +580,21 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       $this->loggerFactory->get('pipeline')->error('Error creating media entity for video: @message', ['@message' => $e->getMessage()]);
       return NULL;
     }
+  }
+
+  /**
+   * Gets the exact duration of an audio file.
+   *
+   * @param string $audioPath
+   *   Path to the audio file.
+   *
+   * @return float
+   *   The duration in seconds.
+   */
+  protected function getAudioDuration($audioPath) {
+    $durationCommand = "ffprobe -i " . escapeshellarg($audioPath) . " -show_entries format=duration -v quiet -of csv=\"p=0\"";
+    $duration = trim(shell_exec($durationCommand));
+    return is_numeric($duration) ? (float)$duration : 0;
   }
 
   /**
