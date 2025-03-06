@@ -38,6 +38,16 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
       'video_settings' => [
         'duration' => 5.0,
       ],
+      'text_overlay' => [
+        'enabled' => FALSE,
+        'text' => '',
+        'position' => 'bottom',
+        'font_size' => 24,
+        'font_color' => 'white',
+        'background_color' => '',
+        'custom_x' => 0,
+        'custom_y' => 0,
+      ],
     ];
   }
 
@@ -83,6 +93,114 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
       '#min' => 1,
       '#max' => 3600,
       '#description' => $this->t('How long this image should appear in generated videos (in seconds).'),
+    ];
+
+    // Add text overlay settings
+    $form['text_overlay'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Text Overlay'),
+      '#open' => TRUE,
+      '#description' => $this->t('Configure text to be overlaid on this image.'),
+    ];
+
+    $form['text_overlay']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable text overlay'),
+      '#default_value' => $this->configuration['text_overlay']['enabled'] ?? FALSE,
+    ];
+
+    $form['text_overlay']['text'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Text content'),
+      '#default_value' => $this->configuration['text_overlay']['text'] ?? '',
+      '#description' => $this->t('Text to overlay on the image. You can use {step_key} placeholders to insert content from previous steps.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $form['text_overlay']['position'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Position'),
+      '#options' => [
+        'top' => $this->t('Top'),
+        'bottom' => $this->t('Bottom'),
+        'center' => $this->t('Center'),
+        'top_left' => $this->t('Top Left'),
+        'top_right' => $this->t('Top Right'),
+        'bottom_left' => $this->t('Bottom Left'),
+        'bottom_right' => $this->t('Bottom Right'),
+        'custom' => $this->t('Custom coordinates'),
+      ],
+      '#default_value' => $this->configuration['text_overlay']['position'] ?? 'bottom',
+      '#states' => [
+        'visible' => [
+          ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $form['text_overlay']['font_size'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Font size'),
+      '#default_value' => $this->configuration['text_overlay']['font_size'] ?? 24,
+      '#min' => 8,
+      '#max' => 72,
+      '#step' => 1,
+      '#states' => [
+        'visible' => [
+          ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $form['text_overlay']['font_color'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Font color'),
+      '#default_value' => $this->configuration['text_overlay']['font_color'] ?? 'white',
+      '#description' => $this->t('Color name (e.g., white, black) or hex value (e.g., #FFFFFF).'),
+      '#states' => [
+        'visible' => [
+          ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $form['text_overlay']['background_color'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Background color (optional)'),
+      '#default_value' => $this->configuration['text_overlay']['background_color'] ?? '',
+      '#description' => $this->t('Optional background box color. Leave empty for transparent background.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $coordinates_state = [
+      'visible' => [
+        ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
+        ':input[name="data[text_overlay][position]"]' => ['value' => 'custom'],
+      ],
+    ];
+
+    $form['text_overlay']['custom_x'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Custom X position'),
+      '#default_value' => $this->configuration['text_overlay']['custom_x'] ?? 0,
+      '#description' => $this->t('X coordinate for custom positioning.'),
+      '#states' => $coordinates_state,
+    ];
+
+    $form['text_overlay']['custom_y'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Custom Y position'),
+      '#default_value' => $this->configuration['text_overlay']['custom_y'] ?? 0,
+      '#description' => $this->t('Y coordinate for custom positioning.'),
+      '#states' => $coordinates_state,
     ];
 
     return $form;
@@ -133,6 +251,18 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
     $this->configuration['video_settings'] = [
       'duration' => (float) $form_state->getValue(['data', 'video_settings', 'duration']),
     ];
+
+    // Handle text overlay settings
+    $this->configuration['text_overlay'] = [
+      'enabled' => (bool) $form_state->getValue(['data', 'text_overlay', 'enabled']),
+      'text' => $form_state->getValue(['data', 'text_overlay', 'text']),
+      'position' => $form_state->getValue(['data', 'text_overlay', 'position']),
+      'font_size' => (int) $form_state->getValue(['data', 'text_overlay', 'font_size']),
+      'font_color' => $form_state->getValue(['data', 'text_overlay', 'font_color']),
+      'background_color' => $form_state->getValue(['data', 'text_overlay', 'background_color']),
+      'custom_x' => (int) $form_state->getValue(['data', 'text_overlay', 'custom_x']),
+      'custom_y' => (int) $form_state->getValue(['data', 'text_overlay', 'custom_y']),
+    ];
   }
 
   /**
@@ -164,6 +294,12 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
           'duration' => $this->configuration['video_settings']['duration'],
         ],
       ];
+
+      // Add text overlay settings if enabled
+      if (!empty($this->configuration['text_overlay']['enabled'])) {
+        $result['text_overlay'] = $this->configuration['text_overlay'];
+      }
+
       // Add the result to the context with the appropriate output type
       $context['results'][$this->getStepOutputKey()] = [
         'output_type' => 'featured_image',

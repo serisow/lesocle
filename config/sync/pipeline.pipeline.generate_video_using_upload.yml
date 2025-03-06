@@ -6,9 +6,9 @@ id: generate_video_using_upload
 label: 'Generate video using upload'
 instructions: 'Generate video using upload'
 created: 1740931404
-changed: 1741190126
+changed: 1741256411
 execution_type: scheduled
-scheduled_time: 1741190100
+scheduled_time: 1741204500
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -21,7 +21,16 @@ step_types:
       step_description: 'Alan watts with orange kimono'
       required_steps: ''
       video_settings:
-        duration: '0.3'
+        duration: '12'
+      text_overlay:
+        enabled: '1'
+        text: 'Alan Watts the master of englightenment in his pink robe.'
+        position: bottom_left
+        font_size: '40'
+        font_color: white
+        background_color: black
+        custom_x: '0'
+        custom_y: '0'
       step_output_key: image_data_1
       output_type: featured_image
       image_file_id: 338
@@ -56,7 +65,16 @@ step_types:
       step_description: 'Alan watts in a nice garden'
       required_steps: ''
       video_settings:
-        duration: '0.3'
+        duration: '18'
+      text_overlay:
+        enabled: '1'
+        text: 'In he look, Alan saw unity and seriousness in a hilarious manner.'
+        position: bottom_left
+        font_size: '40'
+        font_color: white
+        background_color: black
+        custom_x: '0'
+        custom_y: '0'
       step_output_key: image_data_2
       output_type: featured_image
       image_file_id: 350
@@ -69,7 +87,16 @@ step_types:
       step_description: 'Alan watts with crossing arms'
       required_steps: ''
       video_settings:
-        duration: '0.3'
+        duration: '13'
+      text_overlay:
+        enabled: '1'
+        text: 'Crossing his arms, a nice smile in his face, the joy is profound.'
+        position: bottom_left
+        font_size: '40'
+        font_color: white
+        background_color: black
+        custom_x: '0'
+        custom_y: '0'
       step_output_key: image_data_3
       output_type: featured_image
       image_file_id: 351

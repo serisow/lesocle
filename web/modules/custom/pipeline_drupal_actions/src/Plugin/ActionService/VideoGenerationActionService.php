@@ -296,7 +296,8 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
         $imageFiles,
         $audioFilePath,
         $outputFilePath,
-        $config['configuration']
+        $config['configuration'],
+        $context
       );
 
       // 5. Log the command for debugging
@@ -362,7 +363,7 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
   }
 
   /**
-   * Builds FFmpeg command for multiple image slideshow with transitions.
+   * Builds FFmpeg command for multiple image slideshow with transitions and text overlays.
    *
    * @param array $imagePaths
    *   Array of image file paths.
@@ -374,11 +375,20 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
    *   Path where the output video should be saved.
    * @param array $config
    *   Configuration options.
+   * @param array $context
+   *   The pipeline context containing step results.
    *
    * @return string
    *   The FFmpeg command.
    */
-  protected function buildMultiImageFFmpegCommand(array $imagePaths, array $imageFiles, string $audioPath, string $outputPath, array $config = []): string {
+  protected function buildMultiImageFFmpegCommand(
+    array $imagePaths,
+    array $imageFiles,
+    string $audioPath,
+    string $outputPath,
+    array $config = [],
+    array $context = []
+  ): string {
     // Get configuration
     $transitionType = $config['transition_type'] ?? 'fade';
     $transitionDuration = $config['transition_duration'] ?? 1;
@@ -400,15 +410,47 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
     // Start building filter complex
     $filterComplex = "";
 
-    // Scale all images to the same size
+    // Process each image - scale and apply text in a single filter chain per image
     for ($i = 0; $i < count($imagePaths); $i++) {
-      $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p[v%d];",
-        $i, $resolution, $i);
-    }
+      // Start with scaling
+      $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p",
+        $i, $resolution);
 
-    // Create transitions between images
-    $inputs = [];
-    $transitions = [];
+      // Check if image has text overlay configuration and it's enabled
+      if (isset($imageFiles[$i]['text_overlay']) && !empty($imageFiles[$i]['text_overlay']['enabled'])
+        && !empty($imageFiles[$i]['text_overlay']['text'])) {
+
+        $textConfig = $imageFiles[$i]['text_overlay'];
+
+        // Process text content to replace placeholders
+        $text = $this->processTextContent($textConfig['text'], $context);
+        $fontSize = !empty($textConfig['font_size']) ? $textConfig['font_size'] : 24;
+        $fontColor = !empty($textConfig['font_color']) ? $textConfig['font_color'] : 'white';
+
+        // Get position parameters
+        $customCoords = ($textConfig['position'] === 'custom') ?
+          ['x' => $textConfig['custom_x'], 'y' => $textConfig['custom_y']] : NULL;
+        $position = $this->getTextPosition($textConfig['position'], $resolution, $customCoords);
+
+        // Add background box if configured
+        $boxParam = '';
+        if (!empty($textConfig['background_color'])) {
+          $boxParam = ":box=1:boxcolor={$textConfig['background_color']}:boxborderw=5";
+        }
+
+        // Chain the drawtext filter to the scaling
+        $filterComplex .= sprintf(",drawtext=text='%s':fontsize=%d:fontcolor=%s:%s%s",
+          addslashes($text),
+          $fontSize,
+          $fontColor,
+          $position,
+          $boxParam
+        );
+      }
+
+      // Complete this image's filter chain
+      $filterComplex .= sprintf("[v%d];", $i);
+    }
 
     // Calculate durations
     $durations = [];
@@ -428,7 +470,7 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
         $audioDuration, $totalDuration, $totalTransitionTime)
     );
 
-    // Adjust image durations to precisely match audio duration
+    // Adjust image durations to match audio duration
     if ($audioDuration > 0 && abs($totalDuration - $totalTransitionTime - $audioDuration) > 0.1) {
       $scaleFactor = $audioDuration / ($totalDuration - $totalTransitionTime);
       for ($i = 0; $i < count($durations); $i++) {
@@ -439,12 +481,6 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
           json_encode($durations), array_sum($durations))
       );
     }
-
-    // Log the durations for debugging
-    $this->loggerFactory->get('pipeline')->debug(
-      sprintf("Image durations: %s, Total duration: %s",
-        json_encode($durations), $totalDuration)
-    );
 
     // First image
     $filterComplex .= sprintf("[v0]trim=duration=%s,setpts=PTS-STARTPTS[hold0];",
@@ -479,13 +515,9 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
     $ffmpegCmd .= " -shortest " . escapeshellarg($outputPath);
     $ffmpegCmd .= " -y";
 
-    // Log the full command for debugging
-    $this->loggerFactory->get('pipeline')->debug(
-      sprintf("FFmpeg command: %s", $ffmpegCmd)
-    );
-
     return $ffmpegCmd;
   }
+
   /**
    * Finds all image file information in the context.
    *
@@ -617,6 +649,88 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       default:
         return '1280:720';
     }
+  }
+
+  /**
+   * Gets FFmpeg drawtext position parameters based on the selected position.
+   *
+   * @param string $position
+   *   The position identifier.
+   * @param string $resolution
+   *   The video resolution in format "width:height".
+   * @param array|null $customCoords
+   *   Optional custom coordinates.
+   *
+   * @return string
+   *   FFmpeg position parameters.
+   */
+  protected function getTextPosition(string $position, string $resolution, array $customCoords = NULL): string {
+    // Parse resolution to get width and height
+    list($width, $height) = explode(':', $resolution);
+
+    // Default margins
+    $margin = 20;
+
+    switch ($position) {
+      case 'top':
+        return "x=(w-text_w)/2:y=$margin";
+      case 'bottom':
+        return "x=(w-text_w)/2:y=h-text_h-$margin";
+      case 'center':
+        return "x=(w-text_w)/2:y=(h-text_h)/2";
+      case 'top_left':
+        return "x=$margin:y=$margin";
+      case 'top_right':
+        return "x=w-text_w-$margin:y=$margin";
+      case 'bottom_left':
+        return "x=$margin:y=h-text_h-$margin";
+      case 'bottom_right':
+        return "x=w-text_w-$margin:y=h-text_h-$margin";
+      case 'custom':
+        if ($customCoords && isset($customCoords['x']) && isset($customCoords['y'])) {
+          return "x={$customCoords['x']}:y={$customCoords['y']}";
+        }
+        // Fall back to center if custom coords are invalid
+        return "x=(w-text_w)/2:y=(h-text_h)/2";
+    }
+
+    // Default to bottom if position is not recognized
+    return "x=(w-text_w)/2:y=h-text_h-$margin";
+  }
+
+  /**
+   * Processes text content to replace placeholders with values from context.
+   *
+   * @param string $text
+   *   The text with placeholders.
+   * @param array $context
+   *   The pipeline context with results.
+   *
+   * @return string
+   *   The processed text with placeholders replaced.
+   */
+  protected function processTextContent(string $text, array $context): string {
+    return preg_replace_callback('/\{([^}]+)\}/', function ($matches) use ($context) {
+      $key = $matches[1];
+      if (isset($context['results'][$key])) {
+        $result = $context['results'][$key];
+        // If result is an array with data key, use that
+        if (is_array($result) && isset($result['data'])) {
+          if (is_string($result['data'])) {
+            // Try to decode JSON if it's a JSON string
+            $decoded = json_decode($result['data'], TRUE);
+            if (json_last_error() === JSON_ERROR_NONE && isset($decoded['data'])) {
+              return $decoded['data'];
+            }
+            return $result['data'];
+          }
+          return json_encode($result['data']);
+        }
+        // Otherwise return as string
+        return is_string($result) ? $result : json_encode($result);
+      }
+      return $matches[0]; // Return original placeholder if not found
+    }, $text);
   }
 
   /**
