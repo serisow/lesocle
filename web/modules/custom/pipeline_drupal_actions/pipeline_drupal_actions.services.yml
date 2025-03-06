@@ -10,3 +10,17 @@ services:
     tags:
       - { name: entity_creation_strategy }
 
+  pipeline_drupal_actions.ffmpeg_service:
+    class: Drupal\pipeline_drupal_actions\Service\FFmpegService
+    arguments: [ '@logger.factory' ]
+
+  pipeline_drupal_actions.video_file_manager:
+    class: Drupal\pipeline_drupal_actions\Service\VideoFileManager
+    arguments: [ '@file.repository', '@file_system' ]
+
+  pipeline_drupal_actions.text_overlay_formatter:
+    class: Drupal\pipeline_drupal_actions\Service\TextOverlayFormatter
+
+  pipeline_drupal_actions.media_entity_creator:
+    class: Drupal\pipeline_drupal_actions\Service\MediaEntityCreator
+    arguments: [ '@entity_type.manager', '@logger.factory' ]
