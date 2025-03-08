@@ -78,124 +78,176 @@ class FFmpegService
     // Start building filter complex
     $filterComplex = "";
 
-    // Process each image - scale and apply text in a single filter chain per image
+    // Process each image - scale and apply text blocks
     for ($i = 0; $i < count($imagePaths); $i++) {
-      // Start with scaling
+      // Start with scaling filter for this image
       $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p",
         $i, $resolution);
 
-      // Check for text blocks first (new structure)
-      if (isset($imageFiles[$i]['text_blocks']) && !empty($imageFiles[$i]['text_blocks'])) {
-        // Collect enabled blocks
-        $enabledBlocks = [];
+      // Parse resolution
+      list($width, $height) = explode(':', $resolution);
+      $width = (int)$width;
+      $height = (int)$height;
+
+      // Group text blocks by position category (top, middle, bottom)
+      $topBlocks = [];
+      $middleBlocks = [];
+      $bottomBlocks = [];
+      $customBlocks = [];
+
+      // Get text blocks for this image and categorize them
+      if (isset($imageFiles[$i]['text_blocks']) && is_array($imageFiles[$i]['text_blocks'])) {
         foreach ($imageFiles[$i]['text_blocks'] as $block) {
-          if (!empty($block['enabled'])) {
-            $enabledBlocks[] = $block;
-          }
-        }
+          if (empty($block['enabled'])) continue;
 
-// Process each enabled block with adjusted positions
-        foreach ($enabledBlocks as $index => $block) {
-          // Process text content to replace placeholders
-          $text = $this->processTextContent($block['text'], $context);
-
-          // Create a copy of the block to adjust if needed
-          $adjustedBlock = $block;
-
-          // Make adjustments based on the original position
+          // Place in appropriate category
           switch ($block['position']) {
-            case 'top':
-              // For top blocks, use intended position for first one,
-              // then stack downward for additional blocks
-              if ($index > 0) {
-                $adjustedBlock['position'] = 'custom';
-                $adjustedBlock['custom_x'] = (int)($resolution / 2); // center horizontally
-                $adjustedBlock['custom_y'] = 20 + ($index * 50); // stack vertically
-              }
-              break;
-
-            case 'center':
-              // For center blocks, use intended position for first one,
-              // then offset others vertically
-              if ($index > 0) {
-                $adjustedBlock['position'] = 'custom';
-                $adjustedBlock['custom_x'] = (int)($resolution / 2); // center horizontally
-                // Offset from center - upward for odd indices, downward for even
-                $direction = ($index % 2 == 0) ? 1 : -1;
-                $offset = ceil($index / 2) * 50;
-                $adjustedBlock['custom_y'] = (int)($resolution / 2) + ($direction * $offset);
-              }
-              break;
-
-            case 'bottom':
-              // For bottom blocks, use intended position for first one,
-              // then stack upward for additional blocks
-              if ($index > 0) {
-                $adjustedBlock['position'] = 'custom';
-                $adjustedBlock['custom_x'] = (int)($resolution / 2); // center horizontally
-                // Stack upward from bottom
-                $yPos = (int)$resolution - 20 - ($index * 50);
-                $adjustedBlock['custom_y'] = $yPos;
-              }
-              break;
-
             case 'top_left':
+            case 'top':
             case 'top_right':
-            case 'bottom_left':
-            case 'bottom_right':
-            case 'left':
-            case 'right':
-              // For corner positions, use intended position for first one,
-              // then offset slightly for others
-              if ($index > 0) {
-                $adjustedBlock['position'] = 'custom';
-
-                // Determine base position based on original position
-                switch ($block['position']) {
-                  case 'top_left':
-                    $adjustedBlock['custom_x'] = 20;
-                    $adjustedBlock['custom_y'] = 20 + ($index * 40);
-                    break;
-                  case 'top_right':
-                    $adjustedBlock['custom_x'] = (int)$resolution - 20;
-                    $adjustedBlock['custom_y'] = 20 + ($index * 40);
-                    break;
-                  case 'bottom_left':
-                    $adjustedBlock['custom_x'] = 20;
-                    $adjustedBlock['custom_y'] = (int)$resolution - 20 - ($index * 40);
-                    break;
-                  case 'bottom_right':
-                    $adjustedBlock['custom_x'] = (int)$resolution - 20;
-                    $adjustedBlock['custom_y'] = (int)$resolution - 20 - ($index * 40);
-                    break;
-                  case 'left':
-                    $adjustedBlock['custom_x'] = 20;
-                    $adjustedBlock['custom_y'] = (int)($resolution / 2) + (($index % 2 == 0 ? 1 : -1) * ($index * 30));
-                    break;
-                  case 'right':
-                    $adjustedBlock['custom_x'] = (int)$resolution - 20;
-                    $adjustedBlock['custom_y'] = (int)($resolution / 2) + (($index % 2 == 0 ? 1 : -1) * ($index * 30));
-                    break;
-                }
-              }
+              $topBlocks[] = $block;
               break;
-
+            case 'left':
+            case 'center':
+            case 'right':
+              $middleBlocks[] = $block;
+              break;
+            case 'bottom_left':
+            case 'bottom':
+            case 'bottom_right':
+              $bottomBlocks[] = $block;
+              break;
             case 'custom':
-              // For custom positions, offset slightly if there are more than one
-              if ($index > 0) {
-                // Keep original X and increment Y
-                $adjustedBlock['custom_y'] = ($block['custom_y'] ?? 0) + ($index * 40);
-              }
+              $customBlocks[] = $block;
               break;
           }
-
-          // Build drawtext parameters for this block
-          $drawTextParams = $this->buildDrawTextParameters($adjustedBlock, $resolution, $text);
-
-          // Chain the drawtext filter to the current filter chain
-          $filterComplex .= ',' . $drawTextParams;
         }
       }
+
+      // Process each category separately to maintain alignment
+      $margin = 20;
+      $verticalOffset = $margin;
+
+      // Process top blocks
+      foreach ($topBlocks as $index => $block) {
+        $text = $this->processTextContent($block['text'] ?? '', $context);
+        if (empty($text)) continue;
+
+        $adjustedBlock = $block;
+        if ($index > 0) {
+          // For subsequent blocks in the top row, adjust y-coordinate
+          $fontSize = !empty($block['font_size']) ? (int)$block['font_size'] : 24;
+          $verticalSpacing = $fontSize * 1.5;
+          $adjustedBlock['position'] = 'custom';
+
+          // Keep x-coordinate based on original position
+          switch ($block['position']) {
+            case 'top_left':
+              $adjustedBlock['custom_x'] = $margin;
+              break;
+            case 'top':
+              $adjustedBlock['custom_x'] = $width / 2;
+              break;
+            case 'bottom_right':
+            case 'right':
+            case 'top_right':
+              $adjustedBlock['custom_x'] = $width - $margin;
+              break;
+          }
+
+          // Adjust y-coordinate to stack below previous block
+          $adjustedBlock['custom_y'] = $verticalOffset + $verticalSpacing;
+          $verticalOffset += $verticalSpacing;
+        }
+
+        // Add drawtext filter
+        $drawTextParams = $this->buildDrawTextParameters($adjustedBlock, "$width:$height", $text);
+        $filterComplex .= ',' . $drawTextParams;
+      }
+
+      // Process middle blocks
+      $verticalOffset = $height / 2 - 40; // Start a bit above center
+      foreach ($middleBlocks as $index => $block) {
+        $text = $this->processTextContent($block['text'] ?? '', $context);
+        if (empty($text)) continue;
+
+        $adjustedBlock = $block;
+        if ($index > 0) {
+          $fontSize = !empty($block['font_size']) ? (int)$block['font_size'] : 24;
+          $verticalSpacing = $fontSize * 1.5;
+          $adjustedBlock['position'] = 'custom';
+
+          // Keep x-coordinate based on original position
+          switch ($block['position']) {
+            case 'left':
+              $adjustedBlock['custom_x'] = $margin;
+              break;
+            case 'center':
+              $adjustedBlock['custom_x'] = $width / 2;
+              break;
+            case 'right':
+              $adjustedBlock['custom_x'] = $width - $margin;
+              break;
+          }
+
+          // Position blocks alternating above and below center
+          if ($index % 2 == 0) {
+            $adjustedBlock['custom_y'] = $verticalOffset + $verticalSpacing;
+            $verticalOffset += $verticalSpacing;
+          } else {
+            $adjustedBlock['custom_y'] = $height / 2 + ($index * $verticalSpacing / 2);
+          }
+        }
+
+        // Add drawtext filter
+        $drawTextParams = $this->buildDrawTextParameters($adjustedBlock, "$width:$height", $text);
+        $filterComplex .= ',' . $drawTextParams;
+      }
+
+      // Process bottom blocks
+      $verticalOffset = $height - $margin;
+      foreach ($bottomBlocks as $index => $block) {
+        $text = $this->processTextContent($block['text'] ?? '', $context);
+        if (empty($text)) continue;
+
+        $adjustedBlock = $block;
+        if ($index > 0) {
+          $fontSize = !empty($block['font_size']) ? (int)$block['font_size'] : 24;
+          $verticalSpacing = $fontSize * 1.5;
+          $adjustedBlock['position'] = 'custom';
+
+          // Keep x-coordinate based on original position
+          switch ($block['position']) {
+            case 'bottom_left':
+              $adjustedBlock['custom_x'] = $margin;
+              break;
+            case 'bottom':
+              $adjustedBlock['custom_x'] = $width / 2;
+              break;
+            case 'bottom_right':
+              $adjustedBlock['custom_x'] = $width - $margin;
+              break;
+          }
+
+          // Stack upward from bottom
+          $adjustedBlock['custom_y'] = $verticalOffset - ($index * $verticalSpacing);
+        }
+
+        // Add drawtext filter
+        $drawTextParams = $this->buildDrawTextParameters($adjustedBlock, "$width:$height", $text);
+        $filterComplex .= ',' . $drawTextParams;
+      }
+
+      // Process custom position blocks
+      foreach ($customBlocks as $block) {
+        $text = $this->processTextContent($block['text'] ?? '', $context);
+        if (empty($text)) continue;
+
+        // Add drawtext filter
+        $drawTextParams = $this->buildDrawTextParameters($block, "$width:$height", $text);
+        $filterComplex .= ',' . $drawTextParams;
+      }
+
       // Complete this image's filter chain
       $filterComplex .= sprintf("[v%d];", $i);
     }
@@ -266,18 +318,94 @@ class FFmpegService
   }
 
   /**
-   * Builds the drawtext parameters for a text block.
+   * Counts the number of blocks with the same position.
+   *
+   * @param array $blocks
+   *   The blocks to check.
+   * @param string $position
+   *   The position to count.
+   *
+   * @return int
+   *   The number of blocks with the given position.
+   */
+  protected function countBlocksWithPosition(array $blocks, string $position): int {
+    $count = 0;
+    foreach ($blocks as $block) {
+      if (isset($block['position']) && $block['position'] === $position) {
+        $count++;
+      }
+    }
+    return $count;
+  }
+
+  /**
+   * Adjusts block position for multiple blocks with the same position.
    *
    * @param array $block
-   *   The text block configuration.
-   * @param string $resolution
-   *   The video resolution.
-   * @param string $text
-   *   The processed text content.
+   *   The block to adjust.
+   * @param int $width
+   *   The video width.
+   * @param int $height
+   *   The video height.
+   * @param int $index
+   *   The index of the block.
    *
-   * @return string
-   *   The drawtext filter parameters.
+   * @return array
+   *   The adjusted block.
    */
+  protected function adjustBlockPositionForMultiple(array $block, int $width, int $height, int $index): array {
+    $adjustedBlock = $block;
+    $fontSize = $block['font_size'] ?? 24;
+    $lineHeight = $fontSize * 1.5;
+    $marginX = 20;
+    $marginY = 20;
+    $verticalSpacing = $lineHeight + 10;
+
+    // Convert to custom position and adjust coordinates
+    $adjustedBlock['position'] = 'custom';
+
+    switch ($block['position']) {
+      case 'top_left':
+        $adjustedBlock['custom_x'] = $marginX;
+        $adjustedBlock['custom_y'] = $marginY + ($index * $verticalSpacing);
+        break;
+      case 'top':
+        $adjustedBlock['custom_x'] = $width / 2;
+        $adjustedBlock['custom_y'] = $marginY + ($index * $verticalSpacing);
+        break;
+      case 'top_right':
+        $adjustedBlock['custom_x'] = $width - $marginX;
+        $adjustedBlock['custom_y'] = $marginY + ($index * $verticalSpacing);
+        break;
+      case 'left':
+        $adjustedBlock['custom_x'] = $marginX;
+        $adjustedBlock['custom_y'] = ($height / 2) + (($index % 2 == 0 ? 1 : -1) * ($index * $verticalSpacing / 2));
+        break;
+      case 'center':
+        $adjustedBlock['custom_x'] = $width / 2;
+        $adjustedBlock['custom_y'] = ($height / 2) + (($index % 2 == 0 ? 1 : -1) * ($index * $verticalSpacing / 2));
+        break;
+      case 'right':
+        $adjustedBlock['custom_x'] = $width - $marginX;
+        $adjustedBlock['custom_y'] = ($height / 2) + (($index % 2 == 0 ? 1 : -1) * ($index * $verticalSpacing / 2));
+        break;
+      case 'bottom_left':
+        $adjustedBlock['custom_x'] = $marginX;
+        $adjustedBlock['custom_y'] = $height - $marginY - ($index * $verticalSpacing);
+        break;
+      case 'bottom':
+        $adjustedBlock['custom_x'] = $width / 2;
+        $adjustedBlock['custom_y'] = $height - $marginY - ($index * $verticalSpacing);
+        break;
+      case 'bottom_right':
+        $adjustedBlock['custom_x'] = $width - $marginX;
+        $adjustedBlock['custom_y'] = $height - $marginY - ($index * $verticalSpacing);
+        break;
+    }
+
+    return $adjustedBlock;
+  }
+
   /**
    * Builds the drawtext parameters for a text block.
    *
@@ -295,46 +423,60 @@ class FFmpegService
     $fontSize = !empty($block['font_size']) ? $block['font_size'] : 24;
     $fontColor = !empty($block['font_color']) ? $block['font_color'] : 'white';
 
+    // Parse resolution
+    list($width, $height) = explode(':', $resolution);
+    $width = (int)$width;
+    $height = (int)$height;
+
     // Completely escape text for FFmpeg's filter syntax
-    // This is the most critical part for handling all special characters
     $escapedText = $this->escapeFFmpegText($text);
 
-    // Get position parameters
-    $position = '';
+    // Fixed margin value
+    $margin = 20;
+
+    // Calculate position based on position type
     if ($block['position'] === 'custom') {
-      // Use custom coordinates directly
-      $x = $block['custom_x'] ?? 0;
-      $y = $block['custom_y'] ?? 0;
-      $position = "x=$x:y=$y";
+      // Handle custom positions with special care for right-aligned text
+      $x = isset($block['custom_x']) ? (int)$block['custom_x'] : 0;
+      $y = isset($block['custom_y']) ? (int)$block['custom_y'] : 0;
+
+      // If this appears to be a right-aligned position (x is close to right edge)
+      if ($x > $width * 0.8) {
+        // Use FFmpeg expression to place the right edge of text at the specified point
+        $position = "x=w-text_w-($width-$x):y=$y";
+      } else {
+        $position = "x=$x:y=$y";
+      }
     } else {
-      // Use predefined positions
+      // Standard positions with proper right-alignment handling
       switch ($block['position']) {
         case 'top_left':
-          $position = "x=20:y=20";
+          $position = "x=$margin:y=$margin";
           break;
         case 'top':
-          $position = "x=(w-text_w)/2:y=20";
+          $position = "x=(w-text_w)/2:y=$margin";
           break;
         case 'top_right':
-          $position = "x=w-text_w-20:y=20";
+          // Place the right edge of text margin pixels from the right edge
+          $position = "x=w-text_w-$margin:y=$margin";
           break;
         case 'left':
-          $position = "x=20:y=(h-text_h)/2";
+          $position = "x=$margin:y=(h-text_h)/2";
           break;
         case 'center':
           $position = "x=(w-text_w)/2:y=(h-text_h)/2";
           break;
         case 'right':
-          $position = "x=w-text_w-20:y=(h-text_h)/2";
+          $position = "x=w-text_w-$margin:y=(h-text_h)/2";
           break;
         case 'bottom_left':
-          $position = "x=20:y=h-text_h-20";
+          $position = "x=$margin:y=h-text_h-$margin";
           break;
         case 'bottom':
-          $position = "x=(w-text_w)/2:y=h-text_h-20";
+          $position = "x=(w-text_w)/2:y=h-text_h-$margin";
           break;
         case 'bottom_right':
-          $position = "x=w-text_w-20:y=h-text_h-20";
+          $position = "x=w-text_w-$margin:y=h-text_h-$margin";
           break;
         default:
           $position = "x=(w-text_w)/2:y=(h-text_h)/2"; // Default to center
