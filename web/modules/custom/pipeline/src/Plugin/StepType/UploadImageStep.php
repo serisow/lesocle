@@ -31,22 +31,59 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
   /**
    * {@inheritdoc}
    */
-  protected function additionalDefaultConfiguration()
-  {
+  protected function additionalDefaultConfiguration() {
     return [
       'image_file_id' => NULL,
       'video_settings' => [
         'duration' => 5.0,
       ],
-      'text_overlay' => [
-        'enabled' => FALSE,
-        'text' => '',
-        'position' => 'bottom',
-        'font_size' => 24,
-        'font_color' => 'white',
-        'background_color' => '',
-        'custom_x' => 0,
-        'custom_y' => 0,
+
+      // Predefined text blocks with default settings
+      'text_blocks' => [
+        [
+          'id' => 'title_block',
+          'enabled' => FALSE,
+          'text' => '',
+          'position' => 'top',
+          'font_size' => 36,
+          'font_color' => 'white',
+          'background_color' => 'rgba(0,0,0,0.5)',
+          'custom_x' => 0,
+          'custom_y' => 0,
+        ],
+        [
+          'id' => 'subtitle_block',
+          'enabled' => FALSE,
+          'text' => '',
+          'position' => 'center',
+          'font_size' => 28,
+          'font_color' => 'white',
+          'background_color' => '',
+          'custom_x' => 0,
+          'custom_y' => 0,
+        ],
+        [
+          'id' => 'body_block',
+          'enabled' => FALSE,
+          'text' => '',
+          'position' => 'center',
+          'font_size' => 24,
+          'font_color' => 'white',
+          'background_color' => '',
+          'custom_x' => 0,
+          'custom_y' => 60,
+        ],
+        [
+          'id' => 'caption_block',
+          'enabled' => FALSE,
+          'text' => '',
+          'position' => 'bottom',
+          'font_size' => 20,
+          'font_color' => 'white',
+          'background_color' => '',
+          'custom_x' => 0,
+          'custom_y' => 0,
+        ],
       ],
     ];
   }
@@ -95,115 +132,145 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
       '#description' => $this->t('How long this image should appear in generated videos (in seconds).'),
     ];
 
-    // Add text overlay settings
-    $form['text_overlay'] = [
+    // Text blocks section
+    $form['text_blocks'] = [
       '#type' => 'details',
-      '#title' => $this->t('Text Overlay'),
+      '#title' => $this->t('Text Elements'),
       '#open' => TRUE,
-      '#description' => $this->t('Configure text to be overlaid on this image.'),
+      '#description' => $this->t('Configure text elements to overlay on the image.'),
+      '#tree' => TRUE,
     ];
 
-    $form['text_overlay']['enabled'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enable text overlay'),
-      '#default_value' => $this->configuration['text_overlay']['enabled'] ?? FALSE,
-    ];
+    // Get text blocks from configuration or use defaults
+    $text_blocks = $this->configuration['text_blocks'] ?? $this->additionalDefaultConfiguration()['text_blocks'];
 
-    $form['text_overlay']['text'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Text content'),
-      '#default_value' => $this->configuration['text_overlay']['text'] ?? '',
-      '#description' => $this->t('Text to overlay on the image. You can use {step_key} placeholders to insert content from previous steps.'),
-      '#states' => [
-        'visible' => [
-          ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
+    // Create form elements for each predefined block
+    foreach ($text_blocks as $index => $block) {
+      $block_id = $block['id'];
+      $title = $this->getBlockTitle($block_id);
+
+      $form['text_blocks'][$index] = [
+        '#type' => 'details',
+        '#title' => $title,
+        '#open' => !empty($block['enabled']),
+        '#attributes' => [
+          'class' => ['text-block-form'],
+          'data-block-id' => $block_id,
         ],
-      ],
-    ];
+      ];
 
-    $form['text_overlay']['position'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Position'),
-      '#options' => [
-        'top' => $this->t('Top'),
-        'bottom' => $this->t('Bottom'),
-        'center' => $this->t('Center'),
-        'top_left' => $this->t('Top Left'),
-        'top_right' => $this->t('Top Right'),
-        'bottom_left' => $this->t('Bottom Left'),
-        'bottom_right' => $this->t('Bottom Right'),
-        'custom' => $this->t('Custom coordinates'),
-      ],
-      '#default_value' => $this->configuration['text_overlay']['position'] ?? 'bottom',
-      '#states' => [
+      $form['text_blocks'][$index]['id'] = [
+        '#type' => 'hidden',
+        '#value' => $block_id,
+      ];
+
+      $form['text_blocks'][$index]['enabled'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Enable this text element'),
+        '#default_value' => $block['enabled'],
+      ];
+
+      // Only show these fields if enabled
+      $states_visible = [
         'visible' => [
-          ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
+          ':input[name="data[text_blocks][' . $index . '][enabled]"]' => ['checked' => TRUE],
         ],
-      ],
-    ];
+      ];
 
-    $form['text_overlay']['font_size'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Font size'),
-      '#default_value' => $this->configuration['text_overlay']['font_size'] ?? 24,
-      '#min' => 8,
-      '#max' => 72,
-      '#step' => 1,
-      '#states' => [
+      $form['text_blocks'][$index]['text'] = [
+        '#type' => 'textarea',
+        '#title' => $this->t('Text content'),
+        '#default_value' => $block['text'],
+        '#description' => $this->t('Text to overlay on the image. You can use {step_key} placeholders to insert content from previous steps.'),
+        '#rows' => 3,
+        '#states' => $states_visible,
+      ];
+
+      $form['text_blocks'][$index]['font_size'] = [
+        '#type' => 'number',
+        '#title' => $this->t('Font size'),
+        '#default_value' => $block['font_size'],
+        '#min' => 8,
+        '#max' => 72,
+        '#step' => 1,
+        '#states' => $states_visible,
+      ];
+
+      $form['text_blocks'][$index]['font_color'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Font color'),
+        '#default_value' => $block['font_color'],
+        '#description' => $this->t('Color name (e.g., white, black) or hex value (e.g., #FFFFFF).'),
+        '#states' => $states_visible,
+      ];
+
+      $form['text_blocks'][$index]['background_color'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Background color (optional)'),
+        '#default_value' => $block['background_color'],
+        '#description' => $this->t('Optional background box color. Leave empty for transparent background.'),
+        '#states' => $states_visible,
+      ];
+
+      $form['text_blocks'][$index]['position'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Position'),
+        '#options' => [
+          'top_left' => $this->t('Top Left'),
+          'top' => $this->t('Top Center'),
+          'top_right' => $this->t('Top Right'),
+          'left' => $this->t('Middle Left'),
+          'center' => $this->t('Center'),
+          'right' => $this->t('Middle Right'),
+          'bottom_left' => $this->t('Bottom Left'),
+          'bottom' => $this->t('Bottom Center'),
+          'bottom_right' => $this->t('Bottom Right'),
+          'custom' => $this->t('Custom coordinates'),
+        ],
+        '#default_value' => $block['position'],
+        '#states' => $states_visible,
+      ];
+
+      // Custom coordinates, visible only when position is set to 'custom'
+      $custom_coords_visible = [
         'visible' => [
-          ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
+          ':input[name="data[text_blocks][' . $index . '][enabled]"]' => ['checked' => TRUE],
+          ':input[name="data[text_blocks][' . $index . '][position]"]' => ['value' => 'custom'],
         ],
-      ],
-    ];
+      ];
 
-    $form['text_overlay']['font_color'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Font color'),
-      '#default_value' => $this->configuration['text_overlay']['font_color'] ?? 'white',
-      '#description' => $this->t('Color name (e.g., white, black) or hex value (e.g., #FFFFFF).'),
-      '#states' => [
-        'visible' => [
-          ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
-        ],
-      ],
-    ];
+      $form['text_blocks'][$index]['custom_x'] = [
+        '#type' => 'number',
+        '#title' => $this->t('Custom X position'),
+        '#default_value' => $block['custom_x'],
+        '#description' => $this->t('X coordinate for custom positioning.'),
+        '#states' => $custom_coords_visible,
+      ];
 
-    $form['text_overlay']['background_color'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Background color (optional)'),
-      '#default_value' => $this->configuration['text_overlay']['background_color'] ?? '',
-      '#description' => $this->t('Optional background box color. Leave empty for transparent background.'),
-      '#states' => [
-        'visible' => [
-          ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
-        ],
-      ],
-    ];
-
-    $coordinates_state = [
-      'visible' => [
-        ':input[name="data[text_overlay][enabled]"]' => ['checked' => TRUE],
-        ':input[name="data[text_overlay][position]"]' => ['value' => 'custom'],
-      ],
-    ];
-
-    $form['text_overlay']['custom_x'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Custom X position'),
-      '#default_value' => $this->configuration['text_overlay']['custom_x'] ?? 0,
-      '#description' => $this->t('X coordinate for custom positioning.'),
-      '#states' => $coordinates_state,
-    ];
-
-    $form['text_overlay']['custom_y'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Custom Y position'),
-      '#default_value' => $this->configuration['text_overlay']['custom_y'] ?? 0,
-      '#description' => $this->t('Y coordinate for custom positioning.'),
-      '#states' => $coordinates_state,
-    ];
+      $form['text_blocks'][$index]['custom_y'] = [
+        '#type' => 'number',
+        '#title' => $this->t('Custom Y position'),
+        '#default_value' => $block['custom_y'],
+        '#description' => $this->t('Y coordinate for custom positioning.'),
+        '#states' => $custom_coords_visible,
+      ];
+    }
 
     return $form;
+  }
+
+  /**
+   * Get a human-readable title for a block based on its ID.
+   */
+  protected function getBlockTitle($block_id) {
+    $titles = [
+      'title_block' => $this->t('Title Text'),
+      'subtitle_block' => $this->t('Subtitle Text'),
+      'body_block' => $this->t('Body Text'),
+      'caption_block' => $this->t('Caption Text'),
+    ];
+
+    return $titles[$block_id] ?? $this->t('Text Element');
   }
 
   /**
@@ -252,17 +319,30 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
       'duration' => (float) $form_state->getValue(['data', 'video_settings', 'duration']),
     ];
 
-    // Handle text overlay settings
-    $this->configuration['text_overlay'] = [
-      'enabled' => (bool) $form_state->getValue(['data', 'text_overlay', 'enabled']),
-      'text' => $form_state->getValue(['data', 'text_overlay', 'text']),
-      'position' => $form_state->getValue(['data', 'text_overlay', 'position']),
-      'font_size' => (int) $form_state->getValue(['data', 'text_overlay', 'font_size']),
-      'font_color' => $form_state->getValue(['data', 'text_overlay', 'font_color']),
-      'background_color' => $form_state->getValue(['data', 'text_overlay', 'background_color']),
-      'custom_x' => (int) $form_state->getValue(['data', 'text_overlay', 'custom_x']),
-      'custom_y' => (int) $form_state->getValue(['data', 'text_overlay', 'custom_y']),
-    ];
+    // Process text blocks
+    $text_blocks = [];
+    $blocks_values = $form_state->getValue(['data', 'text_blocks']);
+
+    if (is_array($blocks_values)) {
+      foreach ($blocks_values as $index => $values) {
+        // Only add blocks that are both enabled AND have non-empty text content
+        if (!empty($values['enabled']) && !empty(trim($values['text'] ?? ''))) {
+          $text_blocks[] = [
+            'id' => $values['id'],
+            'enabled' => true,
+            'text' => $values['text'],
+            'position' => $values['position'] ?? 'bottom',
+            'font_size' => (int) ($values['font_size'] ?? 24),
+            'font_color' => $values['font_color'] ?? 'white',
+            'background_color' => $values['background_color'] ?? '',
+            'custom_x' => isset($values['custom_x']) ? (int) $values['custom_x'] : 0,
+            'custom_y' => isset($values['custom_y']) ? (int) $values['custom_y'] : 0,
+          ];
+        }
+      }
+    }
+
+    $this->configuration['text_blocks'] = $text_blocks;
   }
 
   /**
@@ -295,9 +375,16 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
         ],
       ];
 
-      // Add text overlay settings if enabled
-      if (!empty($this->configuration['text_overlay']['enabled'])) {
-        $result['text_overlay'] = $this->configuration['text_overlay'];
+      // Add enabled text blocks to the result
+      $enabled_blocks = [];
+      foreach ($this->configuration['text_blocks'] as $block) {
+        if (!empty($block['enabled'])) {
+          $enabled_blocks[] = $block;
+        }
+      }
+
+      if (!empty($enabled_blocks)) {
+        $result['text_blocks'] = $enabled_blocks;
       }
 
       // Add the result to the context with the appropriate output type

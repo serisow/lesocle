@@ -128,6 +128,9 @@ class PipelineStepTypeController extends ControllerBase implements ContainerInje
       } else{
         $cleaned_values = $form_state->getValues();
       }
+      // Filter out empty or not enabled  text_blocks for UploadImageStep
+      $cleaned_values = $this->cleanTextBlocks($cleaned_values, $step_type);
+
       $step_type_instance->setConfiguration($cleaned_values);
       // Set the weight to be the last in the list
       $current_step_count = count($pipeline->getStepTypes());
@@ -194,7 +197,8 @@ class PipelineStepTypeController extends ControllerBase implements ContainerInje
         } else{
           $cleaned_values = $form_state->getValues();
         }
-
+        // Filter out empty or not enabled  text_blocks for UploadImageStep
+        $cleaned_values = $this->cleanTextBlocks($cleaned_values, $step_type->getPluginId());
         $step_type->setConfiguration($cleaned_values);
         $pipeline->save();
         //@todo inject the service messenger
@@ -228,4 +232,49 @@ class PipelineStepTypeController extends ControllerBase implements ContainerInje
     return new JsonResponse(['error' => 'Prompt template not found'], 404);
   }
 
+  /**
+   * Filters out disabled or empty text blocks from configuration data.
+   * Also removes unnecessary custom coordinates for predefined positions.
+   *
+   * Only applies to UploadImageStep type plugins.
+   *
+   * @param array $values
+   *   The configuration values to clean.
+   * @param string $plugin_id
+   *   The plugin ID of the step type.
+   *
+   * @return array
+   *   The cleaned configuration values.
+   */
+  protected function cleanTextBlocks(array $values, string $plugin_id): array {
+    // Only apply cleaning to UploadImageStep
+    if ($plugin_id === 'upload_image_step' && isset($values['data']['text_blocks']) && is_array($values['data']['text_blocks'])) {
+      $filtered_blocks = [];
+      foreach ($values['data']['text_blocks'] as $block) {
+        // Only keep blocks that are enabled AND have non-empty text
+        if (!empty($block['enabled']) && !empty(trim($block['text'] ?? ''))) {
+          // Create a clean block with only required properties
+          $clean_block = [
+            'id' => $block['id'],
+            'enabled' => true,
+            'text' => $block['text'],
+            'position' => $block['position'] ?? 'bottom',
+            'font_size' => (int) ($block['font_size'] ?? 24),
+            'font_color' => $block['font_color'] ?? 'white',
+            'background_color' => $block['background_color'] ?? '',
+          ];
+
+          // Only include custom coordinates if position is set to "custom"
+          if (($block['position'] ?? '') === 'custom') {
+            $clean_block['custom_x'] = isset($block['custom_x']) ? (int) $block['custom_x'] : 0;
+            $clean_block['custom_y'] = isset($block['custom_y']) ? (int) $block['custom_y'] : 0;
+          }
+
+          $filtered_blocks[] = $clean_block;
+        }
+      }
+      $values['data']['text_blocks'] = $filtered_blocks;
+    }
+    return $values;
+  }
 }

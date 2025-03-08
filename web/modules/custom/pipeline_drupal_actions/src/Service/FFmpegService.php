@@ -46,6 +46,9 @@ class FFmpegService
    * @return string
    *   The FFmpeg command.
    */
+  /**
+   * Builds FFmpeg command for multiple image slideshow with transitions and text blocks.
+   */
   public function buildMultiImageCommand(
     array  $imagePaths,
     array  $imageFiles,
@@ -53,8 +56,7 @@ class FFmpegService
     string $outputPath,
     array  $config = [],
     array  $context = []
-  ): string
-  {
+  ): string {
     // Get configuration
     $transitionType = $config['transition_type'] ?? 'fade';
     $transitionDuration = $config['transition_duration'] ?? 1;
@@ -82,42 +84,121 @@ class FFmpegService
       $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p",
         $i, $resolution);
 
-      // Check if image has text overlay configuration and it's enabled
-      if (isset($imageFiles[$i]['text_overlay']) && !empty($imageFiles[$i]['text_overlay']['enabled'])
-        && !empty($imageFiles[$i]['text_overlay']['text'])) {
-
-        $textConfig = $imageFiles[$i]['text_overlay'];
-
-        // Process text content to replace placeholders
-        $text = $this->processTextContent($textConfig['text'], $context);
-        $fontSize = !empty($textConfig['font_size']) ? $textConfig['font_size'] : 24;
-        $fontColor = !empty($textConfig['font_color']) ? $textConfig['font_color'] : 'white';
-
-        // Get position parameters
-        $customCoords = ($textConfig['position'] === 'custom') ?
-          ['x' => $textConfig['custom_x'], 'y' => $textConfig['custom_y']] : NULL;
-        $position = $this->getTextPosition($textConfig['position'], $resolution, $customCoords);
-
-        // Add background box if configured
-        $boxParam = '';
-        if (!empty($textConfig['background_color'])) {
-          $boxParam = ":box=1:boxcolor={$textConfig['background_color']}:boxborderw=5";
+      // Check for text blocks first (new structure)
+      if (isset($imageFiles[$i]['text_blocks']) && !empty($imageFiles[$i]['text_blocks'])) {
+        // Collect enabled blocks
+        $enabledBlocks = [];
+        foreach ($imageFiles[$i]['text_blocks'] as $block) {
+          if (!empty($block['enabled'])) {
+            $enabledBlocks[] = $block;
+          }
         }
 
-        // Chain the drawtext filter to the scaling
-        $filterComplex .= sprintf(",drawtext=text='%s':fontsize=%d:fontcolor=%s:%s%s",
-          addslashes($text),
-          $fontSize,
-          $fontColor,
-          $position,
-          $boxParam
-        );
-      }
+// Process each enabled block with adjusted positions
+        foreach ($enabledBlocks as $index => $block) {
+          // Process text content to replace placeholders
+          $text = $this->processTextContent($block['text'], $context);
 
+          // Create a copy of the block to adjust if needed
+          $adjustedBlock = $block;
+
+          // Make adjustments based on the original position
+          switch ($block['position']) {
+            case 'top':
+              // For top blocks, use intended position for first one,
+              // then stack downward for additional blocks
+              if ($index > 0) {
+                $adjustedBlock['position'] = 'custom';
+                $adjustedBlock['custom_x'] = (int)($resolution / 2); // center horizontally
+                $adjustedBlock['custom_y'] = 20 + ($index * 50); // stack vertically
+              }
+              break;
+
+            case 'center':
+              // For center blocks, use intended position for first one,
+              // then offset others vertically
+              if ($index > 0) {
+                $adjustedBlock['position'] = 'custom';
+                $adjustedBlock['custom_x'] = (int)($resolution / 2); // center horizontally
+                // Offset from center - upward for odd indices, downward for even
+                $direction = ($index % 2 == 0) ? 1 : -1;
+                $offset = ceil($index / 2) * 50;
+                $adjustedBlock['custom_y'] = (int)($resolution / 2) + ($direction * $offset);
+              }
+              break;
+
+            case 'bottom':
+              // For bottom blocks, use intended position for first one,
+              // then stack upward for additional blocks
+              if ($index > 0) {
+                $adjustedBlock['position'] = 'custom';
+                $adjustedBlock['custom_x'] = (int)($resolution / 2); // center horizontally
+                // Stack upward from bottom
+                $yPos = (int)$resolution - 20 - ($index * 50);
+                $adjustedBlock['custom_y'] = $yPos;
+              }
+              break;
+
+            case 'top_left':
+            case 'top_right':
+            case 'bottom_left':
+            case 'bottom_right':
+            case 'left':
+            case 'right':
+              // For corner positions, use intended position for first one,
+              // then offset slightly for others
+              if ($index > 0) {
+                $adjustedBlock['position'] = 'custom';
+
+                // Determine base position based on original position
+                switch ($block['position']) {
+                  case 'top_left':
+                    $adjustedBlock['custom_x'] = 20;
+                    $adjustedBlock['custom_y'] = 20 + ($index * 40);
+                    break;
+                  case 'top_right':
+                    $adjustedBlock['custom_x'] = (int)$resolution - 20;
+                    $adjustedBlock['custom_y'] = 20 + ($index * 40);
+                    break;
+                  case 'bottom_left':
+                    $adjustedBlock['custom_x'] = 20;
+                    $adjustedBlock['custom_y'] = (int)$resolution - 20 - ($index * 40);
+                    break;
+                  case 'bottom_right':
+                    $adjustedBlock['custom_x'] = (int)$resolution - 20;
+                    $adjustedBlock['custom_y'] = (int)$resolution - 20 - ($index * 40);
+                    break;
+                  case 'left':
+                    $adjustedBlock['custom_x'] = 20;
+                    $adjustedBlock['custom_y'] = (int)($resolution / 2) + (($index % 2 == 0 ? 1 : -1) * ($index * 30));
+                    break;
+                  case 'right':
+                    $adjustedBlock['custom_x'] = (int)$resolution - 20;
+                    $adjustedBlock['custom_y'] = (int)($resolution / 2) + (($index % 2 == 0 ? 1 : -1) * ($index * 30));
+                    break;
+                }
+              }
+              break;
+
+            case 'custom':
+              // For custom positions, offset slightly if there are more than one
+              if ($index > 0) {
+                // Keep original X and increment Y
+                $adjustedBlock['custom_y'] = ($block['custom_y'] ?? 0) + ($index * 40);
+              }
+              break;
+          }
+
+          // Build drawtext parameters for this block
+          $drawTextParams = $this->buildDrawTextParameters($adjustedBlock, $resolution, $text);
+
+          // Chain the drawtext filter to the current filter chain
+          $filterComplex .= ',' . $drawTextParams;
+        }
+      }
       // Complete this image's filter chain
       $filterComplex .= sprintf("[v%d];", $i);
     }
-
     // Calculate durations
     $durations = [];
     $totalDuration = 0;
@@ -182,6 +263,164 @@ class FFmpegService
     $ffmpegCmd .= " -y";
 
     return $ffmpegCmd;
+  }
+
+  /**
+   * Builds the drawtext parameters for a text block.
+   *
+   * @param array $block
+   *   The text block configuration.
+   * @param string $resolution
+   *   The video resolution.
+   * @param string $text
+   *   The processed text content.
+   *
+   * @return string
+   *   The drawtext filter parameters.
+   */
+  /**
+   * Builds the drawtext parameters for a text block.
+   *
+   * @param array $block
+   *   The text block configuration.
+   * @param string $resolution
+   *   The video resolution.
+   * @param string $text
+   *   The processed text content.
+   *
+   * @return string
+   *   The drawtext filter parameters.
+   */
+  public function buildDrawTextParameters(array $block, string $resolution, string $text): string {
+    $fontSize = !empty($block['font_size']) ? $block['font_size'] : 24;
+    $fontColor = !empty($block['font_color']) ? $block['font_color'] : 'white';
+
+    // Completely escape text for FFmpeg's filter syntax
+    // This is the most critical part for handling all special characters
+    $escapedText = $this->escapeFFmpegText($text);
+
+    // Get position parameters
+    $position = '';
+    if ($block['position'] === 'custom') {
+      // Use custom coordinates directly
+      $x = $block['custom_x'] ?? 0;
+      $y = $block['custom_y'] ?? 0;
+      $position = "x=$x:y=$y";
+    } else {
+      // Use predefined positions
+      switch ($block['position']) {
+        case 'top_left':
+          $position = "x=20:y=20";
+          break;
+        case 'top':
+          $position = "x=(w-text_w)/2:y=20";
+          break;
+        case 'top_right':
+          $position = "x=w-text_w-20:y=20";
+          break;
+        case 'left':
+          $position = "x=20:y=(h-text_h)/2";
+          break;
+        case 'center':
+          $position = "x=(w-text_w)/2:y=(h-text_h)/2";
+          break;
+        case 'right':
+          $position = "x=w-text_w-20:y=(h-text_h)/2";
+          break;
+        case 'bottom_left':
+          $position = "x=20:y=h-text_h-20";
+          break;
+        case 'bottom':
+          $position = "x=(w-text_w)/2:y=h-text_h-20";
+          break;
+        case 'bottom_right':
+          $position = "x=w-text_w-20:y=h-text_h-20";
+          break;
+        default:
+          $position = "x=(w-text_w)/2:y=(h-text_h)/2"; // Default to center
+      }
+    }
+
+    // Add background box if configured
+    $boxParam = '';
+    if (!empty($block['background_color'])) {
+      // Convert rgba() format to FFmpeg hex color format
+      $bgColor = $this->convertToFFmpegColor($block['background_color']);
+      $boxParam = ":box=1:boxcolor=$bgColor:boxborderw=5";
+    }
+
+    // Return the full drawtext parameter string
+    return sprintf("drawtext=text='%s':fontsize=%d:fontcolor=%s:%s%s",
+      $escapedText,
+      $fontSize,
+      $fontColor,
+      $position,
+      $boxParam
+    );
+  }
+
+  /**
+   * Escapes text for FFmpeg filter_complex parameter.
+   *
+   * This handles all special characters that could break the filter syntax.
+   *
+   * @param string $text
+   *   The original text.
+   *
+   * @return string
+   *   The text properly escaped for FFmpeg.
+   */
+  protected function escapeFFmpegText($text) {
+    // First, escape backslashes
+    $text = str_replace('\\', '\\\\', $text);
+
+    // Escape single quotes (this is crucial for the filter_complex syntax)
+    $text = str_replace("'", "'\\\\\\'", $text);
+
+    // Escape other special characters that might break the filter
+    $special_chars = [':', ',', '[', ']', ';', '=', '%', '-', '+'];
+    foreach ($special_chars as $char) {
+      $text = str_replace($char, '\\' . $char, $text);
+    }
+
+    return $text;
+  }
+
+  /**
+   * Converts various color formats to FFmpeg compatible color format.
+   *
+   * @param string $color
+   *   The color in various formats (name, hex, rgba).
+   *
+   * @return string
+   *   FFmpeg compatible color string.
+   */
+  protected function convertToFFmpegColor($color) {
+    // Check if it's rgba format
+    if (preg_match('/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d\.]+)\s*\)/i', $color, $matches)) {
+      list(, $r, $g, $b, $a) = $matches;
+      // Convert alpha from 0-1 to 0-255
+      $alpha = round($a * 255);
+      // Format as 0xRRGGBBAA
+      return sprintf('0x%02x%02x%02x%02x', $r, $g, $b, $alpha);
+    }
+
+    // Check if it's rgb format
+    if (preg_match('/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/i', $color, $matches)) {
+      list(, $r, $g, $b) = $matches;
+      // Format as 0xRRGGBBAA (fully opaque)
+      return sprintf('0x%02x%02x%02xff', $r, $g, $b);
+    }
+
+    // Check if it's a hex color
+    if (preg_match('/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i', $color, $matches)) {
+      list(, $r, $g, $b) = $matches;
+      // Format as 0xRRGGBBAA (fully opaque)
+      return sprintf('0x%s%s%sff', $r, $g, $b);
+    }
+
+    // For named colors, just return as is (FFmpeg recognizes common color names)
+    return $color;
   }
 
   /**

@@ -391,9 +391,8 @@ class PipelineApiController extends ControllerBase {
                 $step_data['upload_image_config']['image_file_name'] = $file->getFilename();
                 $step_data['upload_image_config']['image_file_size'] = $file->getSize();
                 $step_data['upload_image_config']['duration'] = (float) $configuration['data']['video_settings']['duration'];
-
-                if (!empty($configuration['data']['text_overlay']) && $configuration['data']['text_overlay']['enabled'] == "1") {
-                  $step_data['upload_image_config']['text_overlay'] = $configuration['data']['text_overlay'];
+                if (!empty($configuration['data']['text_blocks'])) {
+                  $step_data['upload_image_config']['text_blocks'] = $configuration['data']['text_blocks'];
                 }
               }
             }
