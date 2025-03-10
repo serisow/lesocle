@@ -270,6 +270,16 @@ class PipelineStepTypeController extends ControllerBase implements ContainerInje
             $clean_block['custom_y'] = isset($block['custom_y']) ? (int) $block['custom_y'] : 0;
           }
 
+          // Add animation properties if they exist
+          if (isset($block['animation'])) {
+            $clean_block['animation'] = [
+              'type' => $block['animation']['type'] ?? 'none',
+              'duration' => (float) ($block['animation']['duration'] ?? 1.0),
+              'delay' => (float) ($block['animation']['delay'] ?? 0.0),
+              'easing' => $block['animation']['easing'] ?? 'linear',
+            ];
+          }
+
           $filtered_blocks[] = $clean_block;
         }
       }

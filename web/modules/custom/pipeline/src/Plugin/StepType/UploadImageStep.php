@@ -50,6 +50,12 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
           'background_color' => 'rgba(0,0,0,0.5)',
           'custom_x' => 0,
           'custom_y' => 0,
+          'animation' => [
+            'type' => 'none',
+            'duration' => 1.0,
+            'delay' => 0.0,
+            'easing' => 'linear',
+          ]
         ],
         [
           'id' => 'subtitle_block',
@@ -61,6 +67,12 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
           'background_color' => '',
           'custom_x' => 0,
           'custom_y' => 0,
+          'animation' => [
+            'type' => 'none',
+            'duration' => 1.0,
+            'delay' => 0.0,
+            'easing' => 'linear',
+          ]
         ],
         [
           'id' => 'body_block',
@@ -72,6 +84,12 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
           'background_color' => '',
           'custom_x' => 0,
           'custom_y' => 60,
+          'animation' => [
+            'type' => 'none',
+            'duration' => 1.0,
+            'delay' => 0.0,
+            'easing' => 'linear',
+          ]
         ],
         [
           'id' => 'caption_block',
@@ -83,6 +101,12 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
           'background_color' => '',
           'custom_x' => 0,
           'custom_y' => 0,
+          'animation' => [
+            'type' => 'none',
+            'duration' => 1.0,
+            'delay' => 0.0,
+            'easing' => 'linear',
+          ]
         ],
       ],
     ];
@@ -254,6 +278,72 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
         '#description' => $this->t('Y coordinate for custom positioning.'),
         '#states' => $custom_coords_visible,
       ];
+
+      // Animation settings
+      $form['text_blocks'][$index]['animation'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Animation'),
+        '#open' => FALSE,
+        '#states' => $states_visible,
+      ];
+
+      $form['text_blocks'][$index]['animation']['type'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Animation Type'),
+        '#options' => [
+          'none' => $this->t('None'),
+          'fade' => $this->t('Fade'),
+          'slide' => $this->t('Slide'),
+          'scale' => $this->t('Scale'),
+          'typewriter' => $this->t('Typewriter'),
+        ],
+        '#default_value' => $block['animation']['type'] ?? 'none',
+      ];
+
+      $form['text_blocks'][$index]['animation']['duration'] = [
+        '#type' => 'number',
+        '#title' => $this->t('Duration (seconds)'),
+        '#default_value' => $block['animation']['duration'] ?? 1.0,
+        '#min' => 0.1,
+        '#max' => 5.0,
+        '#step' => 0.1,
+        '#states' => [
+          'visible' => [
+            ':input[name="data[text_blocks][' . $index . '][animation][type]"]' => ['!value' => 'none'],
+          ],
+        ],
+      ];
+
+      $form['text_blocks'][$index]['animation']['delay'] = [
+        '#type' => 'number',
+        '#title' => $this->t('Delay (seconds)'),
+        '#default_value' => $block['animation']['delay'] ?? 0.0,
+        '#min' => 0.0,
+        '#max' => 10.0,
+        '#step' => 0.1,
+        '#states' => [
+          'visible' => [
+            ':input[name="data[text_blocks][' . $index . '][animation][type]"]' => ['!value' => 'none'],
+          ],
+        ],
+      ];
+
+      $form['text_blocks'][$index]['animation']['easing'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Easing'),
+        '#options' => [
+          'linear' => $this->t('Linear'),
+          'ease-in' => $this->t('Ease In'),
+          'ease-out' => $this->t('Ease Out'),
+          'ease-in-out' => $this->t('Ease In-Out'),
+        ],
+        '#default_value' => $block['animation']['easing'] ?? 'linear',
+        '#states' => [
+          'visible' => [
+            ':input[name="data[text_blocks][' . $index . '][animation][type]"]' => ['!value' => 'none'],
+          ],
+        ],
+      ];
     }
 
     return $form;
@@ -337,6 +427,12 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
             'background_color' => $values['background_color'] ?? '',
             'custom_x' => isset($values['custom_x']) ? (int) $values['custom_x'] : 0,
             'custom_y' => isset($values['custom_y']) ? (int) $values['custom_y'] : 0,
+            'animation' => [
+              'type' => $values['animation']['type'] ?? 'none',
+              'duration' => (float) ($values['animation']['duration'] ?? 1.0),
+              'delay' => (float) ($values['animation']['delay'] ?? 0.0),
+              'easing' => $values['animation']['easing'] ?? 'linear',
+            ],
           ];
         }
       }

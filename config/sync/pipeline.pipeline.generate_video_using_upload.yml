@@ -6,37 +6,15 @@ id: generate_video_using_upload
 label: 'Generate video using upload'
 instructions: 'Generate video using upload'
 created: 1740931404
-changed: 1741256411
+changed: 1741572855
 execution_type: scheduled
-scheduled_time: 1741204500
+scheduled_time: 1741550460
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
 execution_interval: null
 execution_failures: 0
 step_types:
-  2f52a65b-07ae-45e4-ba26-54f02520ea75:
-    id: upload_image_step
-    data:
-      step_description: 'Alan watts with orange kimono'
-      required_steps: ''
-      video_settings:
-        duration: '12'
-      text_overlay:
-        enabled: '1'
-        text: 'Alan Watts the master of englightenment in his pink robe.'
-        position: bottom_left
-        font_size: '40'
-        font_color: white
-        background_color: black
-        custom_x: '0'
-        custom_y: '0'
-      step_output_key: image_data_1
-      output_type: featured_image
-      image_file_id: 338
-      response: ''
-    weight: -10
-    uuid: 2f52a65b-07ae-45e4-ba26-54f02520ea75
   4f570c60-f0ea-46f2-bc12-d5c2c9b50f09:
     id: upload_audio_step
     data:
@@ -57,49 +35,164 @@ step_types:
       output_type: video_content
       action_config: video_generation
       response: ''
-    weight: -4
+    weight: -6
     uuid: 64cb464d-751a-4ae5-9828-66bb9ceeac2c
-  21a21c43-8365-47ca-8b7f-079a0163b0dc:
+  ab023e3e-5032-43a7-bc0c-b291a418af27:
     id: upload_image_step
     data:
-      step_description: 'Alan watts in a nice garden'
+      step_description: Slide3
+      required_steps: ''
+      video_settings:
+        duration: '12'
+      text_blocks:
+        -
+          id: title_block
+          enabled: true
+          text: 'SONGOMAR VIDEOS'
+          position: top
+          font_size: 36
+          font_color: red
+          background_color: yellow
+          animation:
+            type: scale
+            duration: 1.0
+            delay: 0.0
+            easing: linear
+      step_output_key: image_data_3
+      output_type: featured_image
+      image_file_id: 409
+      response: ''
+    weight: -8
+    uuid: ab023e3e-5032-43a7-bc0c-b291a418af27
+  c76e1f95-ec0f-4470-9650-4bf720ff9132:
+    id: upload_image_step
+    data:
+      step_description: 'Slide 1'
+      required_steps: ''
+      video_settings:
+        duration: '12'
+      text_blocks:
+        -
+          id: title_block
+          enabled: true
+          text: 'Exciting Today News'
+          position: top_left
+          font_size: 32
+          font_color: '#FF0000'
+          background_color: yellow
+          animation:
+            type: slide
+            duration: 1.0
+            delay: 0.0
+            easing: linear
+        -
+          id: subtitle_block
+          enabled: true
+          text: 'Our latest news from trusted sources.'
+          position: top_right
+          font_size: 28
+          font_color: '#F0F0F0'
+          background_color: 'rgb(30, 42, 62)'
+          animation:
+            type: fade
+            duration: 1.0
+            delay: 0.5
+            easing: ease-in
+        -
+          id: body_block
+          enabled: true
+          text: "This is  the major text where we shoud put most long text to read more click here.\r\nI want it to act as 3 lines of major news articles from news api.\r\nThis should be shown as a block text so wrapping should work nicely.\r\nThis is  the major text where we shoud put most long text to read more click here.\r\nI want it to act as 3 lines of major news articles from news api.\r\n"
+          position: bottom_right
+          font_size: 20
+          font_color: '#F0F0F0'
+          background_color: 'rgb(30, 42, 62)'
+          animation:
+            type: scale
+            duration: 1.0
+            delay: 0.0
+            easing: ease-in
+        -
+          id: caption_block
+          enabled: true
+          text: "Email: momo@gmail.com\r\nPhone: 0761524874"
+          position: bottom_left
+          font_size: 24
+          font_color: '#F0F0F0'
+          background_color: 'rgb(30, 42, 62)'
+          animation:
+            type: fade
+            duration: 1.0
+            delay: 0.0
+            easing: ease-in
+      step_output_key: image_data_1
+      output_type: featured_image
+      image_file_id: 431
+      response: ''
+    weight: -10
+    uuid: c76e1f95-ec0f-4470-9650-4bf720ff9132
+  e2f39d35-d610-4e4b-aaac-7717a5dacba0:
+    id: upload_image_step
+    data:
+      step_description: 'Slide 2'
       required_steps: ''
       video_settings:
         duration: '18'
-      text_overlay:
-        enabled: '1'
-        text: 'In he look, Alan saw unity and seriousness in a hilarious manner.'
-        position: bottom_left
-        font_size: '40'
-        font_color: white
-        background_color: black
-        custom_x: '0'
-        custom_y: '0'
+      text_blocks:
+        -
+          id: title_block
+          enabled: true
+          text: 'Secoond slide title'
+          position: top_left
+          font_size: 36
+          font_color: white
+          background_color: 'rgba(0,0,0,0.5)'
+          animation:
+            type: scale
+            duration: 1.0
+            delay: 0.0
+            easing: ease-in
+        -
+          id: subtitle_block
+          enabled: true
+          text: 'This is the subtitle text hold my bear.'
+          position: top
+          font_size: 28
+          font_color: white
+          background_color: red
+          animation:
+            type: scale
+            duration: 1.0
+            delay: 0.0
+            easing: ease-in
+        -
+          id: body_block
+          enabled: true
+          text: 'THis the body the long text where talk is done'
+          position: top_right
+          font_size: 24
+          font_color: white
+          background_color: green
+          animation:
+            type: slide
+            duration: 1.0
+            delay: 0.0
+            easing: ease-in
+        -
+          id: caption_block
+          enabled: true
+          text: 'The caption whatever it is'
+          position: bottom_left
+          font_size: 20
+          font_color: white
+          background_color: red
+          animation:
+            type: scale
+            duration: 1.0
+            delay: 0.0
+            easing: ease-in
       step_output_key: image_data_2
       output_type: featured_image
-      image_file_id: 350
+      image_file_id: 439
       response: ''
     weight: -9
-    uuid: 21a21c43-8365-47ca-8b7f-079a0163b0dc
-  27846b05-5d45-4bbe-966e-326cac5b4443:
-    id: upload_image_step
-    data:
-      step_description: 'Alan watts with crossing arms'
-      required_steps: ''
-      video_settings:
-        duration: '13'
-      text_overlay:
-        enabled: '1'
-        text: 'Crossing his arms, a nice smile in his face, the joy is profound.'
-        position: bottom_left
-        font_size: '40'
-        font_color: white
-        background_color: black
-        custom_x: '0'
-        custom_y: '0'
-      step_output_key: image_data_3
-      output_type: featured_image
-      image_file_id: 351
-      response: ''
-    weight: -8
-    uuid: 27846b05-5d45-4bbe-966e-326cac5b4443
+    uuid: e2f39d35-d610-4e4b-aaac-7717a5dacba0

@@ -226,6 +226,57 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       '#description' => $this->t('The frame rate of the video (frames per second).'),
     ];
 
+    // In VideoGenerationActionService::buildConfigurationForm()
+    $form['ken_burns'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Ken Burns Effect'),
+      '#collapsible' => TRUE,
+      '#collapsed' => FALSE,
+    ];
+
+    $form['ken_burns']['ken_burns_enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable Ken Burns Effect'),
+      '#default_value' => $configuration['ken_burns']['ken_burns_enabled'] ?? TRUE,
+      '#description' => $this->t('Add subtle pan and zoom to images for a more professional look.'),
+    ];
+
+    $form['ken_burns']['ken_burns_style'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Effect Style'),
+      '#options' => [
+        'zoom_in' => $this->t('Zoom In'),
+        'zoom_out' => $this->t('Zoom Out'),
+        'pan_left' => $this->t('Pan Left'),
+        'pan_right' => $this->t('Pan Right'),
+        'random' => $this->t('Random (varies by image)'),
+      ],
+      '#default_value' => $configuration['ken_burns']['ken_burns_style'] ?? 'random',
+      '#description' => $this->t('Select the style of the Ken Burns effect.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="ken_burns[enabled]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    $form['ken_burns']['ken_burns_intensity'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Effect Intensity'),
+      '#options' => [
+        'subtle' => $this->t('Subtle'),
+        'moderate' => $this->t('Moderate'),
+        'strong' => $this->t('Strong'),
+      ],
+      '#default_value' => $configuration['ken_burns']['ken_burns_intensity'] ?? 'moderate',
+      '#description' => $this->t('Control how pronounced the effect is.'),
+      '#states' => [
+        'visible' => [
+          ':input[name="ken_burns[enabled]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
     return $form;
   }
 
@@ -238,6 +289,11 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       'output_format' => $form_state->getValue('output_format'),
       'transition_type' => $form_state->getValue('transition_type'),
       'transition_duration' => $form_state->getValue('transition_duration'),
+      'ken_burns' => [
+        'ken_burns_enabled' => $form_state->getValue('ken_burns_enabled'),
+        'ken_burns_style' => $form_state->getValue('ken_burns_style'),
+        'ken_burns_intensity' => $form_state->getValue('ken_burns_intensity'),
+      ],
       'bitrate' => $form_state->getValue('bitrate'),
       'framerate' => $form_state->getValue('framerate'),
     ];

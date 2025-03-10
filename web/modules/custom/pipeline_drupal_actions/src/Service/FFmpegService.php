@@ -61,6 +61,10 @@ class FFmpegService
     $transitionType = $config['transition_type'] ?? 'fade';
     $transitionDuration = $config['transition_duration'] ?? 1;
     $resolution = $this->getResolution($config['video_quality'] ?? 'medium');
+    // Parse resolution for width and height
+    list($width, $height) = explode(':', $resolution);
+    $width = (int)$width;
+    $height = (int)$height;
     $bitrate = $config['bitrate'] ?? '1500k';
     $framerate = $config['framerate'] ?? 24;
 
@@ -78,148 +82,13 @@ class FFmpegService
     // Start building filter complex
     $filterComplex = "";
 
-    // Process each image - scale and apply text blocks
-    for ($i = 0; $i < count($imagePaths); $i++) {
-      // Start with scaling filter for this image
-      $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p",
-        $i, $resolution);
-
-      // Parse resolution
-      list($width, $height) = explode(':', $resolution);
-      $width = (int)$width;
-      $height = (int)$height;
-
-      // Create a more refined grouping system for text blocks based on both vertical and horizontal position
-      $positionGroups = [
-        'top_left' => [],
-        'top' => [],
-        'top_right' => [],
-        'left' => [],
-        'center' => [],
-        'right' => [],
-        'bottom_left' => [],
-        'bottom' => [],
-        'bottom_right' => [],
-        'custom' => [],
-      ];
-
-      // Get text blocks for this image and group them by exact position
-      if (isset($imageFiles[$i]['text_blocks']) && is_array($imageFiles[$i]['text_blocks'])) {
-        foreach ($imageFiles[$i]['text_blocks'] as $block) {
-          if (empty($block['enabled'])) continue;
-
-          $position = $block['position'] ?? 'center';
-          if (isset($positionGroups[$position])) {
-            $positionGroups[$position][] = $block;
-          } else {
-            $positionGroups['custom'][] = $block;
-          }
-        }
-      }
-
-      // Process each position group separately
-      foreach ($positionGroups as $position => $blocks) {
-        if (empty($blocks)) continue;
-
-        // Set different vertical offsets based on the position group
-        $verticalOffset = 0;
-        switch ($position) {
-          case 'top_left':
-          case 'top':
-          case 'top_right':
-            $verticalOffset = 20; // Starting margin from top
-            break;
-          case 'left':
-          case 'center':
-          case 'right':
-            $verticalOffset = $height / 2 - 40; // Start slightly above center
-            break;
-          case 'bottom_left':
-          case 'bottom':
-          case 'bottom_right':
-            $verticalOffset = $height - 20; // Starting from bottom
-            break;
-        }
-
-        // Process blocks within this position group
-        foreach ($blocks as $index => $block) {
-          $text = $this->processTextContent($block['text'] ?? '', $context);
-          if (empty($text)) continue;
-
-          // For the first block in a group, use the original position
-          if ($index === 0) {
-            $drawTextParams = $this->buildDrawTextParameters($block, "$width:$height", $text);
-            $filterComplex .= ',' . $drawTextParams;
-            continue;
-          }
-
-          // For subsequent blocks in the same position group, offset vertically
-          $fontSize = !empty($block['font_size']) ? (int)$block['font_size'] : 24;
-          $verticalSpacing = $fontSize * 1.5;
-
-          // Create a modified block for proper vertical spacing
-          $adjustedBlock = $block;
-          $adjustedBlock['position'] = 'custom';
-
-          // Maintain horizontal alignment based on the position group
-          switch ($position) {
-            case 'top_left':
-            case 'left':
-            case 'bottom_left':
-              $adjustedBlock['custom_x'] = 20; // Left margin
-              break;
-            case 'top':
-            case 'center':
-            case 'bottom':
-              $adjustedBlock['custom_x'] = $width / 2; // Center horizontally
-              break;
-            case 'top_right':
-            case 'right':
-            case 'bottom_right':
-              $adjustedBlock['custom_x'] = $width - 20; // Right margin
-              break;
-          }
-
-          // Adjust vertical position based on the group and block index
-          switch ($position) {
-            case 'top_left':
-            case 'top':
-            case 'top_right':
-              // Stack downward from top
-              $adjustedBlock['custom_y'] = $verticalOffset + ($index * $verticalSpacing);
-              break;
-            case 'left':
-            case 'center':
-            case 'right':
-              // Alternate above and below center
-              if ($index % 2 == 0) {
-                $adjustedBlock['custom_y'] = $verticalOffset + ($index * $verticalSpacing / 2);
-              } else {
-                $adjustedBlock['custom_y'] = $verticalOffset - ($index * $verticalSpacing / 2);
-              }
-              break;
-            case 'bottom_left':
-            case 'bottom':
-            case 'bottom_right':
-              // Stack upward from bottom
-              $adjustedBlock['custom_y'] = $verticalOffset - ($index * $verticalSpacing);
-              break;
-          }
-
-          $drawTextParams = $this->buildDrawTextParameters($adjustedBlock, "$width:$height", $text);
-          $filterComplex .= ',' . $drawTextParams;
-        }
-      }
-
-      // Complete this image's filter chain
-      $filterComplex .= sprintf("[v%d];", $i);
-    }
 
     // Calculate durations
     $durations = [];
     $totalDuration = 0;
     for ($i = 0; $i < count($imageFiles); $i++) {
-      $durations[$i] = $imageFiles[$i]['video_settings']['duration'] ?? 5;
+      $durations[$i] = isset($imageFiles[$i]['video_settings']['duration']) ?
+        (float)$imageFiles[$i]['video_settings']['duration'] : 5.0;
       $totalDuration += $durations[$i];
     }
 
@@ -243,6 +112,64 @@ class FFmpegService
         sprintf("Adjusted durations: %s, Total after adjustment: %.2f",
           json_encode($durations), array_sum($durations))
       );
+    }
+
+    // Process each image - scale and apply text blocks
+    for ($i = 0; $i < count($imagePaths); $i++) {
+      // Start with scaling filter for this image
+      if (!empty($config['ken_burns']['ken_burns_enabled'])) {
+        // Get zoom/pan parameters based on configuration
+        $kenBurnsParams = $this->getKenBurnsParameters(
+          $config['ken_burns']['ken_burns_style'] ?? 'random',
+          $config['ken_burns']['ken_burns_intensity'] ?? 'moderate',
+          $i,
+          $durations[$i] ?? 5,
+          $framerate
+        );
+
+        // Apply zoompan filter after scaling
+        $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,%s,format=yuv420p",
+          $i, $resolution, $kenBurnsParams);
+      } else {
+        // Original code without Ken Burns
+        $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p",
+          $i, $resolution);
+      }
+
+      // Calculate the start time for this slide in the overall video
+      $slideStartTime = 0;
+      for ($j = 0; $j < $i; $j++) {
+        $slideStartTime += $durations[$j];
+        // Subtract transition overlap
+        if ($j > 0) {
+          $slideStartTime -= $transitionDuration;
+        }
+      }
+      $slideDuration = $durations[$i];
+
+      // Get text blocks for this image
+      if (isset($imageFiles[$i]['text_blocks']) && is_array($imageFiles[$i]['text_blocks'])) {
+        foreach ($imageFiles[$i]['text_blocks'] as $block) {
+          if (empty($block['enabled'])) continue;
+
+          $text = $this->processTextContent($block['text'] ?? '', $context);
+          if (empty($text)) continue;
+
+          // Build drawtext parameters with animation support
+          $drawTextParams = $this->buildDrawTextParameters(
+            $block,
+            "$width:$height",
+            $text,
+            $slideStartTime,
+            $slideDuration
+          );
+
+          $filterComplex .= ',' . $drawTextParams;
+        }
+      }
+
+      // Complete this image's filter chain
+      $filterComplex .= sprintf("[v%d];", $i);
     }
 
     // First image
@@ -371,7 +298,7 @@ class FFmpegService
   }
 
   /**
-   * Builds the drawtext parameters for a text block.
+   * Builds the drawtext parameters for a text block with animation support.
    *
    * @param array $block
    *   The text block configuration.
@@ -379,11 +306,19 @@ class FFmpegService
    *   The video resolution.
    * @param string $text
    *   The processed text content.
+   * @param float $startTime
+   *   The start time for this image within the video.
+   * @param float $duration
+   *   The duration this image is displayed.
    *
    * @return string
    *   The drawtext filter parameters.
    */
-  public function buildDrawTextParameters(array $block, string $resolution, string $text): string {
+
+  /**
+   * Builds the drawtext parameters for a text block with animation support.
+   */
+  public function buildDrawTextParameters(array $block, string $resolution, string $text, float $startTime = 0, float $duration = 5): string {
     $fontSize = !empty($block['font_size']) ? $block['font_size'] : 24;
     $fontColor = !empty($block['font_color']) ? $block['font_color'] : 'white';
 
@@ -392,102 +327,249 @@ class FFmpegService
     $width = (int)$width;
     $height = (int)$height;
 
-    // Completely escape text for FFmpeg's filter syntax
+    // Properly escape text for FFmpeg - this is critical
     $escapedText = $this->escapeFFmpegText($text);
 
     // Fixed margin value
     $margin = 20;
 
-    // Calculate position based on position type
-    if ($block['position'] === 'custom') {
-      // Handle custom positions with special care for right-aligned text
-      $x = isset($block['custom_x']) ? (int)$block['custom_x'] : 0;
-      $y = isset($block['custom_y']) ? (int)$block['custom_y'] : 0;
+    // Calculate position parameters
+    $position = '';
+    $posX = 0;
+    $posY = 0;
 
-      // If this appears to be a right-aligned position (x is close to right edge)
-      if ($x > $width * 0.8) {
-        // Use FFmpeg expression to place the right edge of text at the specified point
-        $position = "x=w-text_w-($width-$x):y=$y";
-      } else {
-        $position = "x=$x:y=$y";
-      }
+    if ($block['position'] === 'custom' && isset($block['custom_x']) && isset($block['custom_y'])) {
+      $posX = (int)$block['custom_x'];
+      $posY = (int)$block['custom_y'];
+      $position = "x=$posX:y=$posY";
     } else {
-      // Standard positions with proper right-alignment handling
+      // Standard positions
       switch ($block['position']) {
         case 'top_left':
           $position = "x=$margin:y=$margin";
+          $posX = $margin;
+          $posY = $margin;
           break;
         case 'top':
           $position = "x=(w-text_w)/2:y=$margin";
+          $posX = $width / 2; // Approximate for calculations
+          $posY = $margin;
           break;
         case 'top_right':
-          // Place the right edge of text margin pixels from the right edge
           $position = "x=w-text_w-$margin:y=$margin";
+          $posX = $width - $margin;
+          $posY = $margin;
           break;
         case 'left':
           $position = "x=$margin:y=(h-text_h)/2";
+          $posX = $margin;
+          $posY = $height / 2;
           break;
         case 'center':
           $position = "x=(w-text_w)/2:y=(h-text_h)/2";
+          $posX = $width / 2;
+          $posY = $height / 2;
           break;
         case 'right':
           $position = "x=w-text_w-$margin:y=(h-text_h)/2";
+          $posX = $width - $margin;
+          $posY = $height / 2;
           break;
         case 'bottom_left':
           $position = "x=$margin:y=h-text_h-$margin";
+          $posX = $margin;
+          $posY = $height - $margin;
           break;
         case 'bottom':
           $position = "x=(w-text_w)/2:y=h-text_h-$margin";
+          $posX = $width / 2;
+          $posY = $height - $margin;
           break;
         case 'bottom_right':
           $position = "x=w-text_w-$margin:y=h-text_h-$margin";
+          $posX = $width - $margin;
+          $posY = $height - $margin;
           break;
         default:
-          $position = "x=(w-text_w)/2:y=(h-text_h)/2"; // Default to center
+          $position = "x=(w-text_w)/2:y=(h-text_h)/2";
+          $posX = $width / 2;
+          $posY = $height / 2;
       }
     }
 
     // Add background box if configured
     $boxParam = '';
     if (!empty($block['background_color'])) {
-      // Convert rgba() format to FFmpeg hex color format
+      // Convert rgba() format to FFmpeg hex color format or use directly
       $bgColor = $this->convertToFFmpegColor($block['background_color']);
       $boxParam = ":box=1:boxcolor=$bgColor:boxborderw=5";
     }
 
-    // Return the full drawtext parameter string
-    return sprintf("drawtext=text='%s':fontsize=%d:fontcolor=%s:%s%s",
+    // Get animation parameters
+    $animationType = isset($block['animation']['type']) ? $block['animation']['type'] : 'none';
+    $animationDuration = isset($block['animation']['duration']) ? (float) $block['animation']['duration'] : 1.0;
+    $animationDelay = isset($block['animation']['delay']) ? (float) $block['animation']['delay'] : 0.0;
+
+    // Ensure animation duration isn't too long
+    if ($animationDuration > $duration / 2) {
+      $animationDuration = $duration / 2;
+    }
+
+    // Calculate timing for fade in/out
+    $fadeInStart = $animationDelay;
+    $fadeInEnd = $fadeInStart + $animationDuration;
+    $fadeOutStart = $duration - $animationDuration;
+    $fadeOutEnd = $duration;
+
+    // Basic enable expression - show text during specified time period
+    $enableExpr = "enable='between(t-$startTime,$fadeInStart,$fadeOutEnd)'";
+    $additionalParams = '';
+
+    // Apply animation based on type
+    switch ($animationType) {
+      case 'fade':
+        // Simple fade in/out - using fixed values for reliability
+        $additionalParams = sprintf(":alpha='if(lt(t-%.6f,%.6f),min(1,(t-%.6f-%.6f)/%.6f),if(gt(t-%.6f,%.6f),max(0,(1-(t-%.6f-%.6f)/%.6f)),1))'",
+          $startTime, $fadeInEnd,
+          $startTime, $fadeInStart, $animationDuration,
+          $startTime, $fadeOutStart,
+          $startTime, $fadeOutStart, $animationDuration
+        );
+        break;
+
+      case 'slide':
+        // Slide animation - simplified for reliability
+        $slideDirection = $this->getSlideDirectionFromPosition($block['position']);
+        $slideOffset = 100;
+
+        if ($slideDirection === 'left' || $slideDirection === 'right') {
+          $xValue = $posX;
+          $slideExpr = '';
+
+          if ($slideDirection === 'left') {
+            // Slide from left
+            $slideExpr = sprintf("if(lt(t-%.6f,%.6f),(%.6f-%.6f+(%.6f*(t-%.6f-%.6f)/%.6f)),%.6f)",
+              $startTime, $fadeInEnd,
+              $xValue, $slideOffset, $slideOffset,
+              $startTime, $fadeInStart, $animationDuration,
+              $xValue
+            );
+          } else {
+            // Slide from right
+            $slideExpr = sprintf("if(lt(t-%.6f,%.6f),(%.6f+%.6f-(%.6f*(t-%.6f-%.6f)/%.6f)),%.6f)",
+              $startTime, $fadeInEnd,
+              $xValue, $slideOffset, $slideOffset,
+              $startTime, $fadeInStart, $animationDuration,
+              $xValue
+            );
+          }
+          $additionalParams = ":x='" . $slideExpr . "'";
+        }
+        else {
+          $yValue = $posY;
+          $slideExpr = '';
+
+          if ($slideDirection === 'top') {
+            // Slide from top
+            $slideExpr = sprintf("if(lt(t-%.6f,%.6f),(%.6f-%.6f+(%.6f*(t-%.6f-%.6f)/%.6f)),%.6f)",
+              $startTime, $fadeInEnd,
+              $yValue, $slideOffset, $slideOffset,
+              $startTime, $fadeInStart, $animationDuration,
+              $yValue
+            );
+          } else {
+            // Slide from bottom
+            $slideExpr = sprintf("if(lt(t-%.6f,%.6f),(%.6f+%.6f-(%.6f*(t-%.6f-%.6f)/%.6f)),%.6f)",
+              $startTime, $fadeInEnd,
+              $yValue, $slideOffset, $slideOffset,
+              $startTime, $fadeInStart, $animationDuration,
+              $yValue
+            );
+          }
+          $additionalParams = ":y='" . $slideExpr . "'";
+        }
+
+        // Add fade effect for smoother appearance
+        $fadeExpr = sprintf("if(lt(t-%.6f,%.6f),min(1,(t-%.6f-%.6f)/%.6f),1)",
+          $startTime, $fadeInEnd,
+          $startTime, $fadeInStart, $animationDuration
+        );
+        $additionalParams .= ":alpha='" . $fadeExpr . "'";
+        break;
+
+      case 'scale':
+        // Scale animation - grow from 0 to full size
+        $scaleExpr = sprintf("if(lt(t-%.6f,%.6f),%.6f*(t-%.6f-%.6f)/%.6f,%.6f)",
+          $startTime, $fadeInEnd,
+          $fontSize,
+          $startTime, $fadeInStart, $animationDuration,
+          $fontSize
+        );
+        $additionalParams = ":fontsize='" . $scaleExpr . "'";
+
+        // Add fade for smoother appearance
+        $fadeExpr = sprintf("if(lt(t-%.6f,%.6f),min(1,(t-%.6f-%.6f)/%.6f),1)",
+          $startTime, $fadeInEnd,
+          $startTime, $fadeInStart, $animationDuration
+        );
+        $additionalParams .= ":alpha='" . $fadeExpr . "'";
+        break;
+
+      case 'typewriter':
+        // Typewriter effect - text appears character by character
+        $textLength = mb_strlen($text);
+        $charPerSec = $textLength / max($animationDuration, 0.1); // Avoid division by zero
+
+        $typewriterExpr = sprintf("if(lt(t-%.6f,%.6f),min(%d,floor(%.6f*(t-%.6f-%.6f))),%d)",
+          $startTime, $fadeInEnd,
+          $textLength, $charPerSec,
+          $startTime, $fadeInStart,
+          $textLength
+        );
+        $additionalParams = ":text='substr(\"$escapedText\",0," . $typewriterExpr . ")'";
+        break;
+
+      case 'none':
+      default:
+        // Simple fade in/out with fixed timing
+        $additionalParams = sprintf(":alpha='if(lt(t-%.6f,%.6f),min(1,(t-%.6f-%.6f)/0.3),if(gt(t-%.6f,%.6f),max(0,(1-(t-%.6f-%.6f)/0.3)),1))'",
+          $startTime, $fadeInStart + 0.3,
+          $startTime, $fadeInStart,
+          $startTime, $fadeOutEnd - 0.3,
+          $startTime, $fadeOutEnd - 0.3
+        );
+        break;
+    }
+
+    // Return the full drawtext parameter string with animations
+    return sprintf("drawtext=text='%s':fontsize=%d:fontcolor=%s:%s%s:%s%s",
       $escapedText,
       $fontSize,
       $fontColor,
       $position,
-      $boxParam
+      $boxParam,
+      $enableExpr,
+      $additionalParams
     );
   }
 
   /**
    * Escapes text for FFmpeg filter_complex parameter.
-   *
-   * This handles all special characters that could break the filter syntax.
-   *
-   * @param string $text
-   *   The original text.
-   *
-   * @return string
-   *   The text properly escaped for FFmpeg.
    */
   protected function escapeFFmpegText($text) {
     // First, escape backslashes
-    $text = str_replace('\\', '\\\\', $text);
+    $text = str_replace('\\', '\\\\\\\\', $text);
 
-    // Escape single quotes (this is crucial for the filter_complex syntax)
-    $text = str_replace("'", "'\\\\\\'", $text);
+    // Escape single quotes
+    $text = str_replace("'", "\\\\'", $text);
 
-    // Escape other special characters that might break the filter
-    $special_chars = [':', ',', '[', ']', ';', '=', '%', '-', '+'];
-    foreach ($special_chars as $char) {
-      $text = str_replace($char, '\\' . $char, $text);
-    }
+    // Escape other special characters that might break the filter syntax
+    $text = str_replace(':', '\\:', $text);
+    $text = str_replace(',', '\\,', $text);
+    $text = str_replace('[', '\\[', $text);
+    $text = str_replace(']', '\\]', $text);
+    $text = str_replace(';', '\\;', $text);
+    $text = str_replace('=', '\\=', $text);
 
     return $text;
   }
@@ -501,6 +583,7 @@ class FFmpegService
    * @return string
    *   FFmpeg compatible color string.
    */
+
   protected function convertToFFmpegColor($color) {
     // Check if it's rgba format
     if (preg_match('/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*([\d\.]+)\s*\)/i', $color, $matches)) {
@@ -525,7 +608,7 @@ class FFmpegService
       return sprintf('0x%s%s%sff', $r, $g, $b);
     }
 
-    // For named colors, just return as is (FFmpeg recognizes common color names)
+    // For named colors or already formatted colors, just return as is
     return $color;
   }
 
@@ -613,6 +696,130 @@ class FFmpegService
   }
 
   /**
+   * Gets detailed position information for text based on its configuration.
+   */
+  protected function getTextPositionInfo(array $block, int $width, int $height, int $margin = 20): array {
+    $result = [
+      'position' => '',
+      'x' => 0,
+      'y' => 0
+    ];
+
+    if ($block['position'] === 'custom') {
+      // Handle custom positions
+      $x = isset($block['custom_x']) ? (int)$block['custom_x'] : 0;
+      $y = isset($block['custom_y']) ? (int)$block['custom_y'] : 0;
+
+      // If this appears to be a right-aligned position (x is close to right edge)
+      if ($x > $width * 0.8) {
+        // Use FFmpeg expression to place the right edge of text at the specified point
+        $result['position'] = "x=min(w-text_w,$x):y=$y";
+      } else {
+        $result['position'] = "x=$x:y=$y";
+      }
+      $result['x'] = $x;
+      $result['y'] = $y;
+    } else {
+      // Standard positions with proper right-alignment handling
+      switch ($block['position']) {
+        case 'top_left':
+          $result['position'] = "x=$margin:y=$margin";
+          $result['x'] = $margin;
+          $result['y'] = $margin;
+          break;
+        case 'top':
+          $result['position'] = "x=(w-text_w)/2:y=$margin";
+          $result['x'] = $width / 2;
+          $result['y'] = $margin;
+          break;
+        case 'top_right':
+          $result['position'] = "x=w-text_w-$margin:y=$margin";
+          $result['x'] = $width - $margin;
+          $result['y'] = $margin;
+          break;
+        case 'left':
+          $result['position'] = "x=$margin:y=(h-text_h)/2";
+          $result['x'] = $margin;
+          $result['y'] = $height / 2;
+          break;
+        case 'center':
+          $result['position'] = "x=(w-text_w)/2:y=(h-text_h)/2";
+          $result['x'] = $width / 2;
+          $result['y'] = $height / 2;
+          break;
+        case 'right':
+          $result['position'] = "x=w-text_w-$margin:y=(h-text_h)/2";
+          $result['x'] = $width - $margin;
+          $result['y'] = $height / 2;
+          break;
+        case 'bottom_left':
+          $result['position'] = "x=$margin:y=h-text_h-$margin";
+          $result['x'] = $margin;
+          $result['y'] = $height - $margin;
+          break;
+        case 'bottom':
+          $result['position'] = "x=(w-text_w)/2:y=h-text_h-$margin";
+          $result['x'] = $width / 2;
+          $result['y'] = $height - $margin;
+          break;
+        case 'bottom_right':
+          $result['position'] = "x=w-text_w-$margin:y=h-text_h-$margin";
+          $result['x'] = $width - $margin;
+          $result['y'] = $height - $margin;
+          break;
+        default:
+          $result['position'] = "x=(w-text_w)/2:y=(h-text_h)/2";
+          $result['x'] = $width / 2;
+          $result['y'] = $height / 2;
+      }
+    }
+
+    return $result;
+  }
+
+  /**
+   * Determines slide direction based on text position.
+   */
+  protected function getSlideDirectionFromPosition(string $position): string {
+    switch ($position) {
+      case 'top':
+      case 'top_left':
+      case 'top_right':
+        return 'top';
+      case 'bottom':
+      case 'bottom_left':
+      case 'bottom_right':
+        return 'bottom';
+      case 'left':
+        return 'left';
+      case 'right':
+        return 'right';
+      case 'center':
+      default:
+        // For center position, default to bottom
+        return 'bottom';
+    }
+  }
+
+
+  /**
+   * Returns the easing function expression for FFmpeg.
+   */
+  protected function getEasingFunction(string $easing): string {
+    switch ($easing) {
+      case 'ease-in':
+        return 'pow'; // t^2
+      case 'ease-out':
+        return 'sqrt'; // √t
+      case 'ease-in-out':
+        return '(sin((t-0.5)*PI)+1)/2'; // Sinusoidal easing
+      case 'linear':
+      default:
+        return ''; // Linear (no function applied)
+    }
+  }
+
+  /**
    * Processes text content to replace placeholders with values from context.
    *
    * @param string $text
@@ -669,5 +876,71 @@ class FFmpegService
       'output' => $output,
       'returnCode' => $returnCode,
     ];
+  }
+
+  /**
+   * Generates zoompan parameters for Ken Burns effect.
+   *
+   * @param string $style
+   *   The style of Ken Burns effect.
+   * @param string $intensity
+   *   The intensity level of the effect.
+   * @param int $imageIndex
+   *   The index of the image being processed.
+   * @param float $duration
+   *   The duration of the image in seconds.
+   * @param int $framerate
+   *   The frame rate of the video.
+   *
+   * @return string
+   *   FFmpeg zoompan filter parameters.
+   */
+  protected function getKenBurnsParameters(string $style, string $intensity, int $imageIndex, float $duration, int $framerate): string {
+    // Convert duration to frames
+    $frames = round($duration * $framerate);
+
+    // Set zoom speed based on intensity
+    $zoomSpeed = [
+      'subtle' => 0.0005,
+      'moderate' => 0.001,
+      'strong' => 0.002,
+    ][$intensity] ?? 0.001;
+
+    // Set pan speed based on intensity (pixels per frame)
+    $panSpeed = [
+      'subtle' => 0.5,
+      'moderate' => 0.8,
+      'strong' => 1.2,
+    ][$intensity] ?? 0.8;
+
+    // Determine effect direction based on style or random
+    if ($style === 'random') {
+      $styles = ['zoom_in', 'zoom_out', 'pan_left', 'pan_right'];
+      $style = $styles[$imageIndex % count($styles)];
+    }
+
+    // Build the appropriate zoompan parameters
+    switch ($style) {
+      case 'zoom_in':
+        return sprintf('zoompan=z=\'min(1.0+%f*on,1.3)\':d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\'',
+          $zoomSpeed, $frames);
+
+      case 'zoom_out':
+        return sprintf('zoompan=z=\'max(1.3-%f*on,1.0)\':d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\'',
+          $zoomSpeed, $frames);
+
+      case 'pan_left':
+        return sprintf('zoompan=z=\'1.1\':d=%d:x=\'if(lte(on,%d),0,min(iw-(iw/zoom),%f*on))\':y=\'ih/2-(ih/zoom/2)\'',
+          $frames, $frames/10, $panSpeed);
+
+      case 'pan_right':
+        return sprintf('zoompan=z=\'1.1\':d=%d:x=\'if(lte(on,%d),iw-(iw/zoom),max(0,iw-(iw/zoom)-%f*on))\':y=\'ih/2-(ih/zoom/2)\'',
+          $frames, $frames/10, $panSpeed);
+
+      default:
+        // Default to zoom in if unknown style
+        return sprintf('zoompan=z=\'min(1.0+%f*on,1.3)\':d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\'',
+          $zoomSpeed, $frames);
+    }
   }
 }
