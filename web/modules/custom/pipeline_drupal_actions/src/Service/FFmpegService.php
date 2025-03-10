@@ -46,6 +46,7 @@ class FFmpegService
    * @return string
    *   The FFmpeg command.
    */
+
   /**
    * Builds FFmpeg command for multiple image slideshow with transitions and text blocks.
    */
@@ -82,7 +83,6 @@ class FFmpegService
     // Start building filter complex
     $filterComplex = "";
 
-
     // Calculate durations
     $durations = [];
     $totalDuration = 0;
@@ -115,10 +115,14 @@ class FFmpegService
     }
 
     // Process each image - scale and apply text blocks
+    // CRITICAL FIX: Apply text overlays BEFORE trim/setpts operations
     for ($i = 0; $i < count($imagePaths); $i++) {
-      // Start with scaling filter for this image
+      // Start with basic scaling filter for this image
+      $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p",
+        $i, $resolution);
+
+      // Check if Ken Burns effect is enabled
       if (!empty($config['ken_burns']['ken_burns_enabled'])) {
-        // Get zoom/pan parameters based on configuration
         $kenBurnsParams = $this->getKenBurnsParameters(
           $config['ken_burns']['ken_burns_style'] ?? 'random',
           $config['ken_burns']['ken_burns_intensity'] ?? 'moderate',
@@ -126,28 +130,11 @@ class FFmpegService
           $durations[$i] ?? 5,
           $framerate
         );
-
-        // Apply zoompan filter after scaling
-        $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,%s,format=yuv420p",
-          $i, $resolution, $kenBurnsParams);
-      } else {
-        // Original code without Ken Burns
-        $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p",
-          $i, $resolution);
+        $filterComplex .= "," . $kenBurnsParams;
       }
 
-      // Calculate the start time for this slide in the overall video
-      $slideStartTime = 0;
-      for ($j = 0; $j < $i; $j++) {
-        $slideStartTime += $durations[$j];
-        // Subtract transition overlap
-        if ($j > 0) {
-          $slideStartTime -= $transitionDuration;
-        }
-      }
-      $slideDuration = $durations[$i];
-
-      // Get text blocks for this image
+      // CRITICAL FIX: Get text blocks for this image and add them BEFORE trim/setpts
+      // This ensures text operates on local timeline (0 to duration)
       if (isset($imageFiles[$i]['text_blocks']) && is_array($imageFiles[$i]['text_blocks'])) {
         foreach ($imageFiles[$i]['text_blocks'] as $block) {
           if (empty($block['enabled'])) continue;
@@ -155,12 +142,12 @@ class FFmpegService
           $text = $this->processTextContent($block['text'] ?? '', $context);
           if (empty($text)) continue;
 
-          // Build drawtext parameters with animation support
-          $drawTextParams = $this->buildDrawTextParameters(
+          // Get the text overlay with LOCAL timeline (0 to duration)
+          $slideDuration = $durations[$i];
+          $drawTextParams = $this->buildDrawTextWithLocalTimeline(
             $block,
             "$width:$height",
             $text,
-            $slideStartTime,
             $slideDuration
           );
 
@@ -168,25 +155,25 @@ class FFmpegService
         }
       }
 
-      // Complete this image's filter chain
+      // Close this video's filter chain
       $filterComplex .= sprintf("[v%d];", $i);
     }
 
-    // First image
-    $filterComplex .= sprintf("[v0]trim=duration=%s,setpts=PTS-STARTPTS[hold0];",
-      $durations[0]);
+    // Now process each trimmed video segment with its independent timeline
+    for ($i = 0; $i < count($imagePaths); $i++) {
+      $filterComplex .= sprintf("[v%d]trim=duration=%s,setpts=PTS-STARTPTS[hold%d];",
+        $i, $durations[$i], $i);
+    }
+
+    // First image becomes our initial output
     $lastOutput = "hold0";
 
-    // Before the loop, initialize the offset
+    // Initialize offset for transitions
     $currentOffset = $durations[0] - $transitionDuration;
 
     // Process remaining images with transitions
     for ($i = 1; $i < count($imagePaths); $i++) {
-      $filterComplex .= sprintf("[v%d]trim=duration=%s,setpts=PTS-STARTPTS[hold%d];",
-        $i, $durations[$i], $i);
-
-      $offsetTime = $currentOffset;
-      if ($offsetTime < 0) $offsetTime = 0;
+      $offsetTime = max(0, $currentOffset);
 
       $filterComplex .= sprintf("[%s][hold%d]xfade=transition=%s:duration=%s:offset=%s[trans%d];",
         $lastOutput, $i, $transitionType, $transitionDuration, $offsetTime, $i);
@@ -206,6 +193,252 @@ class FFmpegService
     $ffmpegCmd .= " -y";
 
     return $ffmpegCmd;
+  }
+
+  /**
+   * Builds drawtext parameters using the local timeline of each input video.
+   *
+   * @param array $block
+   *   The text block configuration.
+   * @param string $resolution
+   *   The video resolution.
+   * @param string $text
+   *   The processed text content.
+   * @param float $slideDuration
+   *   The duration of this slide.
+   *
+   * @return string
+   *   The drawtext filter parameters.
+   */
+  protected function buildDrawTextWithLocalTimeline(
+    array $block,
+    string $resolution,
+    string $text,
+    float $slideDuration
+  ): string {
+    $fontSize = !empty($block['font_size']) ? $block['font_size'] : 24;
+    $fontColor = !empty($block['font_color']) ? $block['font_color'] : 'white';
+
+    // Parse resolution
+    list($width, $height) = explode(':', $resolution);
+    $width = (int)$width;
+    $height = (int)$height;
+
+    // Properly escape text for FFmpeg
+    $escapedText = $this->escapeFFmpegText($text);
+
+    // Fixed margin value
+    $margin = 20;
+
+    // Calculate position parameters
+    $position = '';
+    $posX = 0;
+    $posY = 0;
+
+    if ($block['position'] === 'custom' && isset($block['custom_x']) && isset($block['custom_y'])) {
+      $posX = (int)$block['custom_x'];
+      $posY = (int)$block['custom_y'];
+      $position = "x=$posX:y=$posY";
+    } else {
+      // Standard positions
+      switch ($block['position']) {
+        case 'top_left':
+          $position = "x=$margin:y=$margin";
+          $posX = $margin;
+          $posY = $margin;
+          break;
+        case 'top':
+          $position = "x=(w-text_w)/2:y=$margin";
+          $posX = $width / 2;
+          $posY = $margin;
+          break;
+        case 'top_right':
+          $position = "x=w-text_w-$margin:y=$margin";
+          $posX = $width - $margin;
+          $posY = $margin;
+          break;
+        case 'left':
+          $position = "x=$margin:y=(h-text_h)/2";
+          $posX = $margin;
+          $posY = $height / 2;
+          break;
+        case 'center':
+          $position = "x=(w-text_w)/2:y=(h-text_h)/2";
+          $posX = $width / 2;
+          $posY = $height / 2;
+          break;
+        case 'right':
+          $position = "x=w-text_w-$margin:y=(h-text_h)/2";
+          $posX = $width - $margin;
+          $posY = $height / 2;
+          break;
+        case 'bottom_left':
+          $position = "x=$margin:y=h-text_h-$margin";
+          $posX = $margin;
+          $posY = $height - $margin;
+          break;
+        case 'bottom':
+          $position = "x=(w-text_w)/2:y=h-text_h-$margin";
+          $posX = $width / 2;
+          $posY = $height - $margin;
+          break;
+        case 'bottom_right':
+          $position = "x=w-text_w-$margin:y=h-text_h-$margin";
+          $posX = $width - $margin;
+          $posY = $height - $margin;
+          break;
+        default:
+          $position = "x=(w-text_w)/2:y=(h-text_h)/2";
+          $posX = $width / 2;
+          $posY = $height / 2;
+      }
+    }
+
+    // Add background box if configured
+    $boxParam = '';
+    if (!empty($block['background_color'])) {
+      $bgColor = $this->convertToFFmpegColor($block['background_color']);
+      $boxParam = ":box=1:boxcolor=$bgColor:boxborderw=5";
+    }
+
+    // Get animation parameters
+    $animationType = isset($block['animation']['type']) ? $block['animation']['type'] : 'none';
+    $animationDuration = isset($block['animation']['duration']) ? (float) $block['animation']['duration'] : 1.0;
+    $animationDelay = isset($block['animation']['delay']) ? (float) $block['animation']['delay'] : 0.0;
+
+    // Log the timing calculations
+    $this->loggerFactory->get('pipeline')->debug(
+      sprintf("Text block using LOCAL timeline (0-%0.2fs), animation=%s, delay=%0.2f",
+        $slideDuration, $animationType, $animationDelay)
+    );
+
+    // CRITICAL FIX: Use local timeline (0 to slideDuration)
+    $fadeInStart = $animationDelay;
+    $fadeInEnd = $fadeInStart + $animationDuration;
+    $fadeOutStart = $slideDuration - $animationDuration;
+    $fadeOutEnd = $slideDuration;
+
+    // Make sure animation stays within slide boundaries
+    if ($fadeInEnd > $slideDuration) $fadeInEnd = $slideDuration;
+    if ($fadeOutStart < $fadeInEnd) $fadeOutStart = $fadeInEnd;
+
+    // Create enable expression for the full duration of this slide (in its local timeline)
+    $enableExpr = sprintf("enable='between(t,0,%0.3f)'", $slideDuration);
+    $additionalParams = '';
+
+    // Apply animation based on type
+    switch ($animationType) {
+      case 'fade':
+        // Fade in at start, fade out at end
+        $additionalParams = sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,if(between(t,%0.3f,%0.3f),1-(t-%0.3f)/%0.3f,1))'",
+          $fadeInStart, $fadeInEnd, // Fade in range
+          $fadeInStart, $animationDuration, // Fade in calculation
+          $fadeOutStart, $fadeOutEnd, // Fade out range
+          $fadeOutStart, $animationDuration // Fade out calculation
+        );
+        break;
+
+      case 'slide':
+        $slideDirection = $this->getSlideDirectionFromPosition($block['position']);
+        $slideOffset = 100;
+
+        if ($slideDirection === 'left' || $slideDirection === 'right') {
+          $xValue = $posX;
+
+          if ($slideDirection === 'left') {
+            // Slide from left with local timing
+            $additionalParams = sprintf(":x='if(between(t,%0.3f,%0.3f),%0.3f+(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
+              $fadeInStart, $fadeInEnd, // Time range
+              $xValue - $slideOffset, // Starting position
+              $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
+              $xValue // Final position
+            );
+          } else {
+            // Slide from right with local timing
+            $additionalParams = sprintf(":x='if(between(t,%0.3f,%0.3f),%0.3f-(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
+              $fadeInStart, $fadeInEnd, // Time range
+              $xValue + $slideOffset, // Starting position
+              $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
+              $xValue // Final position
+            );
+          }
+        } else {
+          $yValue = $posY;
+
+          if ($slideDirection === 'top') {
+            // Slide from top with local timing
+            $additionalParams = sprintf(":y='if(between(t,%0.3f,%0.3f),%0.3f+(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
+              $fadeInStart, $fadeInEnd, // Time range
+              $yValue - $slideOffset, // Starting position
+              $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
+              $yValue // Final position
+            );
+          } else {
+            // Slide from bottom with local timing
+            $additionalParams = sprintf(":y='if(between(t,%0.3f,%0.3f),%0.3f-(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
+              $fadeInStart, $fadeInEnd, // Time range
+              $yValue + $slideOffset, // Starting position
+              $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
+              $yValue // Final position
+            );
+          }
+        }
+
+        // Fade in for smoother appearance
+        $additionalParams .= sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,1)'",
+          $fadeInStart, $fadeInEnd, // Range
+          $fadeInStart, $animationDuration // Fade calculation
+        );
+        break;
+
+      case 'scale':
+        // Scale animation with local timing
+        $additionalParams = sprintf(":fontsize='if(between(t,%0.3f,%0.3f),%0.3f*(t-%0.3f)/%0.3f,%0.3f)'",
+          $fadeInStart, $fadeInEnd, // Time range
+          $fontSize, // Target size
+          $fadeInStart, $animationDuration, // Scaling calculation
+          $fontSize // Final size
+        );
+
+        // Fade in for smoother appearance
+        $additionalParams .= sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,1)'",
+          $fadeInStart, $fadeInEnd, // Range
+          $fadeInStart, $animationDuration // Fade calculation
+        );
+        break;
+
+      case 'typewriter':
+        // Sanitize problematic characters for ffmpeg
+        $safeText = str_replace(['@', ':', ';', ',', '\\'],
+          ['[at]', ' ', ' ', ' ', ''],
+          $text);
+
+        // Simplified approach - just use fade-in animation for text that contains special characters
+        $additionalParams = sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,1)'",
+          $fadeInStart, $fadeInEnd,
+          $fadeInStart, $animationDuration
+        );
+
+        // Override the escapedText with sanitized version for problematic content
+        $escapedText = $this->escapeFFmpegText($safeText);
+        break;
+
+      case 'none':
+      default:
+        // No additional animation
+        break;
+    }
+
+    // Return the full drawtext parameter string with animations
+    return sprintf("drawtext=text='%s':fontsize=%d:fontcolor=%s:%s%s:%s%s",
+      $escapedText,
+      $fontSize,
+      $fontColor,
+      $position,
+      $boxParam,
+      $enableExpr,
+      $additionalParams
+    );
   }
 
   /**
@@ -314,10 +547,6 @@ class FFmpegService
    * @return string
    *   The drawtext filter parameters.
    */
-
-  /**
-   * Builds the drawtext parameters for a text block with animation support.
-   */
   public function buildDrawTextParameters(array $block, string $resolution, string $text, float $startTime = 0, float $duration = 5): string {
     $fontSize = !empty($block['font_size']) ? $block['font_size'] : 24;
     $fontColor = !empty($block['font_color']) ? $block['font_color'] : 'white';
@@ -410,134 +639,133 @@ class FFmpegService
     $animationDuration = isset($block['animation']['duration']) ? (float) $block['animation']['duration'] : 1.0;
     $animationDelay = isset($block['animation']['delay']) ? (float) $block['animation']['delay'] : 0.0;
 
+    // Add debug logging for slide timing
+    if (method_exists($this, 'loggerFactory')) {
+      $this->loggerFactory->get('pipeline')->debug(
+        sprintf("Text block on slide at %.2fs: Animation type=%s, delay=%.2f, duration=%.2f, slide duration=%.2f",
+          $startTime, $animationType, $animationDelay, $animationDuration, $duration)
+      );
+    }
+
     // Ensure animation duration isn't too long
     if ($animationDuration > $duration / 2) {
       $animationDuration = $duration / 2;
     }
 
-    // Calculate timing for fade in/out
-    $fadeInStart = $animationDelay;
+    // FIX: Calculate timing specifically based on absolute video timeline
+    // Each value is precisely calculated relative to the start time of this slide
+    $fadeInStart = $startTime + $animationDelay;
     $fadeInEnd = $fadeInStart + $animationDuration;
-    $fadeOutStart = $duration - $animationDuration;
-    $fadeOutEnd = $duration;
+    $fadeOutStart = $startTime + $duration - $animationDuration;
+    $fadeOutEnd = $startTime + $duration;
 
-    // Basic enable expression - show text during specified time period
-    $enableExpr = "enable='between(t-$startTime,$fadeInStart,$fadeOutEnd)'";
+    // Create an enable expression with precise timing boundaries
+    // This ensures text is only visible during the exact timeframe of this slide
+    $enableExpr = sprintf("enable='between(t,%.3f,%.3f)'", $fadeInStart, $fadeOutEnd);
     $additionalParams = '';
 
-    // Apply animation based on type
+    // Apply animation based on type with corrected timing
     switch ($animationType) {
       case 'fade':
-        // Simple fade in/out - using fixed values for reliability
-        $additionalParams = sprintf(":alpha='if(lt(t-%.6f,%.6f),min(1,(t-%.6f-%.6f)/%.6f),if(gt(t-%.6f,%.6f),max(0,(1-(t-%.6f-%.6f)/%.6f)),1))'",
-          $startTime, $fadeInEnd,
-          $startTime, $fadeInStart, $animationDuration,
-          $startTime, $fadeOutStart,
-          $startTime, $fadeOutStart, $animationDuration
+        // Fade in/out relative to the start time of this slide
+        $additionalParams = sprintf(":alpha='if(between(t,%.3f,%.3f),(t-%.3f)/%.3f,if(between(t,%.3f,%.3f),1-(t-%.3f)/%.3f,if(lt(t,%.3f),0,if(gt(t,%.3f),0,1))))'",
+          $fadeInStart, $fadeInEnd, // Fade in range
+          $fadeInStart, $animationDuration, // Fade in calculation
+          $fadeOutStart, $fadeOutEnd, // Fade out range
+          $fadeOutStart, $animationDuration, // Fade out calculation
+          $fadeInStart, // Before fade in
+          $fadeOutEnd // After fade out
         );
         break;
 
       case 'slide':
-        // Slide animation - simplified for reliability
+        // Slide animation with corrected timing
         $slideDirection = $this->getSlideDirectionFromPosition($block['position']);
         $slideOffset = 100;
 
         if ($slideDirection === 'left' || $slideDirection === 'right') {
           $xValue = $posX;
-          $slideExpr = '';
 
           if ($slideDirection === 'left') {
-            // Slide from left
-            $slideExpr = sprintf("if(lt(t-%.6f,%.6f),(%.6f-%.6f+(%.6f*(t-%.6f-%.6f)/%.6f)),%.6f)",
-              $startTime, $fadeInEnd,
-              $xValue, $slideOffset, $slideOffset,
-              $startTime, $fadeInStart, $animationDuration,
-              $xValue
+            // Slide from left with absolute timing
+            $additionalParams = sprintf(":x='if(between(t,%.3f,%.3f),%.3f+(%.3f*(t-%.3f)/%.3f),%.3f)'",
+              $fadeInStart, $fadeInEnd, // Time range
+              $xValue - $slideOffset, // Starting position
+              $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
+              $xValue // Final position
             );
           } else {
-            // Slide from right
-            $slideExpr = sprintf("if(lt(t-%.6f,%.6f),(%.6f+%.6f-(%.6f*(t-%.6f-%.6f)/%.6f)),%.6f)",
-              $startTime, $fadeInEnd,
-              $xValue, $slideOffset, $slideOffset,
-              $startTime, $fadeInStart, $animationDuration,
-              $xValue
+            // Slide from right with absolute timing
+            $additionalParams = sprintf(":x='if(between(t,%.3f,%.3f),%.3f-(%.3f*(t-%.3f)/%.3f),%.3f)'",
+              $fadeInStart, $fadeInEnd, // Time range
+              $xValue + $slideOffset, // Starting position
+              $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
+              $xValue // Final position
             );
           }
-          $additionalParams = ":x='" . $slideExpr . "'";
-        }
-        else {
+        } else {
           $yValue = $posY;
-          $slideExpr = '';
 
           if ($slideDirection === 'top') {
-            // Slide from top
-            $slideExpr = sprintf("if(lt(t-%.6f,%.6f),(%.6f-%.6f+(%.6f*(t-%.6f-%.6f)/%.6f)),%.6f)",
-              $startTime, $fadeInEnd,
-              $yValue, $slideOffset, $slideOffset,
-              $startTime, $fadeInStart, $animationDuration,
-              $yValue
+            // Slide from top with absolute timing
+            $additionalParams = sprintf(":y='if(between(t,%.3f,%.3f),%.3f+(%.3f*(t-%.3f)/%.3f),%.3f)'",
+              $fadeInStart, $fadeInEnd, // Time range
+              $yValue - $slideOffset, // Starting position
+              $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
+              $yValue // Final position
             );
           } else {
-            // Slide from bottom
-            $slideExpr = sprintf("if(lt(t-%.6f,%.6f),(%.6f+%.6f-(%.6f*(t-%.6f-%.6f)/%.6f)),%.6f)",
-              $startTime, $fadeInEnd,
-              $yValue, $slideOffset, $slideOffset,
-              $startTime, $fadeInStart, $animationDuration,
-              $yValue
+            // Slide from bottom with absolute timing
+            $additionalParams = sprintf(":y='if(between(t,%.3f,%.3f),%.3f-(%.3f*(t-%.3f)/%.3f),%.3f)'",
+              $fadeInStart, $fadeInEnd, // Time range
+              $yValue + $slideOffset, // Starting position
+              $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
+              $yValue // Final position
             );
           }
-          $additionalParams = ":y='" . $slideExpr . "'";
         }
 
-        // Add fade effect for smoother appearance
-        $fadeExpr = sprintf("if(lt(t-%.6f,%.6f),min(1,(t-%.6f-%.6f)/%.6f),1)",
-          $startTime, $fadeInEnd,
-          $startTime, $fadeInStart, $animationDuration
+        // Add fade in for smoother appearance with absolute timing
+        $additionalParams .= sprintf(":alpha='if(between(t,%.3f,%.3f),(t-%.3f)/%.3f,if(lt(t,%.3f),0,1))'",
+          $fadeInStart, $fadeInEnd, // Fade in range
+          $fadeInStart, $animationDuration, // Fade in calculation
+          $fadeInStart // Before fade in
         );
-        $additionalParams .= ":alpha='" . $fadeExpr . "'";
         break;
 
       case 'scale':
-        // Scale animation - grow from 0 to full size
-        $scaleExpr = sprintf("if(lt(t-%.6f,%.6f),%.6f*(t-%.6f-%.6f)/%.6f,%.6f)",
-          $startTime, $fadeInEnd,
-          $fontSize,
-          $startTime, $fadeInStart, $animationDuration,
-          $fontSize
+        // Scale animation with absolute timing
+        $additionalParams = sprintf(":fontsize='if(between(t,%.3f,%.3f),%.3f*(t-%.3f)/%.3f,%.3f)'",
+          $fadeInStart, $fadeInEnd, // Time range
+          $fontSize, // Target size
+          $fadeInStart, $animationDuration, // Scaling calculation
+          $fontSize // Final size
         );
-        $additionalParams = ":fontsize='" . $scaleExpr . "'";
 
-        // Add fade for smoother appearance
-        $fadeExpr = sprintf("if(lt(t-%.6f,%.6f),min(1,(t-%.6f-%.6f)/%.6f),1)",
-          $startTime, $fadeInEnd,
-          $startTime, $fadeInStart, $animationDuration
+        // Simple fade for smoother appearance with absolute timing
+        $additionalParams .= sprintf(":alpha='if(between(t,%.3f,%.3f),(t-%.3f)/%.3f,if(lt(t,%.3f),0,1))'",
+          $fadeInStart, $fadeInEnd, // Fade in range
+          $fadeInStart, $animationDuration, // Fade in calculation
+          $fadeInStart // Before fade in
         );
-        $additionalParams .= ":alpha='" . $fadeExpr . "'";
         break;
 
       case 'typewriter':
-        // Typewriter effect - text appears character by character
+        // Typewriter effect with absolute timing
         $textLength = mb_strlen($text);
-        $charPerSec = $textLength / max($animationDuration, 0.1); // Avoid division by zero
+        $charPerSec = $textLength / max($animationDuration, 0.1);
 
-        $typewriterExpr = sprintf("if(lt(t-%.6f,%.6f),min(%d,floor(%.6f*(t-%.6f-%.6f))),%d)",
-          $startTime, $fadeInEnd,
-          $textLength, $charPerSec,
-          $startTime, $fadeInStart,
-          $textLength
+        $additionalParams = sprintf(":text='if(between(t,%.3f,%.3f),substr(\"%s\",0,floor(%.3f*(t-%.3f))),\"%s\")'",
+          $fadeInStart, $fadeInEnd, // Time range
+          $escapedText, // Text to type
+          $charPerSec, $fadeInStart, // Characters calculation
+          $escapedText // Complete text
         );
-        $additionalParams = ":text='substr(\"$escapedText\",0," . $typewriterExpr . ")'";
         break;
 
       case 'none':
       default:
-        // Simple fade in/out with fixed timing
-        $additionalParams = sprintf(":alpha='if(lt(t-%.6f,%.6f),min(1,(t-%.6f-%.6f)/0.3),if(gt(t-%.6f,%.6f),max(0,(1-(t-%.6f-%.6f)/0.3)),1))'",
-          $startTime, $fadeInStart + 0.3,
-          $startTime, $fadeInStart,
-          $startTime, $fadeOutEnd - 0.3,
-          $startTime, $fadeOutEnd - 0.3
-        );
+        // No special animation, text appears immediately when slide appears
         break;
     }
 
