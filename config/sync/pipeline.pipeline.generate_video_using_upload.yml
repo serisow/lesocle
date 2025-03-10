@@ -6,9 +6,9 @@ id: generate_video_using_upload
 label: 'Generate video using upload'
 instructions: 'Generate video using upload'
 created: 1740931404
-changed: 1741572855
+changed: 1741641135
 execution_type: scheduled
-scheduled_time: 1741550460
+scheduled_time: 1741641060
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -37,33 +37,6 @@ step_types:
       response: ''
     weight: -6
     uuid: 64cb464d-751a-4ae5-9828-66bb9ceeac2c
-  ab023e3e-5032-43a7-bc0c-b291a418af27:
-    id: upload_image_step
-    data:
-      step_description: Slide3
-      required_steps: ''
-      video_settings:
-        duration: '12'
-      text_blocks:
-        -
-          id: title_block
-          enabled: true
-          text: 'SONGOMAR VIDEOS'
-          position: top
-          font_size: 36
-          font_color: red
-          background_color: yellow
-          animation:
-            type: scale
-            duration: 1.0
-            delay: 0.0
-            easing: linear
-      step_output_key: image_data_3
-      output_type: featured_image
-      image_file_id: 409
-      response: ''
-    weight: -8
-    uuid: ab023e3e-5032-43a7-bc0c-b291a418af27
   c76e1f95-ec0f-4470-9650-4bf720ff9132:
     id: upload_image_step
     data:
@@ -107,7 +80,7 @@ step_types:
           font_color: '#F0F0F0'
           background_color: 'rgb(30, 42, 62)'
           animation:
-            type: scale
+            type: fade
             duration: 1.0
             delay: 0.0
             easing: ease-in
@@ -116,7 +89,7 @@ step_types:
           enabled: true
           text: "Email: momo@gmail.com\r\nPhone: 0761524874"
           position: bottom_left
-          font_size: 24
+          font_size: 20
           font_color: '#F0F0F0'
           background_color: 'rgb(30, 42, 62)'
           animation:
@@ -143,7 +116,7 @@ step_types:
           enabled: true
           text: 'Secoond slide title'
           position: top_left
-          font_size: 36
+          font_size: 30
           font_color: white
           background_color: 'rgba(0,0,0,0.5)'
           animation:
@@ -155,7 +128,7 @@ step_types:
           id: subtitle_block
           enabled: true
           text: 'This is the subtitle text hold my bear.'
-          position: top
+          position: bottom_left
           font_size: 28
           font_color: white
           background_color: red
@@ -168,7 +141,7 @@ step_types:
           id: body_block
           enabled: true
           text: 'THis the body the long text where talk is done'
-          position: top_right
+          position: center
           font_size: 24
           font_color: white
           background_color: green
@@ -181,7 +154,7 @@ step_types:
           id: caption_block
           enabled: true
           text: 'The caption whatever it is'
-          position: bottom_left
+          position: bottom_right
           font_size: 20
           font_color: white
           background_color: red
@@ -196,3 +169,69 @@ step_types:
       response: ''
     weight: -9
     uuid: e2f39d35-d610-4e4b-aaac-7717a5dacba0
+  ba6863af-3a24-4d75-8347-c05c510c1e63:
+    id: upload_image_step
+    data:
+      step_description: 'Slide 3'
+      required_steps: ''
+      video_settings:
+        duration: '12'
+      text_blocks:
+        -
+          id: title_block
+          enabled: true
+          text: 'Third slide title'
+          position: top_left
+          font_size: 30
+          font_color: white
+          background_color: 'rgba(0,0,0,0.5)'
+          animation:
+            type: fade
+            duration: 2.0
+            delay: 0.0
+            easing: ease-in
+        -
+          id: subtitle_block
+          enabled: true
+          text: 'Third subtitle'
+          position: bottom_left
+          font_size: 28
+          font_color: white
+          background_color: red
+          animation:
+            type: fade
+            duration: 2.0
+            delay: 0.0
+            easing: ease-in
+        -
+          id: body_block
+          enabled: true
+          text: 'Lots of text should act as the content of the main area.'
+          position: center
+          font_size: 24
+          font_color: orange
+          background_color: black
+          animation:
+            type: scale
+            duration: 1.0
+            delay: 0.0
+            easing: ease-out
+        -
+          id: caption_block
+          enabled: true
+          text: 'The third caption'
+          position: bottom_right
+          font_size: 20
+          font_color: white
+          background_color: green
+          animation:
+            type: fade
+            duration: 1.0
+            delay: 0.0
+            easing: ease-in
+      step_output_key: image_data_3
+      output_type: featured_image
+      image_file_id: 498
+      response: ''
+    weight: -8
+    uuid: ba6863af-3a24-4d75-8347-c05c510c1e63
