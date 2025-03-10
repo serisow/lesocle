@@ -42,6 +42,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\pipeline\Plugin\ActionServiceManager;
 use Drupal\pipeline\Service\ImageDownloadService;
 use Drupal\pipeline\Service\PipelineErrorHandler;
+use Drupal\pipeline\Service\VideoDownloadService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -58,6 +59,13 @@ class PipelineExecutionController extends ControllerBase {
    */
   protected $imageDownloadService;
 
+  /**
+   * The video download service.
+   *
+   * @var \Drupal\pipeline\Service\VideoDownloadService
+   */
+  protected $videoDownloadService;
+
   /** @var \Drupal\pipeline\Service\PipelineErrorHandler */
   protected $errorHandler;
 
@@ -66,11 +74,13 @@ class PipelineExecutionController extends ControllerBase {
     EntityTypeManagerInterface $entity_type_manager,
     ActionServiceManager $action_service_manager,
     ImageDownloadService $image_download_service,
+    VideoDownloadService $video_download_service,
     PipelineErrorHandler $error_handler
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->actionServiceManager = $action_service_manager;
     $this->imageDownloadService = $image_download_service;
+    $this->videoDownloadService = $video_download_service;
     $this->errorHandler = $error_handler;
   }
 
@@ -79,6 +89,7 @@ class PipelineExecutionController extends ControllerBase {
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.action_service'),
       $container->get('pipeline.image_download_service'),
+      $container->get('pipeline.video_download_service'),
       $container->get('pipeline.error_handler')
     );
   }
@@ -184,10 +195,28 @@ class PipelineExecutionController extends ControllerBase {
 
           // Handle featured image
           if ($result['output_type'] === 'featured_image') {
-            $image_data = $this->imageDownloadService->downloadImage($result['data']);
-            $step_result['data'] = $image_data;
-            $step_results[$step_uuid] = $step_result;
-            $context['results'][$step_uuid]['data'] = $image_data;
+            // Add this condition to check if the step type is NOT UploadImageStep
+            if ($step_type->getPluginId() !== 'upload_image_step') {
+              $image_data = $this->imageDownloadService->downloadImage($result['data']);
+              $step_result['data'] = $image_data;
+              $step_results[$step_uuid] = $step_result;
+              $context['results'][$step_uuid]['data'] = $image_data;
+            }
+          }
+          // Handle video content
+          elseif ($result['output_type'] === 'video_content') {
+            try {
+              $video_data = $this->videoDownloadService->downloadVideo($result['data']);
+              $step_result['data'] = $video_data;
+              $step_results[$step_uuid] = $step_result;
+              $context['results'][$step_uuid]['data'] = $video_data;
+            }
+            catch (\Exception $e) {
+              $has_errors = true;
+              $step_result['status'] = 'failed';
+              $step_result['error_message'] = $e->getMessage();
+              \Drupal::logger('pipeline')->error('Error processing video: @error', ['@error' => $e->getMessage()]);
+            }
           }
 
         } catch (\Exception $e) {
