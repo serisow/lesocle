@@ -203,6 +203,7 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       'facebook_content'  => $this->t('Facebook Content'),
       'audio_content'  => $this->t('Audio Content'),
       'video_content'  => $this->t('Video Content'),
+      'structured_news'  => $this->t('Structured News'),
     ];
   }
 }
