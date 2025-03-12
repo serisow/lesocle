@@ -40,6 +40,7 @@ namespace Drupal\pipeline\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\pipeline\Plugin\ActionServiceManager;
+use Drupal\pipeline\Service\GoServiceImageProcessor;
 use Drupal\pipeline\Service\ImageDownloadService;
 use Drupal\pipeline\Service\PipelineErrorHandler;
 use Drupal\pipeline\Service\VideoDownloadService;
@@ -69,19 +70,29 @@ class PipelineExecutionController extends ControllerBase {
   /** @var \Drupal\pipeline\Service\PipelineErrorHandler */
   protected $errorHandler;
 
+  /**
+   * The Go service image processor.
+   *
+   * @var \Drupal\pipeline\Service\GoServiceImageProcessor
+   */
+  protected $goServiceImageProcessor;
+
 
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     ActionServiceManager $action_service_manager,
     ImageDownloadService $image_download_service,
     VideoDownloadService $video_download_service,
-    PipelineErrorHandler $error_handler
+    PipelineErrorHandler $error_handler,
+    GoServiceImageProcessor $go_service_image_processor
+
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->actionServiceManager = $action_service_manager;
     $this->imageDownloadService = $image_download_service;
     $this->videoDownloadService = $video_download_service;
     $this->errorHandler = $error_handler;
+    $this->goServiceImageProcessor = $go_service_image_processor;
   }
 
   public static function create(ContainerInterface $container) {
@@ -90,7 +101,8 @@ class PipelineExecutionController extends ControllerBase {
       $container->get('plugin.manager.action_service'),
       $container->get('pipeline.image_download_service'),
       $container->get('pipeline.video_download_service'),
-      $container->get('pipeline.error_handler')
+      $container->get('pipeline.error_handler'),
+      $container->get('pipeline.go_service_image_processor')
     );
   }
 
@@ -217,6 +229,13 @@ class PipelineExecutionController extends ControllerBase {
               $step_result['error_message'] = $e->getMessage();
               \Drupal::logger('pipeline')->error('Error processing video: @error', ['@error' => $e->getMessage()]);
             }
+          }
+          // Special handling for NewsItemImageGeneratorActionService
+          elseif ($result['action_service'] == 'news_item_image_generator' && isset($result['data'])) {
+            $news_items_data = $this->goServiceImageProcessor->processNewsItemsWithImages($result['data']);
+            $step_result['data'] = $news_items_data;
+            $step_results[$step_uuid] = $step_result;
+            $context['results'][$step_uuid]['data'] = $news_items_data;
           }
 
         } catch (\Exception $e) {

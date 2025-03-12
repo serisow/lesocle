@@ -29,6 +29,13 @@ services:
       - '@entity_type.manager'
       - '@logger.factory'
 
+  pipeline.go_service_image_processor:
+    class: Drupal\pipeline\Service\GoServiceImageProcessor
+    arguments:
+      - '@pipeline.image_download_service'
+      - '@entity_type.manager'
+      - '@logger.factory'
+
   pipeline.error_handler:
     class: Drupal\pipeline\Service\PipelineErrorHandler
     arguments:
