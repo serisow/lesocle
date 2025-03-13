@@ -413,7 +413,20 @@ class PipelineApiController extends ControllerBase {
               }
             }
             break;
-
+          case 'image_enrichment_step':
+            // Format ImageEnrichmentStep data to be compatible with UploadImageStep
+            // Include the duration and text blocks configuration
+            $step_data['image_enrichment_config']['duration'] = (float) ($configuration['data']['duration'] ?? 5.0);
+            // Include text blocks if available
+            if (!empty($configuration['data']['text_blocks'])) {
+              $step_data['image_enrichment_config']['text_blocks'] = $configuration['data']['text_blocks'];
+            }
+            // Note: The actual image file data will be populated during execution by the Go service
+            // We're just ensuring the structure is compatible for the Go service to process
+            $this->logger->debug('ImageEnrichmentStep data prepared for Go service: @data', [
+              '@data' => json_encode($step_data),
+            ]);
+            break;
         }
 
         // Remove the 'data' key as we've extracted its contents

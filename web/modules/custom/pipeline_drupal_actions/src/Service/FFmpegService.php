@@ -784,22 +784,63 @@ class FFmpegService
   /**
    * Escapes text for FFmpeg filter_complex parameter.
    */
+  /**
+   * Escapes text for FFmpeg filter_complex parameter.
+   *
+   * This function handles all special characters that could cause issues
+   * in FFmpeg's filter_complex parameter.
+   *
+   * @param string $text
+   *   Raw text to be escaped.
+   *
+   * @return string
+   *   Properly escaped text for FFmpeg.
+   */
   protected function escapeFFmpegText($text) {
-    // First, escape backslashes
+    // Replace any literal backslashes first with QUADRUPLE backslashes
+    // (this is because both shell and FFmpeg will interpret them)
     $text = str_replace('\\', '\\\\\\\\', $text);
 
-    // Escape single quotes
-    $text = str_replace("'", "\\\\'", $text);
+    // Escape single quotes (critical for the shell command)
+    $text = str_replace("'", "'\\\\\''", $text);
 
-    // Escape other special characters that might break the filter syntax
-    $text = str_replace(':', '\\:', $text);
-    $text = str_replace(',', '\\,', $text);
-    $text = str_replace('[', '\\[', $text);
-    $text = str_replace(']', '\\]', $text);
-    $text = str_replace(';', '\\;', $text);
-    $text = str_replace('=', '\\=', $text);
+    // Replace problematic characters
+    $replacements = [
+      // Special characters in filter_complex
+      ':' => '\\:',     // colon
+      ',' => '\\,',     // comma
+      ';' => '\\;',     // semicolon
+      '=' => '\\=',     // equals
+      '[' => '\\[',     // brackets
+      ']' => '\\]',
+      '?' => '\\?',     // question mark
+      '!' => '\\!',     // exclamation
+      '#' => '\\#',     // hash
+      '$' => '\\$',     // dollar
+      '%' => '\\%',     // percentage
+      '&' => '\\&',     // ampersand
+      '(' => '\\(',     // parentheses
+      ')' => '\\)',
+      '*' => '\\*',     // asterisk
+      '+' => '\\+',     // plus
+      '/' => '\\/',     // slash
+      '<' => '\\<',     // angle brackets
+      '>' => '\\>',
+      '@' => '\\@',     // at sign
+      '^' => '\\^',     // caret
+      '|' => '\\|',     // pipe
+      '~' => '\\~',     // tilde
+      '`' => '\\`',     // backtick
+      '"' => '\\"',     // double quote
+      ' '  => '\\ ',    // Space (for shell safety)
+      '{'  => '\\{',    // Curly brace open (shell brace expansion, FFmpeg filter graphs)
+      '}'  => '\\}',    // Curly brace close
+      "\t" => '\\t',    // Tab character (for readability and FFmpeg compatibility)
+      '.'  => '\\.',    // Dot (rarely an issue, but can be in some filter contexts)
+    ];
 
-    return $text;
+    // Apply all replacements
+    return str_replace(array_keys($replacements), array_values($replacements), $text);
   }
 
   /**

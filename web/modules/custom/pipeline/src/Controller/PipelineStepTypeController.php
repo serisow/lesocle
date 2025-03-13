@@ -233,6 +233,113 @@ class PipelineStepTypeController extends ControllerBase implements ContainerInje
   }
 
   /**
+   * Formats text for display in video overlays.
+   *
+   * @param string $text
+   *   The original text.
+   * @param string $blockType
+   *   The type of block (title_block, body_block, etc.).
+   *
+   * @return string
+   *   The formatted text.
+   */
+  protected function formatText($text, $blockType) {
+    // Define character limits and line lengths based on block type
+    // Increase limits but stay conservative to ensure FFmpeg compatibility
+    $config = [
+      'title_block' => ['maxChars' => 80, 'lineLength' => 40, 'maxLines' => 2],
+      'subtitle_block' => ['maxChars' => 100, 'lineLength' => 45, 'maxLines' => 2],
+      'body_block' => ['maxChars' => 450, 'lineLength' => 100, 'maxLines' => 8],
+      'caption_block' => ['maxChars' => 120, 'lineLength' => 45, 'maxLines' => 3],
+    ];
+
+    // Default values if block type is not recognized
+    $maxChars = 100;
+    $lineLength = 40;
+    $maxLines = 3;
+
+    // Get the specific config for this block type
+    if (isset($config[$blockType])) {
+      $maxChars = $config[$blockType]['maxChars'];
+      $lineLength = $config[$blockType]['lineLength'];
+      $maxLines = $config[$blockType]['maxLines'];
+    }
+
+    // Preprocess text: remove extra spaces and normalize line breaks
+    $text = trim(preg_replace('/\s+/', ' ', $text));
+
+    // Trim text if it exceeds the maximum length
+    $original_length = mb_strlen($text);
+    if ($original_length > $maxChars) {
+      // Try sentence-based truncation first for more natural reading
+      $sentences = preg_split('/(?<=[.!?])\s+/', $text, -1, PREG_SPLIT_NO_EMPTY);
+      $truncated = '';
+      foreach ($sentences as $sentence) {
+        if (mb_strlen($truncated . ' ' . $sentence) <= $maxChars) {
+          $truncated .= ($truncated ? ' ' : '') . $sentence;
+        } else {
+          // If adding this sentence would exceed limits, stop
+          break;
+        }
+      }
+
+      // If we got some sentences, use them
+      if (mb_strlen($truncated) > 0) {
+        $text = $truncated;
+      } else {
+        // Otherwise fall back to word boundary truncation
+        $text = mb_substr($text, 0, $maxChars);
+        $lastSpace = mb_strrpos($text, ' ');
+        if ($lastSpace !== false) {
+          $text = mb_substr($text, 0, $lastSpace);
+        }
+        $text .= '...';
+      }
+    }
+
+    // Add smart line breaks for readability
+    $words = explode(' ', $text);
+    $lines = [];
+    $currentLine = '';
+    $lineCount = 0;
+
+    foreach ($words as $word) {
+      // Check if adding the next word would exceed the line length
+      if (mb_strlen($currentLine . ' ' . $word) > $lineLength && !empty($currentLine)) {
+        // Add the current line to the lines array and start a new line
+        $lines[] = $currentLine;
+        $currentLine = $word;
+        $lineCount++;
+
+        // If we've reached max lines, start combining remaining text
+        if ($lineCount >= $maxLines - 1) {
+          // Add all remaining words with space
+          $remainingWords = array_slice($words, array_search($word, $words) + 1);
+          if (!empty($remainingWords)) {
+            $currentLine .= ' ' . implode(' ', $remainingWords);
+
+            // If the last line is too long, truncate it with ellipsis
+            if (mb_strlen($currentLine) > $lineLength) {
+              $currentLine = mb_substr($currentLine, 0, $lineLength - 3) . '...';
+            }
+          }
+          break;
+        }
+      } else {
+        // Add the word to the current line with a space if not the first word
+        $currentLine = empty($currentLine) ? $word : $currentLine . ' ' . $word;
+      }
+    }
+
+    // Add the last line if not empty and we haven't reached max lines
+    if (!empty($currentLine) && $lineCount < $maxLines) {
+      $lines[] = $currentLine;
+    }
+
+    // Join the lines with line breaks - use \n for FFmpeg
+    return implode("\n", $lines);
+  }
+  /**
    * Filters out disabled or empty text blocks from configuration data.
    * Also removes unnecessary custom coordinates for predefined positions.
    *
@@ -253,11 +360,13 @@ class PipelineStepTypeController extends ControllerBase implements ContainerInje
       foreach ($values['data']['text_blocks'] as $block) {
         // Only keep blocks that are enabled AND have non-empty text
         if (!empty($block['enabled']) && !empty(trim($block['text'] ?? ''))) {
+          // Format the text content using our formatting method
+          $formatted_text = $this->formatText($block['text'], $block['id']);
           // Create a clean block with only required properties
           $clean_block = [
             'id' => $block['id'],
             'enabled' => true,
-            'text' => $block['text'],
+            'text' => $formatted_text,
             'position' => $block['position'] ?? 'bottom',
             'font_size' => (int) ($block['font_size'] ?? 24),
             'font_color' => $block['font_color'] ?? 'white',

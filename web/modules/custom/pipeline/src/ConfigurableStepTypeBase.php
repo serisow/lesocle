@@ -201,9 +201,17 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       'generic_webhook_content'  => $this->t('Generic Webhook Content'),
       'linkedin_content'  => $this->t('LinkedIn Content'),
       'facebook_content'  => $this->t('Facebook Content'),
+      // Select  this key for Upload Audio Step type
       'audio_content'  => $this->t('Audio Content'),
+      // Select  this key for action step Video Generation
       'video_content'  => $this->t('Video Content'),
+      // Use this key for LLM Step which process the news api data.The step come right after the step type
+      // News API Search Step in UI.
       'structured_news'  => $this->t('Structured News'),
+      // Use this key with the step type NewsItemImageGeneratorActionService
+      // This step type process news api data, use LLM to generate image based on news content.
+      // Each ImageEnrichmentStep will look for this key to fetch a news item based on it's position in the array
+      'enriched_news_api_image' => $this->t('Enriched News API Image'),
     ];
   }
 }
