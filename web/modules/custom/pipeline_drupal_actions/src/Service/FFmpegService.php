@@ -783,9 +783,6 @@ class FFmpegService
 
   /**
    * Escapes text for FFmpeg filter_complex parameter.
-   */
-  /**
-   * Escapes text for FFmpeg filter_complex parameter.
    *
    * This function handles all special characters that could cause issues
    * in FFmpeg's filter_complex parameter.
