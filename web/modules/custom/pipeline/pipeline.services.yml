@@ -75,3 +75,6 @@ services:
       - '@entity_type.manager'
       - '@pipeline.media_creation_service'
       - '@logger.factory'
+
+  pipeline.font_service:
+    class: Drupal\pipeline\Service\FontService

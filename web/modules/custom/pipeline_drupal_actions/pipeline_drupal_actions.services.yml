@@ -12,7 +12,7 @@ services:
 
   pipeline_drupal_actions.ffmpeg_service:
     class: Drupal\pipeline_drupal_actions\Service\FFmpegService
-    arguments: [ '@logger.factory' ]
+    arguments: [ '@logger.factory', '@pipeline.font_service' ]
 
   pipeline_drupal_actions.video_file_manager:
     class: Drupal\pipeline_drupal_actions\Service\VideoFileManager

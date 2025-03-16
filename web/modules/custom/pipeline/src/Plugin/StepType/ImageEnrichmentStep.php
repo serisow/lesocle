@@ -726,63 +726,15 @@ class ImageEnrichmentStep extends ConfigurableStepTypeBase implements StepTypeEx
   }
 
 
-  // Add to UploadImageStep.php or ImageEnrichmentStep.php in additionalConfigurationForm
+  /**
+   * Gets font options for form select elements.
+   *
+   * @return array
+   *   Array of font options.
+   */
   protected function getFontOptions() {
-    $availableFonts = $this->scanAvailableFonts();
-
-    $options = [];
-    // Add a default system font option
-    $options['default'] = $this->t('Default (System Font)');
-
-    // Group fonts by family
-    $groupedFonts = [];
-    foreach ($availableFonts as $fontId => $fontInfo) {
-      // Extract family name (first part before hyphen or similar)
-      $familyName = preg_replace('/[-_].*$/', '', $fontId);
-      $familyName = ucfirst($familyName);
-
-      if (!isset($groupedFonts[$familyName])) {
-        $groupedFonts[$familyName] = [];
-      }
-
-      $groupedFonts[$familyName][$fontId] = $fontInfo['name'];
-    }
-
-    // Build the options array with optgroups
-    foreach ($groupedFonts as $family => $fonts) {
-      $options[$family] = $fonts;
-    }
-
-    return $options;
-  }
-
-  protected function scanAvailableFonts(): array {
-    $fontDirs = [
-      '/usr/share/fonts/dejavu',
-      '/usr/share/fonts/opensans',
-      '/usr/share/fonts/droid',
-      '/usr/share/fonts/liberation',
-      '/usr/share/fonts/freefont',
-    ];
-
-    $availableFonts = [];
-
-    foreach ($fontDirs as $dir) {
-      if (is_dir($dir)) {
-        $files = glob($dir . '/*.ttf');
-        foreach ($files as $file) {
-          $fontName = basename($file, '.ttf');
-          // Create a friendly name from filename
-          $friendlyName = str_replace(['-', '_'], ' ', $fontName);
-          $friendlyName = ucwords($friendlyName);
-          $availableFonts[$fontName] = [
-            'path' => $file,
-            'name' => $friendlyName,
-          ];
-        }
-      }
-    }
-
-    return $availableFonts;
+    // Get the font service from the container
+    $fontService = \Drupal::service('pipeline.font_service');
+    return $fontService->getFontOptions();
   }
 }

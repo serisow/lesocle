@@ -2,6 +2,8 @@
 namespace Drupal\pipeline_drupal_actions\Service;
 
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\pipeline\Service\FontService;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Service for FFmpeg video generation operations.
@@ -17,16 +19,30 @@ class FFmpegService
   protected $loggerFactory;
 
   /**
+   * The font service.
+   *
+   * @var \Drupal\pipeline\Service\FontService
+   */
+  protected $fontService;
+
+  /**
    * Constructs a new FFmpegService.
    *
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger factory.
+   * @param \Drupal\pipeline\Service\FontService
+   *   The font service.
    */
-  public function __construct(LoggerChannelFactoryInterface $logger_factory)
-  {
+  public function __construct(LoggerChannelFactoryInterface $logger_factory, FontService $font_service) {
     $this->loggerFactory = $logger_factory;
+    $this->fontService = $font_service;
   }
-
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('logger.factory'),
+      $container->get('pipeline.font_service')
+    );
+  }
   /**
    * Builds FFmpeg command for multiple image slideshow with transitions and text overlays.
    *
@@ -1239,40 +1255,7 @@ class FFmpegService
           $zoomSpeed, $frames);
     }
   }
-  // Add helper method to get font file path
   protected function getFontFilePath(string $fontId): string {
-    $availableFonts = $this->scanAvailableFonts();
-    return isset($availableFonts[$fontId]) ? $availableFonts[$fontId]['path'] : '';
-  }
-
-  // Add to FFmpegService.php
-  protected function scanAvailableFonts(): array {
-    $fontDirs = [
-      '/usr/share/fonts/dejavu',
-      '/usr/share/fonts/opensans',
-      '/usr/share/fonts/droid',
-      '/usr/share/fonts/liberation',
-      '/usr/share/fonts/freefont',
-    ];
-
-    $availableFonts = [];
-
-    foreach ($fontDirs as $dir) {
-      if (is_dir($dir)) {
-        $files = glob($dir . '/*.ttf');
-        foreach ($files as $file) {
-          $fontName = basename($file, '.ttf');
-          // Create a friendly name from filename
-          $friendlyName = str_replace(['-', '_'], ' ', $fontName);
-          $friendlyName = ucwords($friendlyName);
-          $availableFonts[$fontName] = [
-            'path' => $file,
-            'name' => $friendlyName,
-          ];
-        }
-      }
-    }
-
-    return $availableFonts;
+    return $this->fontService->getFontFilePath($fontId);
   }
 }
