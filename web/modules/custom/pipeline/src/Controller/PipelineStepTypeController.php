@@ -370,6 +370,8 @@ class PipelineStepTypeController extends ControllerBase implements ContainerInje
             'position' => $block['position'] ?? 'bottom',
             'font_size' => (int) ($block['font_size'] ?? 24),
             'font_color' => $block['font_color'] ?? 'white',
+            'font_family' => $block['font_family'] ?? 'sans',
+            'font_style' => $block['font_style'] ?? 'normal',
             'background_color' => $block['background_color'] ?? '',
           ];
 

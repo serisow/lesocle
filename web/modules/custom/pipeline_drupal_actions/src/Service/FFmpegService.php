@@ -218,6 +218,34 @@ class FFmpegService
   ): string {
     $fontSize = !empty($block['font_size']) ? $block['font_size'] : 24;
     $fontColor = !empty($block['font_color']) ? $block['font_color'] : 'white';
+    $fontFamily = !empty($block['font_family']) ? $block['font_family'] : 'default';
+    $fontStyle = !empty($block['font_style']) ? $block['font_style'] : 'normal';
+
+    // Get font file path if a specific font is selected
+    $fontParam = '';
+    if ($fontFamily !== 'default') {
+      $fontFile = $this->getFontFilePath($fontFamily);
+      if ($fontFile) {
+        $fontParam = ":fontfile='" . $fontFile . "'";
+      }
+    }
+    // Apply font styling based on the selected style
+    $styleParams = '';
+    switch ($fontStyle) {
+      case 'outline':
+        $styleParams = ":borderw=1.5:bordercolor=black";
+        break;
+      case 'shadow':
+        $styleParams = ":shadowx=2:shadowy=2:shadowcolor=black";
+        break;
+      case 'outline_shadow':
+        $styleParams = ":borderw=1.5:bordercolor=black:shadowx=2:shadowy=2:shadowcolor=black";
+        break;
+      case 'normal':
+      default:
+        // No additional styling
+        break;
+    }
 
     // Parse resolution
     list($width, $height) = explode(':', $resolution);
@@ -430,10 +458,12 @@ class FFmpegService
     }
 
     // Return the full drawtext parameter string with animations
-    return sprintf("drawtext=text='%s':fontsize=%d:fontcolor=%s:%s%s:%s%s",
+    return sprintf("drawtext=text='%s':fontsize=%d:fontcolor=%s%s%s:%s%s:%s%s",
       $escapedText,
       $fontSize,
       $fontColor,
+      $fontParam,
+      $styleParams,
       $position,
       $boxParam,
       $enableExpr,
@@ -1208,5 +1238,41 @@ class FFmpegService
         return sprintf('zoompan=z=\'min(1.0+%f*on,1.3)\':d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\'',
           $zoomSpeed, $frames);
     }
+  }
+  // Add helper method to get font file path
+  protected function getFontFilePath(string $fontId): string {
+    $availableFonts = $this->scanAvailableFonts();
+    return isset($availableFonts[$fontId]) ? $availableFonts[$fontId]['path'] : '';
+  }
+
+  // Add to FFmpegService.php
+  protected function scanAvailableFonts(): array {
+    $fontDirs = [
+      '/usr/share/fonts/dejavu',
+      '/usr/share/fonts/opensans',
+      '/usr/share/fonts/droid',
+      '/usr/share/fonts/liberation',
+      '/usr/share/fonts/freefont',
+    ];
+
+    $availableFonts = [];
+
+    foreach ($fontDirs as $dir) {
+      if (is_dir($dir)) {
+        $files = glob($dir . '/*.ttf');
+        foreach ($files as $file) {
+          $fontName = basename($file, '.ttf');
+          // Create a friendly name from filename
+          $friendlyName = str_replace(['-', '_'], ' ', $fontName);
+          $friendlyName = ucwords($friendlyName);
+          $availableFonts[$fontName] = [
+            'path' => $file,
+            'name' => $friendlyName,
+          ];
+        }
+      }
+    }
+
+    return $availableFonts;
   }
 }

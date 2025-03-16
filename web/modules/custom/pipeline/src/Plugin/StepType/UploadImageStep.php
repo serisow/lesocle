@@ -47,6 +47,8 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
           'position' => 'top',
           'font_size' => 36,
           'font_color' => 'white',
+          'font_family' => 'sans',
+          'font_style' => 'normal',
           'background_color' => 'rgba(0,0,0,0.5)',
           'custom_x' => 0,
           'custom_y' => 0,
@@ -64,6 +66,8 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
           'position' => 'center',
           'font_size' => 28,
           'font_color' => 'white',
+          'font_family' => 'sans',
+          'font_style' => 'normal',
           'background_color' => '',
           'custom_x' => 0,
           'custom_y' => 0,
@@ -81,6 +85,8 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
           'position' => 'center',
           'font_size' => 24,
           'font_color' => 'white',
+          'font_family' => 'sans',
+          'font_style' => 'normal',
           'background_color' => '',
           'custom_x' => 0,
           'custom_y' => 60,
@@ -98,6 +104,8 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
           'position' => 'bottom',
           'font_size' => 20,
           'font_color' => 'white',
+          'font_family' => 'sans',
+          'font_style' => 'normal',
           'background_color' => '',
           'custom_x' => 0,
           'custom_y' => 0,
@@ -225,6 +233,28 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
         '#title' => $this->t('Font color'),
         '#default_value' => $block['font_color'],
         '#description' => $this->t('Color name (e.g., white, black) or hex value (e.g., #FFFFFF).'),
+        '#states' => $states_visible,
+      ];
+      $form['text_blocks'][$index]['font_family'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Font'),
+        '#options' => $this->getFontOptions(),
+        '#default_value' => $block['font_family'] ?? 'default',
+        '#description' => $this->t('Select a font for this text block.'),
+        '#states' => $states_visible,
+      ];
+
+      $form['text_blocks'][$index]['font_style'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Font Style'),
+        '#options' => [
+          'normal' => $this->t('Normal'),
+          'outline' => $this->t('Outline'),
+          'shadow' => $this->t('Shadow'),
+          'outline_shadow' => $this->t('Outline + Shadow'),
+        ],
+        '#default_value' => $block['font_style'] ?? 'normal',
+        '#description' => $this->t('Apply additional styling to improve visibility.'),
         '#states' => $states_visible,
       ];
 
@@ -424,6 +454,8 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
             'position' => $values['position'] ?? 'bottom',
             'font_size' => (int) ($values['font_size'] ?? 24),
             'font_color' => $values['font_color'] ?? 'white',
+            'font_family' => $values['font_family'] ?? 'sans',
+            'font_style' => $values['font_style'] ?? 'normal',
             'background_color' => $values['background_color'] ?? '',
             'custom_x' => isset($values['custom_x']) ? (int) $values['custom_x'] : 0,
             'custom_y' => isset($values['custom_y']) ? (int) $values['custom_y'] : 0,
@@ -492,5 +524,65 @@ class UploadImageStep extends ConfigurableStepTypeBase implements StepTypeExecut
     } catch (\Exception $e) {
       throw new \Exception('Error processing uploaded image: ' . $e->getMessage());
     }
+  }
+
+  // Add to UploadImageStep.php or ImageEnrichmentStep.php in additionalConfigurationForm
+  protected function getFontOptions() {
+    $availableFonts = $this->scanAvailableFonts();
+
+    $options = [];
+    // Add a default system font option
+    $options['default'] = $this->t('Default (System Font)');
+
+    // Group fonts by family
+    $groupedFonts = [];
+    foreach ($availableFonts as $fontId => $fontInfo) {
+      // Extract family name (first part before hyphen or similar)
+      $familyName = preg_replace('/[-_].*$/', '', $fontId);
+      $familyName = ucfirst($familyName);
+
+      if (!isset($groupedFonts[$familyName])) {
+        $groupedFonts[$familyName] = [];
+      }
+
+      $groupedFonts[$familyName][$fontId] = $fontInfo['name'];
+    }
+
+    // Build the options array with optgroups
+    foreach ($groupedFonts as $family => $fonts) {
+      $options[$family] = $fonts;
+    }
+
+    return $options;
+  }
+
+  protected function scanAvailableFonts(): array {
+    $fontDirs = [
+      '/usr/share/fonts/dejavu',
+      '/usr/share/fonts/opensans',
+      '/usr/share/fonts/droid',
+      '/usr/share/fonts/liberation',
+      '/usr/share/fonts/freefont',
+    ];
+
+    $availableFonts = [];
+
+    foreach ($fontDirs as $dir) {
+      if (is_dir($dir)) {
+        $files = glob($dir . '/*.ttf');
+        foreach ($files as $file) {
+          $fontName = basename($file, '.ttf');
+          // Create a friendly name from filename
+          $friendlyName = str_replace(['-', '_'], ' ', $fontName);
+          $friendlyName = ucwords($friendlyName);
+          $availableFonts[$fontName] = [
+            'path' => $file,
+            'name' => $friendlyName,
+          ];
+        }
+      }
+    }
+
+    return $availableFonts;
   }
 }
