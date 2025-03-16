@@ -814,7 +814,7 @@ class FFmpegService
       '!' => '\\!',     // exclamation
       '#' => '\\#',     // hash
       '$' => '\\$',     // dollar
-      '%' => '\\%',     // percentage
+      '%' => '\\\%',     // percentage
       '&' => '\\&',     // ampersand
       '(' => '\\(',     // parentheses
       ')' => '\\)',
