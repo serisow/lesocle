@@ -138,6 +138,16 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       '#default_value' => $configuration['video_quality'] ?? 'medium',
       '#description' => $this->t('Select the quality of the generated video.'),
     ];
+    $form['orientation'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Video Orientation'),
+      '#options' => [
+        'horizontal' => $this->t('Horizontal (Landscape)'),
+        'vertical' => $this->t('Vertical (Portrait - for TikTok/Instagram)'),
+      ],
+      '#default_value' => $configuration['orientation'] ?? 'horizontal',
+      '#description' => $this->t('Select the orientation of the generated video.'),
+    ];
 
     // Output format options.
     $form['output_format'] = [
@@ -286,6 +296,7 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     return [
       'video_quality' => $form_state->getValue('video_quality'),
+      'orientation' => $form_state->getValue('orientation'),
       'output_format' => $form_state->getValue('output_format'),
       'transition_type' => $form_state->getValue('transition_type'),
       'transition_duration' => $form_state->getValue('transition_duration'),

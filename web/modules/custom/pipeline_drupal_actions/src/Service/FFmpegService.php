@@ -77,8 +77,7 @@ class FFmpegService
     // Get configuration
     $transitionType = $config['transition_type'] ?? 'fade';
     $transitionDuration = $config['transition_duration'] ?? 1;
-    $resolution = $this->getResolution($config['video_quality'] ?? 'medium');
-    // Parse resolution for width and height
+    $resolution = $this->getResolution($config['video_quality'] ?? 'medium', ($config['orientation'] ?? 'horizontal') === 'vertical');    // Parse resolution for width and height
     list($width, $height) = explode(':', $resolution);
     $width = (int)$width;
     $height = (int)$height;
@@ -949,17 +948,23 @@ class FFmpegService
    * @return string
    *   The resolution string for FFmpeg.
    */
-  public function getResolution(string $quality): string
-  {
-    switch ($quality) {
-      case 'low':
-        return '640:480';
-      case 'high':
-        return '1920:1080';
-      case 'medium':
-      default:
-        return '1280:720';
-    }
+  public function getResolution(string $quality, bool $vertical = false): string {
+    // Standard horizontal resolutions
+    $resolutions = [
+      'low' => '640:480',
+      'medium' => '1280:720',
+      'high' => '1920:1080',
+    ];
+
+    // Vertical resolutions for social media
+    $verticalResolutions = [
+      'low' => '480:640',
+      'medium' => '720:1280',
+      'high' => '1080:1920', // Standard 9:16 for TikTok/Instagram
+    ];
+
+    return $vertical ? ($verticalResolutions[$quality] ?? $verticalResolutions['medium'])
+      : ($resolutions[$quality] ?? $resolutions['medium']);
   }
 
   /**
