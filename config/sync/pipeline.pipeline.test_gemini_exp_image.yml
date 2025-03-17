@@ -1,0 +1,30 @@
+uuid: 3b79d3a6-68ab-404d-99b6-75c9ca000308
+langcode: en
+status: false
+dependencies: {  }
+id: test_gemini_exp_image
+label: 'Test gemini exp image'
+instructions: 'Test gemini exp image'
+created: 1742210651
+changed: 1742211790
+execution_type: scheduled
+scheduled_time: null
+schedule_type: none
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  fb5a7a9a-92ea-44e2-a8f0-9f38f58d165c:
+    id: llm_step
+    data:
+      step_description: 'Generate image'
+      required_steps: ''
+      step_output_key: image_data
+      output_type: generic_content
+      llm_config: gemini_2_0_flash_exp_image
+      prompt_template: ''
+      prompt: 'GENERATE an image of a  beautiful cat.'
+      response: ''
+    weight: 0
+    uuid: fb5a7a9a-92ea-44e2-a8f0-9f38f58d165c
