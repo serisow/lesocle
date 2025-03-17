@@ -536,11 +536,7 @@ class ImageEnrichmentStep extends ConfigurableStepTypeBase implements StepTypeEx
       foreach ($this->configuration['text_blocks'] as $block) {
         if (!empty($block['enabled'])) {
           $processedBlock = $block;
-
-          // Auto-populate content based on block ID if text is empty or if text has default value
-          $default_texts = ['default title', 'default subtitle', 'default body', 'default caption'];
-          if (empty($processedBlock['text']) || in_array($processedBlock['text'], $default_texts)) {
-            $sourceText = '';
+           $sourceText = '';
             switch ($block['id']) {
               case 'title_block':
                 $sourceText = $newsItem['headline'] ?? '';
@@ -555,11 +551,8 @@ class ImageEnrichmentStep extends ConfigurableStepTypeBase implements StepTypeEx
                 $sourceText = $newsItem['caption'] ?? '';
                 break;
             }
-
             // Format the text for video display
             $processedBlock['text'] = $this->formatText($sourceText, $block['id']);
-          }
-
           $processedTextBlocks[] = $processedBlock;
         }
       }

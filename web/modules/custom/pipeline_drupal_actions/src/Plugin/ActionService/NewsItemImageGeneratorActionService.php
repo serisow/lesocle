@@ -107,17 +107,22 @@ class NewsItemImageGeneratorActionService extends PluginBase implements ActionSe
       '#required' => TRUE,
     ];
 
-    $form['image_size'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Image Size'),
-      '#description' => $this->t('Select the size for generated images.'),
-      '#options' => [
-        '1024x1024' => $this->t('1024x1024 - Standard'),
-        '1024x1792' => $this->t('1024x1792 - Portrait'),
-        '1792x1024' => $this->t('1792x1024 - Landscape'),
-      ],
-      '#default_value' => $configuration['image_size'] ?? '1024x1024',
-    ];
+    $selected_generator = $form_state->getValue('image_generator') ?: $configuration['image_generator'] ?? 'openai_image';
+
+    // Add size selection for DALL-E models
+    if ($selected_generator === 'openai_image') {
+      $form['image_config_wrapper']['image_size'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Image Size'),
+        '#description' => $this->t('Select the size for generated images.'),
+        '#options' => [
+          '1024x1024' => $this->t('1024x1024 - Standard'),
+          '1024x1792' => $this->t('1024x1792 - Portrait'),
+          '1792x1024' => $this->t('1792x1024 - Landscape'),
+        ],
+        '#default_value' => $configuration['image_size'] ?? '1024x1024',
+      ];
+    }
 
     $form['concurrent_limit'] = [
       '#type' => 'number',
@@ -144,17 +149,20 @@ class NewsItemImageGeneratorActionService extends PluginBase implements ActionSe
   /**
    * Gets options for image generators.
    */
+  /**
+   * Gets options for image generators.
+   */
   protected function getImageGeneratorOptions()
   {
-    // For now we only have OpenAI, but this allows us to easily add more
     return [
       'openai_image' => $this->t('DALL-E (OpenAI)'),
-      // Future options could include:
-      // 'stability_ai' => $this->t('Stable Diffusion (Stability AI)'),
-      // 'midjourney' => $this->t('Midjourney'),
+      'gemini' => $this->t('Gemini (Google)'),
     ];
   }
 
+  /**
+   * Gets options for LLM configs.
+   */
   /**
    * Gets options for LLM configs.
    */
@@ -163,8 +171,9 @@ class NewsItemImageGeneratorActionService extends PluginBase implements ActionSe
     $options = [];
     $llm_configs = $this->entityTypeManager->getStorage('llm_config')->loadMultiple();
     foreach ($llm_configs as $llm_config) {
-      // Only include configs that match our image generation services
-      if (in_array($llm_config->getModelName(), ['dall-e-3'])) {
+      // Include configs for both DALL-E and Gemini image models
+      $model_name = $llm_config->getModelName();
+      if (in_array($model_name, ['dall-e-3', 'gemini-2.0-flash-exp-image'])) {
         $options[$llm_config->id()] = $llm_config->label();
       }
     }
@@ -188,8 +197,10 @@ class NewsItemImageGeneratorActionService extends PluginBase implements ActionSe
   /**
    * {@inheritdoc}
    */
-  public function executeAction(array $config, array &$context): string
-  {
+  /**
+   * {@inheritdoc}
+   */
+  public function executeAction(array $config, array &$context): string {
     try {
       // Determine the LLM service to use based on the configuration
       $image_generator = $config['configuration']['image_generator'] ?? 'openai_image';
@@ -209,6 +220,10 @@ class NewsItemImageGeneratorActionService extends PluginBase implements ActionSe
       if (!$llm_service) {
         throw new \Exception('Image generation service not found: ' . $image_generator);
       }
+
+      // Get model information to adapt processing based on model type
+      $model_name = $llm_config->getModelName();
+      $is_gemini_model = str_contains($model_name, 'gemini');
 
       $news_items_data = $this->findNewsContentData($context);
       if (empty($news_items_data)) {
@@ -237,7 +252,18 @@ class NewsItemImageGeneratorActionService extends PluginBase implements ActionSe
 
           // Create a config array for the LLM service with the desired image size
           $llm_config_array = $llm_config->toArray();
-          $llm_config_array['image_size'] = $image_size;
+
+          // Adjust configuration based on model type
+          if ($is_gemini_model) {
+            // Gemini-specific configuration adjustments
+            // (Gemini doesn't use the image_size parameter in the same way)
+            $this->loggerFactory->get('pipeline')->debug('Using Gemini model for image generation: @model', [
+              '@model' => $model_name,
+            ]);
+          } else {
+            // DALL-E specific configuration
+            $llm_config_array['image_size'] = $image_size;
+          }
 
           // Generate the image
           $retries = 0;
@@ -252,6 +278,11 @@ class NewsItemImageGeneratorActionService extends PluginBase implements ActionSe
               $image_info = json_decode($image_result, true);
               if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new \Exception('Failed to parse image generation result: ' . json_last_error_msg());
+              }
+
+              // Handle potential error flag returned by Gemini model
+              if (isset($image_info['error']) && $image_info['error'] === true) {
+                throw new \Exception('Image generation failed: ' . ($image_info['message'] ?? 'Unknown error'));
               }
 
               // Add the image info to the article
@@ -297,23 +328,13 @@ class NewsItemImageGeneratorActionService extends PluginBase implements ActionSe
         }
       }
 
-      // Add the results to the context with the appropriate output_type
-      $result = json_encode($enriched_articles);
-
-      // Store the result in the context with a specific output_type
-      /*$context['results'][$this->getStepOutputKey()] = [
-        'output_type' => 'news_with_images',
-        'service' => 'news_item_image_generator',
-        'data' => $result,
-      ];*/
-
-      return $result;
+      // Return the JSON encoded result
+      return json_encode($enriched_articles);
     } catch (\Exception $e) {
       $this->loggerFactory->get('pipeline')->error('Article image generation failed: @error', ['@error' => $e->getMessage()]);
       throw $e;
     }
   }
-
   /**
    * Finds news content data with the expected output_type in the pipeline context.
    *

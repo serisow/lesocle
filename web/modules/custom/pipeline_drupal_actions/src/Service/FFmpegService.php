@@ -839,6 +839,8 @@ class FFmpegService
    *   Properly escaped text for FFmpeg.
    */
   protected function escapeFFmpegText($text) {
+    // First, unescape any already escaped double quotes to normalize the text
+    $text = str_replace('\"', '"', $text);
     // Replace any literal backslashes first with QUADRUPLE backslashes
     // (this is because both shell and FFmpeg will interpret them)
     $text = str_replace('\\', '\\\\\\\\', $text);
