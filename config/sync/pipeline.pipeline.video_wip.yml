@@ -1,0 +1,225 @@
+uuid: f254f7e3-1257-4e99-a778-3ddd977eacd4
+langcode: en
+status: true
+dependencies: {  }
+id: video_wip
+label: 'Video WIP'
+instructions: 'Testing prompt for video generation.'
+created: 1741707610
+changed: 1741990577
+execution_type: scheduled
+scheduled_time: 1741990560
+schedule_type: one_time
+recurring_frequency: null
+recurring_time: null
+execution_interval: null
+execution_failures: 0
+step_types:
+  2fce4532-f753-4a09-8400-b97e073441cc:
+    id: news_api_search
+    data:
+      step_description: 'Gather news'
+      required_steps: ''
+      step_output_key: step1
+      output_type: generic_content
+      query: 'Climate change latest research and impacts'
+      advanced_params:
+        language: en
+        sort_by: popularity
+        page_size: '2'
+        date_range:
+          from: ''
+          to: ''
+      response: ''
+    weight: 0
+    uuid: 2fce4532-f753-4a09-8400-b97e073441cc
+  13ff5606-f0e7-4880-a69a-1149a5643b0e:
+    id: llm_step
+    data:
+      step_description: 'Process news'
+      required_steps: step1
+      step_output_key: step2
+      output_type: structured_news
+      llm_config: gemini_2_0_flash
+      prompt_template: ''
+      prompt: "You are an expert news editor and visual director tasked with creating content for a video news report. You'll receive data from multiple news articles, and your job is to:\r\n\r\n1. Analyze each article of the content in the section <CONTENT> below by focus on the expanded_content and description field.\r\n2. Create a concise, engaging summary (50-75 words) that captures the essential information\r\n3. Write a headline (10 words or less)\r\n4. Create a detailed image prompt for DALL-E that will generate a relevant, journalistic-quality image\r\n5. Add a brief caption for the image\r\n\r\n<CONTENT>\r\n{step1}\r\n</CONTENT>\r\n\r\nFORMAT YOUR RESPONSE AS JSON LIKE THIS:\r\n[\r\n  {\r\n    \"article_id\": 1,\r\n    \"headline\": \"Compelling headline here\",\r\n    \"summary\": \"Concise summary capturing the most important aspects of the article...\",\r\n    \"image_prompt\": \"Detailed description for generating an image that represents the article visually...\",\r\n    \"caption\": \"Brief image caption that provides context\"\r\n  }\r\n]\r\n\r\nGuidelines:\r\n- Focus on factual information and clarity\r\n- For image prompts, describe scenes with specific details about setting, lighting, perspective and mood\r\n- Avoid political bias\r\n- Include relevant names, locations, and dates in summaries\r\n- Maintain a professional tone throughout\r\n- For each image prompt, focus on a photojournalistic style, not illustrations or graphics\r\n\r\nProcess all articles in the input, giving each an incrementing article_id starting with 1."
+      response: ''
+    weight: 1
+    uuid: 13ff5606-f0e7-4880-a69a-1149a5643b0e
+  e136ea32-24a5-450f-afca-ef6bd4b70d26:
+    id: action_step
+    data:
+      step_description: 'Generate images for news'
+      required_steps: step2
+      step_output_key: step3
+      output_type: enriched_news_api_image
+      action_config: news_api_images_generation
+      response: ''
+    weight: 2
+    uuid: e136ea32-24a5-450f-afca-ef6bd4b70d26
+  7fb600c4-c989-42f9-b91d-b9a49e08dcf5:
+    id: image_enrichment_step
+    data:
+      step_description: 'Enriched image 1'
+      required_steps: step2
+      step_output_key: image_data_1
+      output_type: featured_image
+      duration: '30'
+      text_blocks:
+        -
+          id: title_block
+          enabled: 1
+          text: 'default title'
+          position: top_left
+          font_size: '20'
+          font_color: red
+          background_color: '#F0F0F0'
+          custom_x: '0'
+          custom_y: '0'
+          animation:
+            type: slide
+            duration: '1'
+            delay: '0'
+            easing: ease-in-out
+        -
+          id: subtitle_block
+          enabled: 1
+          text: 'default subtitle'
+          position: top_right
+          font_size: '16'
+          font_color: red
+          background_color: '#F0F0F0'
+          custom_x: '0'
+          custom_y: '0'
+          animation:
+            type: fade
+            duration: '1'
+            delay: '0.5'
+            easing: ease-in
+        -
+          id: body_block
+          enabled: 1
+          text: 'default body'
+          position: center
+          font_size: '18'
+          font_color: black
+          background_color: '#F0F0F0'
+          custom_x: '0'
+          custom_y: '60'
+          animation:
+            type: slide
+            duration: '1'
+            delay: '0'
+            easing: ease-in
+        -
+          id: caption_block
+          enabled: 0
+          text: 'default caption'
+          position: bottom_right
+          font_size: '18'
+          font_color: green
+          background_color: '#F0F0F0'
+          custom_x: '0'
+          custom_y: '0'
+          animation:
+            type: fade
+            duration: '1'
+            delay: '1.5'
+            easing: linear
+      response: ''
+    weight: 3
+    uuid: 7fb600c4-c989-42f9-b91d-b9a49e08dcf5
+  c67aa675-559f-49d2-bcdb-49007cd480ca:
+    id: image_enrichment_step
+    data:
+      step_description: 'Enriched Image 2'
+      required_steps: step2
+      step_output_key: image_data_2
+      output_type: featured_image
+      duration: '30'
+      text_blocks:
+        -
+          id: title_block
+          enabled: 1
+          text: 'default title'
+          position: top_left
+          font_size: '22'
+          font_color: red
+          background_color: '#F0F0F0'
+          custom_x: '0'
+          custom_y: '0'
+          animation:
+            type: slide
+            duration: '1'
+            delay: '0'
+            easing: ease-in-out
+        -
+          id: subtitle_block
+          enabled: 1
+          text: 'default subtitle'
+          position: top_right
+          font_size: '18'
+          font_color: green
+          background_color: '#F0F0F0'
+          custom_x: '0'
+          custom_y: '0'
+          animation:
+            type: fade
+            duration: '1'
+            delay: '0.5'
+            easing: linear
+        -
+          id: body_block
+          enabled: 1
+          text: 'default body'
+          position: center
+          font_size: '18'
+          font_color: black
+          background_color: '#F0F0F0'
+          custom_x: '0'
+          custom_y: '60'
+          animation:
+            type: slide
+            duration: '1'
+            delay: '1'
+            easing: ease-in-out
+        -
+          id: caption_block
+          enabled: 1
+          text: 'default caption'
+          position: bottom_right
+          font_size: '15'
+          font_color: green
+          background_color: '#F0F0F0'
+          custom_x: '0'
+          custom_y: '0'
+          animation:
+            type: slide
+            duration: '1'
+            delay: '1.5'
+            easing: ease-in
+      response: ''
+    weight: 4
+    uuid: c67aa675-559f-49d2-bcdb-49007cd480ca
+  e0ba46dd-fbf6-45e1-8e4b-f77b8003c68d:
+    id: upload_audio_step
+    data:
+      step_description: 'Audio '
+      required_steps: ''
+      step_output_key: audio_data
+      output_type: audio_content
+      audio_file_id: 565
+      response: ''
+    weight: 5
+    uuid: e0ba46dd-fbf6-45e1-8e4b-f77b8003c68d
+  dd187d70-d0d4-4890-8326-67a280714660:
+    id: action_step
+    data:
+      step_description: 'Video generation'
+      required_steps: "image_data_1\r\nimage_data_2\r\naudio_data"
+      step_output_key: video_content
+      output_type: video_content
+      action_config: video_generation
+      response: ''
+    weight: 6
+    uuid: dd187d70-d0d4-4890-8326-67a280714660

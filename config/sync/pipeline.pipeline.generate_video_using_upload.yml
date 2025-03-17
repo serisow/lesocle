@@ -6,9 +6,9 @@ id: generate_video_using_upload
 label: 'Generate video using upload'
 instructions: 'Generate video using upload'
 created: 1740931404
-changed: 1741641135
+changed: 1742161707
 execution_type: scheduled
-scheduled_time: 1741641060
+scheduled_time: 1742151180
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -22,7 +22,7 @@ step_types:
       required_steps: ''
       step_output_key: audio_data
       output_type: audio_content
-      audio_file_id: 367
+      audio_file_id: 598
       response: ''
     weight: -7
     uuid: 4f570c60-f0ea-46f2-bc12-d5c2c9b50f09
@@ -43,29 +43,35 @@ step_types:
       step_description: 'Slide 1'
       required_steps: ''
       video_settings:
-        duration: '12'
+        duration: '38'
       text_blocks:
         -
           id: title_block
           enabled: true
-          text: 'Exciting Today News'
+          text: 'Exciting Today News 66%'
           position: top_left
           font_size: 32
           font_color: '#FF0000'
+          font_family: OpenSans-Bold
+          font_style: shadow
           background_color: yellow
           animation:
-            type: slide
+            type: fade
             duration: 1.0
             delay: 0.0
-            easing: linear
+            easing: ease-in-out
         -
           id: subtitle_block
           enabled: true
-          text: 'Our latest news from trusted sources.'
+          text: |-
+            Our latest news from trusted sources it's so
+            cool.
           position: top_right
           font_size: 28
-          font_color: '#F0F0F0'
-          background_color: 'rgb(30, 42, 62)'
+          font_color: black
+          font_family: OpenSans-Regular
+          font_style: shadow
+          background_color: white
           animation:
             type: fade
             duration: 1.0
@@ -74,29 +80,22 @@ step_types:
         -
           id: body_block
           enabled: true
-          text: "This is  the major text where we shoud put most long text to read more click here.\r\nI want it to act as 3 lines of major news articles from news api.\r\nThis should be shown as a block text so wrapping should work nicely.\r\nThis is  the major text where we shoud put most long text to read more click here.\r\nI want it to act as 3 lines of major news articles from news api.\r\n"
-          position: bottom_right
-          font_size: 20
-          font_color: '#F0F0F0'
-          background_color: 'rgb(30, 42, 62)'
+          text: |-
+            This is the major text where we shoud put most long text to read more click here. I want it to act
+            as 3 lines of major news articles from news api. This should be shown as a block text so wrapping
+            should work nicely. This is the major text where we shoud put most long text to read more click
+            here. I want it to act as 3 lines of major news articles from news api.
+          position: bottom
+          font_size: 22
+          font_color: black
+          font_family: OpenSans-Regular
+          font_style: shadow
+          background_color: white
           animation:
-            type: fade
+            type: typewriter
             duration: 1.0
-            delay: 0.0
-            easing: ease-in
-        -
-          id: caption_block
-          enabled: true
-          text: "Email: momo@gmail.com\r\nPhone: 0761524874"
-          position: bottom_left
-          font_size: 20
-          font_color: '#F0F0F0'
-          background_color: 'rgb(30, 42, 62)'
-          animation:
-            type: fade
-            duration: 1.0
-            delay: 0.0
-            easing: ease-in
+            delay: 1.0
+            easing: linear
       step_output_key: image_data_1
       output_type: featured_image
       image_file_id: 431
@@ -109,16 +108,18 @@ step_types:
       step_description: 'Slide 2'
       required_steps: ''
       video_settings:
-        duration: '18'
+        duration: '38'
       text_blocks:
         -
           id: title_block
           enabled: true
-          text: 'Secoond slide title'
+          text: |-
+            Welcome to the Jungle That's fine 100%,
+            isn't it?
           position: top_left
-          font_size: 30
+          font_size: 32
           font_color: white
-          background_color: 'rgba(0,0,0,0.5)'
+          background_color: 'rgb(30, 42, 62)'
           animation:
             type: scale
             duration: 1.0
@@ -128,10 +129,10 @@ step_types:
           id: subtitle_block
           enabled: true
           text: 'This is the subtitle text hold my bear.'
-          position: bottom_left
+          position: top_right
           font_size: 28
           font_color: white
-          background_color: red
+          background_color: 'rgb(30, 42, 62)'
           animation:
             type: scale
             duration: 1.0
@@ -140,29 +141,19 @@ step_types:
         -
           id: body_block
           enabled: true
-          text: 'THis the body the long text where talk is done'
+          text: |-
+            Testing API Integrations: Start by integrating one platform (e.g., YouTube) and iteratively build
+            support for additional channels. User Feedback Loop: Keep the manual review step in Drupal to
+            maintain quality control until you’re confident in the automation.
           position: center
-          font_size: 24
+          font_size: 22
           font_color: white
-          background_color: green
+          background_color: 'rgb(30, 42, 62)'
           animation:
-            type: slide
+            type: fade
             duration: 1.0
             delay: 0.0
-            easing: ease-in
-        -
-          id: caption_block
-          enabled: true
-          text: 'The caption whatever it is'
-          position: bottom_right
-          font_size: 20
-          font_color: white
-          background_color: red
-          animation:
-            type: scale
-            duration: 1.0
-            delay: 0.0
-            easing: ease-in
+            easing: ease-in-out
       step_output_key: image_data_2
       output_type: featured_image
       image_file_id: 439
@@ -175,14 +166,14 @@ step_types:
       step_description: 'Slide 3'
       required_steps: ''
       video_settings:
-        duration: '12'
+        duration: '38'
       text_blocks:
         -
           id: title_block
           enabled: true
-          text: 'Third slide title'
+          text: 'The end is near get ready!'
           position: top_left
-          font_size: 30
+          font_size: 32
           font_color: white
           background_color: 'rgba(0,0,0,0.5)'
           animation:
@@ -193,7 +184,7 @@ step_types:
         -
           id: subtitle_block
           enabled: true
-          text: 'Third subtitle'
+          text: 'Understanding is the key, if you know'
           position: bottom_left
           font_size: 28
           font_color: white
@@ -206,9 +197,13 @@ step_types:
         -
           id: body_block
           enabled: true
-          text: 'Lots of text should act as the content of the main area.'
+          text: |-
+            API Rate Limits & Authentication: Each platform has its own API rate limits and authentication
+            methods (often OAuth-based). Your pipeline will need to handle these robustly. Content Formatting &
+            Requirements: Video formats, metadata, and even thumbnail requirements differ by platform. Ensure
+            that the pipeline step for each social media channel accommodates these specifications.
           position: center
-          font_size: 24
+          font_size: 22
           font_color: orange
           background_color: black
           animation:
@@ -216,19 +211,6 @@ step_types:
             duration: 1.0
             delay: 0.0
             easing: ease-out
-        -
-          id: caption_block
-          enabled: true
-          text: 'The third caption'
-          position: bottom_right
-          font_size: 20
-          font_color: white
-          background_color: green
-          animation:
-            type: fade
-            duration: 1.0
-            delay: 0.0
-            easing: ease-in
       step_output_key: image_data_3
       output_type: featured_image
       image_file_id: 498

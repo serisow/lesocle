@@ -6,7 +6,7 @@ id: legislation_news_hebdomadaire
 label: 'Legislation news hebdomadaire'
 instructions: 'Create an informative article about climate change with an accompanying image.'
 created: 1740406614
-changed: 1740406614
+changed: 1741706917
 execution_type: scheduled
 scheduled_time: 1739904060
 schedule_type: one_time
@@ -37,7 +37,7 @@ step_types:
       output_type: generic_content
       llm_config: gpt_4o_mini
       prompt_template: ''
-      prompt: "Générez un prompt visuel pour illustrer les contenu ci dessous. Éléments requis :\r\n - Architecture institutionnelle française\r\n - Symboles républicains (Marianne, devise)\r\n  - Représentation du processus législatif\r\n  - Style sobre type Journal Officiel\r\n\r\nContenu:\r\n####\r\n{step2}\r\n####"
+      prompt: "Générez un prompt visuel pour illustrer les contenu ci dessous.\r\nLe prompt ne doit pas dépasser 950 caractères.\r\nÉléments requis :\r\n - Architecture institutionnelle française\r\n - Symboles républicains (Marianne, devise)\r\n  - Représentation du processus législatif\r\n  - Style sobre type Journal Officiel\r\n\r\nContenu:\r\n####\r\n{step2}\r\n####"
       response: ''
     weight: -8
     uuid: 831e5667-1433-4700-834d-5e2b3dd3cf77
