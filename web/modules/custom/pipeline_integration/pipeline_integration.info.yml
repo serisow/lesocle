@@ -1,0 +1,7 @@
+name: 'Pipeline Integration'
+type: module
+description: 'Integrate ino Drupal services which use the pipeline module.'
+package: Custom
+core_version_requirement: ^10 || ^11
+dependencies:
+  - pipeline:pipeline

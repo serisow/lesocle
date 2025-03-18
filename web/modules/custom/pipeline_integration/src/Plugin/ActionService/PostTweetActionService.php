@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\pipeline_communication\Plugin\ActionService;
+namespace Drupal\pipeline_integration\Plugin\ActionService;
 
 use Abraham\TwitterOAuth\TwitterOAuth;
 use Drupal\Core\Entity\EntityTypeManagerInterface;

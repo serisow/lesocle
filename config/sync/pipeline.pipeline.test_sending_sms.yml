@@ -1,15 +1,15 @@
 uuid: d563c84c-4ce9-4ba0-9d5f-0a1f54200787
 langcode: en
-status: false
+status: true
 dependencies: {  }
 id: test_sending_sms
 label: 'Test Sending SMS'
 instructions: 'This test for sending sms'
 created: 1729847299
-changed: 1740841148
-execution_type: on_demand
-scheduled_time: null
-schedule_type: null
+changed: 1742317766
+execution_type: scheduled
+scheduled_time: 1742317680
+schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
 execution_interval: 5
