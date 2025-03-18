@@ -1,7 +1,7 @@
 name: 'Pipeline Run'
 type: module
-description: 'Represent the result of a a pipeline execution.'
-package: Custom
+description: 'Tracks and stores execution results, step outcomes, performance metrics, and error logs for pipeline workflows to enable monitoring, auditing, and debugging.'
+package: Pipeline
 core_version_requirement: ^10 || ^11
 dependencies:
   - pipeline:pipeline

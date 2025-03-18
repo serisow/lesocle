@@ -1,14 +1,14 @@
 <?php
-namespace Drupal\pipeline_drupal_actions;
+namespace Drupal\pipeline_integration;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
-use Drupal\pipeline_drupal_actions\DependencyInjection\Compiler\EntityCreationStrategyPass;
+use Drupal\pipeline_integration\DependencyInjection\Compiler\EntityCreationStrategyPass;
 
 /**
- * Class PipelineDrupalActionsServiceProvider
+ * Class PipelineIntegrationServiceProvider
  */
-class PipelineDrupalActionsServiceProvider extends ServiceProviderBase
+class PipelineIntegrationServiceProvider extends ServiceProviderBase
 {
   /**
    * {@inheritdoc}

@@ -45,7 +45,6 @@ module:
   path: 0
   path_alias: 0
   pipeline: 0
-  pipeline_drupal_actions: 0
   pipeline_integration: 0
   pipeline_run: 0
   redis: 0

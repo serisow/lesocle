@@ -1,7 +1,7 @@
 name: 'Pipeline'
 type: module
-description: 'Defines configurable pipelines.'
-package: custom
+description: 'Provides a flexible framework for creating multi-step AI workflows that orchestrate LLM services, content generation, and automated actions through a configurable pipeline system.'
+package: Pipeline
 core_version_requirement: ^10 || ^11
 
 'interface translation project': pipeline

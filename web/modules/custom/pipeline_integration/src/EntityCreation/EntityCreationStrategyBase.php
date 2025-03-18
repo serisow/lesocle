@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\pipeline_drupal_actions\EntityCreation;
+namespace Drupal\pipeline_integration\EntityCreation;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\pipeline\Service\MediaCreationService;

@@ -1,7 +1,7 @@
 <?php
-namespace Drupal\pipeline_drupal_actions\EntityCreation\Strategy;
+namespace Drupal\pipeline_integration\EntityCreation\Strategy;
 
-use Drupal\pipeline_drupal_actions\EntityCreation\EntityCreationStrategyBase;
+use Drupal\pipeline_integration\EntityCreation\EntityCreationStrategyBase;
 
 class ArticleCreationStrategy extends EntityCreationStrategyBase {
   public function supportsBundle(string $entityTypeId, string $bundle): bool {

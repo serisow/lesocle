@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\pipeline_drupal_actions\Service;
+namespace Drupal\pipeline_integration\Service;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;

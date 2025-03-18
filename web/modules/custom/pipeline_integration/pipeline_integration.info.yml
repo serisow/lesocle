@@ -1,7 +1,7 @@
 name: 'Pipeline Integration'
 type: module
-description: 'Integrate ino Drupal services which use the pipeline module.'
-package: Custom
+description: 'Connects AI pipelines with Drupal entities, media systems, and external services to enable content creation, media generation, and cross-platform communication.'
+package: Pipeline
 core_version_requirement: ^10 || ^11
 dependencies:
   - pipeline:pipeline

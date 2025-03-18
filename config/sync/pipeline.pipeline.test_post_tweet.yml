@@ -6,7 +6,7 @@ id: test_post_tweet
 label: 'Test Post Tweet'
 instructions: 'Only for testing tweet'
 created: 1729808615
-changed: 1740406614
+changed: 1742327660
 execution_type: scheduled
 scheduled_time: 1739117280
 schedule_type: one_time
@@ -22,9 +22,9 @@ step_types:
       required_steps: ''
       step_output_key: step1
       output_type: tweet_content
-      llm_config: gemini_1_5_pro_002
+      llm_config: gemini_2_0_flash
       prompt_template: 'Viral Tweet Generator (viral_tweet_generator)'
-      prompt: "You are a viral tweet optimization expert with deep knowledge of what makes content spread on Twitter. Your task is to create a tweet based on the following content that has high potential for engagement, while maintaining authenticity and value.\r\n\r\nContent to tweet about:\r\n####\r\nAgentic workflow\r\n####\r\n\r\nInstructions:\r\n1. Keep the tweet under 280 characters\r\n2. Make it engaging without being clickbaity\r\n3. Use emojis strategically and sparingly\r\n4. Consider adding one or two relevant hashtags if they add value\r\n5. Make it easy to read and understand\r\n6. Include a hook or value proposition\r\n7. Make it shareworthy\r\n8. Format the response as a JSON object with a single \"text\" field\r\n\r\nRules:\r\n- DON'T use spammy tactics or excessive emojis\r\n- DON'T use \"RT\", \"Please Share\", or beg for engagement\r\n- DON'T include placeholder URLs\r\n- DO ensure the tone matches the content\r\n- DO focus on providing value\r\n- DO use line breaks strategically if needed (but count them in character limit)\r\n\r\nFormat your response EXACTLY like this example:\r\n{\r\n  \"text\": \"🚀 Just discovered the ultimate productivity hack: The Pomodoro Technique isn't just about 25min work sprints - it's about guilt-free breaks!\\n\\nTripled my output without the burnout.\\n\\n#ProductivityTips\"\r\n}\r\n\r\nRemember: The response MUST be valid JSON and ONLY include the tweet text in the specified format. No additional explanation or content should be included."
+      prompt: "You are a viral tweet optimization expert with deep knowledge of what makes content spread on Twitter. Your task is to create a tweet based on the following content that has high potential for engagement, while maintaining authenticity and value.\r\n\r\nContent to tweet about:\r\n####\r\nAI Workflow Automation\r\n####\r\n\r\nInstructions:\r\n1. Keep the tweet under 280 characters\r\n2. Make it engaging without being clickbaity\r\n3. Use emojis strategically and sparingly\r\n4. Consider adding one or two relevant hashtags if they add value\r\n5. Make it easy to read and understand\r\n6. Include a hook or value proposition\r\n7. Make it shareworthy\r\n8. Format the response as a JSON object with a single \"text\" field\r\n\r\nRules:\r\n- DON'T use spammy tactics or excessive emojis\r\n- DON'T use \"RT\", \"Please Share\", or beg for engagement\r\n- DON'T include placeholder URLs\r\n- DO ensure the tone matches the content\r\n- DO focus on providing value\r\n- DO use line breaks strategically if needed (but count them in character limit)\r\n\r\nFormat your response EXACTLY like this example:\r\n{\r\n  \"text\": \"🚀 Just discovered the ultimate productivity hack: The Pomodoro Technique isn't just about 25min work sprints - it's about guilt-free breaks!\\n\\nTripled my output without the burnout.\\n\\n#ProductivityTips\"\r\n}\r\n\r\nRemember: The response MUST be valid JSON and ONLY include the tweet text in the specified format. No additional explanation or content should be included."
       response: ''
     weight: 0
     uuid: a1c5eff4-054b-48e2-8727-f8e2ab084f03

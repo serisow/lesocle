@@ -1,7 +1,7 @@
 <?php
-namespace Drupal\pipeline_drupal_actions\EntityCreation;
+namespace Drupal\pipeline_integration\EntityCreation;
 
-namespace Drupal\pipeline_drupal_actions\EntityCreation;
+namespace Drupal\pipeline_integration\EntityCreation;
 
 class EntityCreationStrategyManager {
   protected $strategies = [];

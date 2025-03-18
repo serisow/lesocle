@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\pipeline_drupal_actions\Plugin\ActionService;
+namespace Drupal\pipeline_integration\Plugin\ActionService;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
@@ -9,7 +9,7 @@ use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\pipeline\Plugin\ActionServiceInterface;
 use Drupal\pipeline\Service\MediaCreationService;
-use Drupal\pipeline_drupal_actions\EntityCreation\EntityCreationStrategyManager;
+use Drupal\pipeline_integration\EntityCreation\EntityCreationStrategyManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -41,7 +41,7 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
 
   /**
    * The strategy manager service.
-   * @var \Drupal\pipeline_drupal_actions\EntityCreation\EntityCreationStrategyManager
+   * @var \Drupal\pipeline_integration\EntityCreation\EntityCreationStrategyManager
    */
   protected $entityCreationStrategyManager;
 
@@ -86,8 +86,8 @@ class CreateEntityActionService extends PluginBase implements ActionServiceInter
       $plugin_definition,
       $container->get('entity_type.manager'),
       $container->get('entity_type.bundle.info'),
-      $container->get('pipeline.media_creation_service'),
-      $container->get('pipeline_drupal_actions.entity_creation_strategy_manager')
+      $container->get('pipeline.media_creation_service'), // @TODO: Look if same purpose as MediaEntityCreator here
+      $container->get('pipeline_integration.entity_creation_strategy_manager')
     );
   }
 

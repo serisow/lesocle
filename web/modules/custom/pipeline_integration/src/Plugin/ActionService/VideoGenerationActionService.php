@@ -1,5 +1,5 @@
 <?php
-namespace Drupal\pipeline_drupal_actions\Plugin\ActionService;
+namespace Drupal\pipeline_integration\Plugin\ActionService;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -7,9 +7,9 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginBase;
 use Drupal\pipeline\Plugin\ActionServiceInterface;
-use Drupal\pipeline_drupal_actions\Service\FFmpegService;
-use Drupal\pipeline_drupal_actions\Service\MediaEntityCreator;
-use Drupal\pipeline_drupal_actions\Service\VideoFileManager;
+use Drupal\pipeline_integration\Service\FFmpegService;
+use Drupal\pipeline_integration\Service\MediaEntityCreator;
+use Drupal\pipeline_integration\Service\VideoFileManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -37,14 +37,14 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
   /**
    * The FFmpeg service.
    *
-   * @var \Drupal\pipeline_drupal_actions\Service\FFmpegService
+   * @var \Drupal\pipeline_integration\Service\FFmpegService
    */
   protected $ffmpegService;
 
   /**
    * The video file manager service.
    *
-   * @var \Drupal\pipeline_drupal_actions\Service\VideoFileManager
+   * @var \Drupal\pipeline_integration\Service\VideoFileManager
    */
   protected $videoFileManager;
 
@@ -52,7 +52,7 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
   /**
    * The media entity creator service.
    *
-   * @var \Drupal\pipeline_drupal_actions\Service\MediaEntityCreator
+   * @var \Drupal\pipeline_integration\Service\MediaEntityCreator
    */
   protected $mediaEntityCreator;
 
@@ -69,11 +69,11 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
    *   The entity type manager.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger factory.
-   * @param \Drupal\pipeline_drupal_actions\Service\FFmpegService $ffmpeg_service
+   * @param \Drupal\pipeline_integration\Service\FFmpegService $ffmpeg_service
    *   The FFmpeg service.
-   * @param \Drupal\pipeline_drupal_actions\Service\VideoFileManager $video_file_manager
+   * @param \Drupal\pipeline_integration\Service\VideoFileManager $video_file_manager
    *   The video file manager service.
-   * @param \Drupal\pipeline_drupal_actions\Service\MediaEntityCreator $media_entity_creator
+   * @param \Drupal\pipeline_integration\Service\MediaEntityCreator $media_entity_creator
    *   The media entity creator service.
    */
   public function __construct(
@@ -104,9 +104,9 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       $plugin_definition,
       $container->get('entity_type.manager'),
       $container->get('logger.factory'),
-      $container->get('pipeline_drupal_actions.ffmpeg_service'),
-      $container->get('pipeline_drupal_actions.video_file_manager'),
-      $container->get('pipeline_drupal_actions.media_entity_creator')
+      $container->get('pipeline_integration.ffmpeg_service'),
+      $container->get('pipeline_integration.video_file_manager'),
+      $container->get('pipeline_integration.media_entity_creator')
     );
   }
 

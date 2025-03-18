@@ -1,7 +1,0 @@
-name: 'Pipeline Drupal Actions'
-type: module
-description: 'Provides Drupal entity actions (article creation, media handling, taxonomy) for Pipeline module'
-package: Pipeline
-core_version_requirement: ^10 || ^11
-dependencies:
-  - pipeline:pipeline
