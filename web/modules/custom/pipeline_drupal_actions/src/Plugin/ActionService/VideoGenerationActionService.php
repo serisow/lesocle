@@ -9,7 +9,6 @@ use Drupal\Core\Plugin\PluginBase;
 use Drupal\pipeline\Plugin\ActionServiceInterface;
 use Drupal\pipeline_drupal_actions\Service\FFmpegService;
 use Drupal\pipeline_drupal_actions\Service\MediaEntityCreator;
-use Drupal\pipeline_drupal_actions\Service\TextOverlayFormatter;
 use Drupal\pipeline_drupal_actions\Service\VideoFileManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -49,12 +48,6 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
    */
   protected $videoFileManager;
 
-  /**
-   * The text overlay formatter service.
-   *
-   * @var \Drupal\pipeline_drupal_actions\Service\TextOverlayFormatter
-   */
-  protected $textOverlayFormatter;
 
   /**
    * The media entity creator service.
@@ -80,8 +73,6 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
    *   The FFmpeg service.
    * @param \Drupal\pipeline_drupal_actions\Service\VideoFileManager $video_file_manager
    *   The video file manager service.
-   * @param \Drupal\pipeline_drupal_actions\Service\TextOverlayFormatter $text_overlay_formatter
-   *   The text overlay formatter service.
    * @param \Drupal\pipeline_drupal_actions\Service\MediaEntityCreator $media_entity_creator
    *   The media entity creator service.
    */
@@ -93,7 +84,6 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
     LoggerChannelFactoryInterface $logger_factory,
     FFmpegService $ffmpeg_service,
     VideoFileManager $video_file_manager,
-    TextOverlayFormatter $text_overlay_formatter,
     MediaEntityCreator $media_entity_creator
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
@@ -101,7 +91,6 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
     $this->loggerFactory = $logger_factory;
     $this->ffmpegService = $ffmpeg_service;
     $this->videoFileManager = $video_file_manager;
-    $this->textOverlayFormatter = $text_overlay_formatter;
     $this->mediaEntityCreator = $media_entity_creator;
   }
 
@@ -117,7 +106,6 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       $container->get('logger.factory'),
       $container->get('pipeline_drupal_actions.ffmpeg_service'),
       $container->get('pipeline_drupal_actions.video_file_manager'),
-      $container->get('pipeline_drupal_actions.text_overlay_formatter'),
       $container->get('pipeline_drupal_actions.media_entity_creator')
     );
   }
