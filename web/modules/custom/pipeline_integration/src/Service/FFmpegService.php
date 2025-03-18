@@ -43,8 +43,9 @@ class FFmpegService
       $container->get('pipeline.font_service')
     );
   }
+
   /**
-   * Builds FFmpeg command for multiple image slideshow with transitions and text overlays.
+   * Builds FFmpeg command for multiple image slideshow with transitions and text blocks.
    *
    * @param array $imagePaths
    *   Array of image file paths.
@@ -62,10 +63,6 @@ class FFmpegService
    * @return string
    *   The FFmpeg command.
    */
-
-  /**
-   * Builds FFmpeg command for multiple image slideshow with transitions and text blocks.
-   */
   public function buildMultiImageCommand(
     array  $imagePaths,
     array  $imageFiles,
@@ -74,140 +71,55 @@ class FFmpegService
     array  $config = [],
     array  $context = []
   ): string {
-    // Get configuration
+    // Extract configuration options
     $transitionType = $config['transition_type'] ?? 'fade';
     $transitionDuration = $config['transition_duration'] ?? 1;
-    $resolution = $this->getResolution($config['video_quality'] ?? 'medium', ($config['orientation'] ?? 'horizontal') === 'vertical');    // Parse resolution for width and height
+    $isVertical = ($config['orientation'] ?? 'horizontal') === 'vertical';
+    $resolution = $this->getResolution($config['video_quality'] ?? 'medium', $isVertical);
     list($width, $height) = explode(':', $resolution);
     $width = (int)$width;
     $height = (int)$height;
     $bitrate = $config['bitrate'] ?? '1500k';
     $framerate = $config['framerate'] ?? 24;
 
-    // Build the ffmpeg command
-    $ffmpegCmd = "ffmpeg";
+    // Build base command (input files and audio)
+    $ffmpegCmd = $this->buildBaseCommand($imagePaths, $audioPath);
 
-    // Add input images
-    foreach ($imagePaths as $index => $path) {
-      $ffmpegCmd .= " -loop 1 -i " . escapeshellarg($path);
-    }
+    // Calculate durations and handle timing
+    $durations = $this->calculateImageDurations($imageFiles, $audioPath, $transitionDuration);
 
-    // Add audio input
-    $ffmpegCmd .= " -i " . escapeshellarg($audioPath);
-
-    // Start building filter complex
-    $filterComplex = "";
-
-    // Calculate durations
-    $durations = [];
-    $totalDuration = 0;
-    for ($i = 0; $i < count($imageFiles); $i++) {
-      $durations[$i] = isset($imageFiles[$i]['video_settings']['duration']) ?
-        (float)$imageFiles[$i]['video_settings']['duration'] : 5.0;
-      $totalDuration += $durations[$i];
-    }
-
-    // Add duration adjustment to match audio
-    $audioDuration = $this->getAudioDuration($audioPath);
-    $totalTransitionTime = ($transitionDuration * (count($imagePaths) - 1));
-
-    // Log the timing calculations for debugging
-    $this->loggerFactory->get('pipeline')->debug(
-      sprintf("Timing details:\n- Audio duration: %.2f\n- Total image duration: %.2f\n- Transition time: %.2f",
-        $audioDuration, $totalDuration, $totalTransitionTime)
+    // Build filter complex components
+    $filterComplex = $this->buildImageFiltersWithText(
+      $imagePaths,
+      $imageFiles,
+      $durations,
+      $width,
+      $height,
+      $resolution,
+      $config,
+      $context,
+      $framerate
     );
 
-    // Adjust image durations to match audio duration
-    if ($audioDuration > 0 && abs($totalDuration - $totalTransitionTime - $audioDuration) > 0.1) {
-      $scaleFactor = $audioDuration / ($totalDuration - $totalTransitionTime);
-      for ($i = 0; $i < count($durations); $i++) {
-        $durations[$i] = $durations[$i] * $scaleFactor;
-      }
-      $this->loggerFactory->get('pipeline')->debug(
-        sprintf("Adjusted durations: %s, Total after adjustment: %.2f",
-          json_encode($durations), array_sum($durations))
-      );
-    }
+    // Add transition filters
+    $lastOutput = $this->buildTransitionSequence(
+      $filterComplex,
+      count($imagePaths),
+      $durations,
+      $transitionType,
+      $transitionDuration
+    );
 
-    // Process each image - scale and apply text blocks
-    // CRITICAL FIX: Apply text overlays BEFORE trim/setpts operations
-    for ($i = 0; $i < count($imagePaths); $i++) {
-      // Start with basic scaling filter for this image
-      $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p",
-        $i, $resolution);
-
-      // Check if Ken Burns effect is enabled
-      if (!empty($config['ken_burns']['ken_burns_enabled'])) {
-        $kenBurnsParams = $this->getKenBurnsParameters(
-          $config['ken_burns']['ken_burns_style'] ?? 'random',
-          $config['ken_burns']['ken_burns_intensity'] ?? 'moderate',
-          $i,
-          $durations[$i] ?? 5,
-          $framerate
-        );
-        $filterComplex .= "," . $kenBurnsParams;
-      }
-
-      // CRITICAL FIX: Get text blocks for this image and add them BEFORE trim/setpts
-      // This ensures text operates on local timeline (0 to duration)
-      if (isset($imageFiles[$i]['text_blocks']) && is_array($imageFiles[$i]['text_blocks'])) {
-        foreach ($imageFiles[$i]['text_blocks'] as $block) {
-          if (empty($block['enabled'])) continue;
-
-          $text = $this->processTextContent($block['text'] ?? '', $context);
-          if (empty($text)) continue;
-
-          // Get the text overlay with LOCAL timeline (0 to duration)
-          $slideDuration = $durations[$i];
-          $drawTextParams = $this->buildDrawTextWithLocalTimeline(
-            $block,
-            "$width:$height",
-            $text,
-            $slideDuration
-          );
-
-          $filterComplex .= ',' . $drawTextParams;
-        }
-      }
-
-      // Close this video's filter chain
-      $filterComplex .= sprintf("[v%d];", $i);
-    }
-
-    // Now process each trimmed video segment with its independent timeline
-    for ($i = 0; $i < count($imagePaths); $i++) {
-      $filterComplex .= sprintf("[v%d]trim=duration=%s,setpts=PTS-STARTPTS[hold%d];",
-        $i, $durations[$i], $i);
-    }
-
-    // First image becomes our initial output
-    $lastOutput = "hold0";
-
-    // Initialize offset for transitions
-    $currentOffset = $durations[0] - $transitionDuration;
-
-    // Process remaining images with transitions
-    for ($i = 1; $i < count($imagePaths); $i++) {
-      $offsetTime = max(0, $currentOffset);
-
-      $filterComplex .= sprintf("[%s][hold%d]xfade=transition=%s:duration=%s:offset=%s[trans%d];",
-        $lastOutput, $i, $transitionType, $transitionDuration, $offsetTime, $i);
-
-      $lastOutput = sprintf("trans%d", $i);
-
-      // Update the offset for the next transition
-      $currentOffset += $durations[$i] - $transitionDuration;
-    }
-
-    // Complete the command
-    $ffmpegCmd .= " -filter_complex " . escapeshellarg($filterComplex);
-    $ffmpegCmd .= " -map \"[" . $lastOutput . "]\" -map " . count($imagePaths) . ":a";
-    $ffmpegCmd .= " -c:v libx264 -c:a aac -pix_fmt yuv420p";
-    $ffmpegCmd .= " -r " . $framerate . " -b:v " . $bitrate;
-    $ffmpegCmd .= " -shortest " . escapeshellarg($outputPath);
-    $ffmpegCmd .= " -y";
-
-    return $ffmpegCmd;
+    // Complete and return the command
+    return $this->finalizeCommand(
+      $ffmpegCmd,
+      $filterComplex,
+      $lastOutput,
+      count($imagePaths),
+      $outputPath,
+      $framerate,
+      $bitrate
+    );
   }
 
   /**
@@ -231,11 +143,92 @@ class FFmpegService
     string $text,
     float $slideDuration
   ): string {
-    $fontSize = !empty($block['font_size']) ? $block['font_size'] : 24;
-    $fontColor = !empty($block['font_color']) ? $block['font_color'] : 'white';
-    $fontFamily = !empty($block['font_family']) ? $block['font_family'] : 'default';
-    $fontStyle = !empty($block['font_style']) ? $block['font_style'] : 'normal';
+    // Parse resolution
+    list($width, $height) = explode(':', $resolution);
+    $width = (int)$width;
+    $height = (int)$height;
 
+    // Properly escape text for FFmpeg
+    $escapedText = $this->escapeFFmpegText($text);
+
+    // Configure font parameters
+    $fontParams = $this->configureFontParameters(
+      $block['font_size'] ?? 24,
+      $block['font_color'] ?? 'white',
+      $block['font_family'] ?? 'default',
+      $block['font_style'] ?? 'normal'
+    );
+
+    // Fixed margin for positioning
+    $margin = 20;
+
+    // Calculate position parameters
+    list($posX, $posY, $positionParams) = $this->calculatePositionParameters(
+      $block['position'] ?? 'center',
+      $block['custom_x'] ?? 0,
+      $block['custom_y'] ?? 0,
+      $width,
+      $height,
+      $margin
+    );
+
+    // Add background box if configured
+    $boxParams = $this->getBackgroundParameters($block['background_color'] ?? '');
+
+    // Get animation type and timing parameters
+    $animationType = $block['animation']['type'] ?? 'none';
+    $animationDuration = $block['animation']['duration'] ?? 1.0;
+    $animationDelay = $block['animation']['delay'] ?? 0.0;
+
+    // Log the timing calculations
+    $this->loggerFactory->get('pipeline')->debug(
+      sprintf("Text block using LOCAL timeline (0-%0.2fs), animation=%s, delay=%0.2f",
+        $slideDuration, $animationType, $animationDelay)
+    );
+
+    // Create enable expression for the full duration of this slide (in its local timeline)
+    $enableExpr = sprintf("enable='between(t,0,%0.3f)'", $slideDuration);
+
+    // Apply animation based on type
+    $animationParams = $this->getAnimationParameters(
+      $animationType,
+      $animationDuration,
+      $animationDelay,
+      $slideDuration,
+      $posX,
+      $posY,
+      $block['position'] ?? 'center',
+      $block['font_size'] ?? 24,
+      $text
+    );
+
+    // Return the full drawtext parameter string with animations
+    return $this->formatFFmpegDrawText(
+      $escapedText,
+      $fontParams,
+      $positionParams,
+      $boxParams,
+      $enableExpr,
+      $animationParams
+    );
+  }
+
+  /**
+   * Configures font parameters for the drawtext filter.
+   *
+   * @param int $fontSize
+   *   The font size.
+   * @param string $fontColor
+   *   The font color.
+   * @param string $fontFamily
+   *   The font family identifier.
+   * @param string $fontStyle
+   *   The font style (normal, outline, shadow, outline_shadow).
+   *
+   * @return string
+   *   The font parameters for FFmpeg.
+   */
+  protected function configureFontParameters(int $fontSize, string $fontColor, string $fontFamily, string $fontStyle): string {
     // Get font file path if a specific font is selected
     $fontParam = '';
     if ($fontFamily !== 'default') {
@@ -244,6 +237,7 @@ class FFmpegService
         $fontParam = ":fontfile='" . $fontFile . "'";
       }
     }
+
     // Apply font styling based on the selected style
     $styleParams = '';
     switch ($fontStyle) {
@@ -262,99 +256,156 @@ class FFmpegService
         break;
     }
 
-    // Parse resolution
-    list($width, $height) = explode(':', $resolution);
-    $width = (int)$width;
-    $height = (int)$height;
+    return "fontsize={$fontSize}:fontcolor={$fontColor}{$fontParam}{$styleParams}";
+  }
 
-    // Properly escape text for FFmpeg
-    $escapedText = $this->escapeFFmpegText($text);
-
-    // Fixed margin value
-    $margin = 20;
-
-    // Calculate position parameters
-    $position = '';
+  /**
+   * Calculates position parameters for text placement.
+   *
+   * @param string $position
+   *   The position identifier.
+   * @param int $customX
+   *   Custom X coordinate for custom positioning.
+   * @param int $customY
+   *   Custom Y coordinate for custom positioning.
+   * @param int $width
+   *   Video width.
+   * @param int $height
+   *   Video height.
+   * @param int $margin
+   *   Margin to use for positioning.
+   *
+   * @return array
+   *   Array containing [posX, posY, positionParameter].
+   */
+  protected function calculatePositionParameters(
+    string $position,
+    int $customX,
+    int $customY,
+    int $width,
+    int $height,
+    int $margin
+  ): array {
     $posX = 0;
     $posY = 0;
+    $positionParam = '';
 
-    if ($block['position'] === 'custom' && isset($block['custom_x']) && isset($block['custom_y'])) {
-      $posX = (int)$block['custom_x'];
-      $posY = (int)$block['custom_y'];
-      $position = "x=$posX:y=$posY";
+    if ($position === 'custom' && $customX !== 0 && $customY !== 0) {
+      $posX = $customX;
+      $posY = $customY;
+      $positionParam = "x=$posX:y=$posY";
     } else {
       // Standard positions
-      switch ($block['position']) {
+      switch ($position) {
         case 'top_left':
-          $position = "x=$margin:y=$margin";
+          $positionParam = "x=$margin:y=$margin";
           $posX = $margin;
           $posY = $margin;
           break;
         case 'top':
-          $position = "x=(w-text_w)/2:y=$margin";
+          $positionParam = "x=(w-text_w)/2:y=$margin";
           $posX = $width / 2;
           $posY = $margin;
           break;
         case 'top_right':
-          $position = "x=w-text_w-$margin:y=$margin";
+          $positionParam = "x=w-text_w-$margin:y=$margin";
           $posX = $width - $margin;
           $posY = $margin;
           break;
         case 'left':
-          $position = "x=$margin:y=(h-text_h)/2";
+          $positionParam = "x=$margin:y=(h-text_h)/2";
           $posX = $margin;
           $posY = $height / 2;
           break;
         case 'center':
-          $position = "x=(w-text_w)/2:y=(h-text_h)/2";
+          $positionParam = "x=(w-text_w)/2:y=(h-text_h)/2";
           $posX = $width / 2;
           $posY = $height / 2;
           break;
         case 'right':
-          $position = "x=w-text_w-$margin:y=(h-text_h)/2";
+          $positionParam = "x=w-text_w-$margin:y=(h-text_h)/2";
           $posX = $width - $margin;
           $posY = $height / 2;
           break;
         case 'bottom_left':
-          $position = "x=$margin:y=h-text_h-$margin";
+          $positionParam = "x=$margin:y=h-text_h-$margin";
           $posX = $margin;
           $posY = $height - $margin;
           break;
         case 'bottom':
-          $position = "x=(w-text_w)/2:y=h-text_h-$margin";
+          $positionParam = "x=(w-text_w)/2:y=h-text_h-$margin";
           $posX = $width / 2;
           $posY = $height - $margin;
           break;
         case 'bottom_right':
-          $position = "x=w-text_w-$margin:y=h-text_h-$margin";
+          $positionParam = "x=w-text_w-$margin:y=h-text_h-$margin";
           $posX = $width - $margin;
           $posY = $height - $margin;
           break;
         default:
-          $position = "x=(w-text_w)/2:y=(h-text_h)/2";
+          $positionParam = "x=(w-text_w)/2:y=(h-text_h)/2";
           $posX = $width / 2;
           $posY = $height / 2;
       }
     }
 
-    // Add background box if configured
-    $boxParam = '';
-    if (!empty($block['background_color'])) {
-      $bgColor = $this->convertToFFmpegColor($block['background_color']);
-      $boxParam = ":box=1:boxcolor=$bgColor:boxborderw=5";
+    return [$posX, $posY, $positionParam];
+  }
+
+  /**
+   * Gets background parameters for text background box.
+   *
+   * @param string $backgroundColor
+   *   The background color.
+   *
+   * @return string
+   *   The background box parameters.
+   */
+  protected function getBackgroundParameters(string $backgroundColor): string {
+    if (empty($backgroundColor)) {
+      return '';
     }
 
-    // Get animation parameters
-    $animationType = isset($block['animation']['type']) ? $block['animation']['type'] : 'none';
-    $animationDuration = isset($block['animation']['duration']) ? (float) $block['animation']['duration'] : 1.0;
-    $animationDelay = isset($block['animation']['delay']) ? (float) $block['animation']['delay'] : 0.0;
+    $bgColor = $this->convertToFFmpegColor($backgroundColor);
+    return ":box=1:boxcolor=$bgColor:boxborderw=5";
+  }
 
-    // Log the timing calculations
-    $this->loggerFactory->get('pipeline')->debug(
-      sprintf("Text block using LOCAL timeline (0-%0.2fs), animation=%s, delay=%0.2f",
-        $slideDuration, $animationType, $animationDelay)
-    );
-
+  /**
+   * Gets animation parameters based on animation type.
+   *
+   * @param string $animationType
+   *   The type of animation.
+   * @param float $animationDuration
+   *   Duration of the animation in seconds.
+   * @param float $animationDelay
+   *   Delay before animation starts in seconds.
+   * @param float $slideDuration
+   *   Total duration of the slide in seconds.
+   * @param int $posX
+   *   X coordinate for positioning.
+   * @param int $posY
+   *   Y coordinate for positioning.
+   * @param string $position
+   *   Text position identifier.
+   * @param int $fontSize
+   *   Font size for scale animations.
+   * @param string $originalText
+   *   Original text for typewriter effect.
+   *
+   * @return string
+   *   The animation parameters.
+   */
+  protected function getAnimationParameters(
+    string $animationType,
+    float $animationDuration,
+    float $animationDelay,
+    float $slideDuration,
+    int $posX,
+    int $posY,
+    string $position,
+    int $fontSize,
+    string $originalText
+  ): string {
     // CRITICAL FIX: Use local timeline (0 to slideDuration)
     $fadeInStart = $animationDelay;
     $fadeInEnd = $fadeInStart + $animationDuration;
@@ -365,32 +416,28 @@ class FFmpegService
     if ($fadeInEnd > $slideDuration) $fadeInEnd = $slideDuration;
     if ($fadeOutStart < $fadeInEnd) $fadeOutStart = $fadeInEnd;
 
-    // Create enable expression for the full duration of this slide (in its local timeline)
-    $enableExpr = sprintf("enable='between(t,0,%0.3f)'", $slideDuration);
-    $additionalParams = '';
-
     // Apply animation based on type
     switch ($animationType) {
       case 'fade':
         // Fade in at start, fade out at end
-        $additionalParams = sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,if(between(t,%0.3f,%0.3f),1-(t-%0.3f)/%0.3f,1))'",
+        return sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,if(between(t,%0.3f,%0.3f),1-(t-%0.3f)/%0.3f,1))'",
           $fadeInStart, $fadeInEnd, // Fade in range
           $fadeInStart, $animationDuration, // Fade in calculation
           $fadeOutStart, $fadeOutEnd, // Fade out range
           $fadeOutStart, $animationDuration // Fade out calculation
         );
-        break;
 
       case 'slide':
-        $slideDirection = $this->getSlideDirectionFromPosition($block['position']);
+        $slideDirection = $this->getSlideDirectionFromPosition($position);
         $slideOffset = 100;
+        $animParams = '';
 
         if ($slideDirection === 'left' || $slideDirection === 'right') {
           $xValue = $posX;
 
           if ($slideDirection === 'left') {
             // Slide from left with local timing
-            $additionalParams = sprintf(":x='if(between(t,%0.3f,%0.3f),%0.3f+(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
+            $animParams = sprintf(":x='if(between(t,%0.3f,%0.3f),%0.3f+(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
               $fadeInStart, $fadeInEnd, // Time range
               $xValue - $slideOffset, // Starting position
               $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
@@ -398,7 +445,7 @@ class FFmpegService
             );
           } else {
             // Slide from right with local timing
-            $additionalParams = sprintf(":x='if(between(t,%0.3f,%0.3f),%0.3f-(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
+            $animParams = sprintf(":x='if(between(t,%0.3f,%0.3f),%0.3f-(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
               $fadeInStart, $fadeInEnd, // Time range
               $xValue + $slideOffset, // Starting position
               $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
@@ -410,7 +457,7 @@ class FFmpegService
 
           if ($slideDirection === 'top') {
             // Slide from top with local timing
-            $additionalParams = sprintf(":y='if(between(t,%0.3f,%0.3f),%0.3f+(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
+            $animParams = sprintf(":y='if(between(t,%0.3f,%0.3f),%0.3f+(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
               $fadeInStart, $fadeInEnd, // Time range
               $yValue - $slideOffset, // Starting position
               $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
@@ -418,7 +465,7 @@ class FFmpegService
             );
           } else {
             // Slide from bottom with local timing
-            $additionalParams = sprintf(":y='if(between(t,%0.3f,%0.3f),%0.3f-(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
+            $animParams = sprintf(":y='if(between(t,%0.3f,%0.3f),%0.3f-(%0.3f*(t-%0.3f)/%0.3f),%0.3f)'",
               $fadeInStart, $fadeInEnd, // Time range
               $yValue + $slideOffset, // Starting position
               $slideOffset, $fadeInStart, $animationDuration, // Movement calculation
@@ -428,15 +475,16 @@ class FFmpegService
         }
 
         // Fade in for smoother appearance
-        $additionalParams .= sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,1)'",
+        $animParams .= sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,1)'",
           $fadeInStart, $fadeInEnd, // Range
           $fadeInStart, $animationDuration // Fade calculation
         );
-        break;
+
+        return $animParams;
 
       case 'scale':
         // Scale animation with local timing
-        $additionalParams = sprintf(":fontsize='if(between(t,%0.3f,%0.3f),%0.3f*(t-%0.3f)/%0.3f,%0.3f)'",
+        $scaleParams = sprintf(":fontsize='if(between(t,%0.3f,%0.3f),%0.3f*(t-%0.3f)/%0.3f,%0.3f)'",
           $fadeInStart, $fadeInEnd, // Time range
           $fontSize, // Target size
           $fadeInStart, $animationDuration, // Scaling calculation
@@ -444,46 +492,365 @@ class FFmpegService
         );
 
         // Fade in for smoother appearance
-        $additionalParams .= sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,1)'",
+        $scaleParams .= sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,1)'",
           $fadeInStart, $fadeInEnd, // Range
           $fadeInStart, $animationDuration // Fade calculation
         );
-        break;
+
+        return $scaleParams;
 
       case 'typewriter':
         // Sanitize problematic characters for ffmpeg
         $safeText = str_replace(['@', ':', ';', ',', '\\'],
           ['[at]', ' ', ' ', ' ', ''],
-          $text);
+          $originalText);
 
         // Simplified approach - just use fade-in animation for text that contains special characters
-        $additionalParams = sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,1)'",
+        return sprintf(":alpha='if(between(t,%0.3f,%0.3f),(t-%0.3f)/%0.3f,1)'",
           $fadeInStart, $fadeInEnd,
           $fadeInStart, $animationDuration
         );
 
-        // Override the escapedText with sanitized version for problematic content
-        $escapedText = $this->escapeFFmpegText($safeText);
-        break;
-
       case 'none':
       default:
         // No additional animation
-        break;
+        return '';
+    }
+  }
+
+  /**
+   * Formats the complete drawtext filter parameters.
+   *
+   * @param string $escapedText
+   *   The escaped text content.
+   * @param string $fontParams
+   *   Font configuration parameters.
+   * @param string $positionParams
+   *   Position parameters.
+   * @param string $boxParams
+   *   Background box parameters.
+   * @param string $enableExpr
+   *   Enable expression.
+   * @param string $animationParams
+   *   Animation parameters.
+   *
+   * @return string
+   *   The complete drawtext filter parameters.
+   */
+  protected function formatFFmpegDrawText(
+    string $escapedText,
+    string $fontParams,
+    string $positionParams,
+    string $boxParams,
+    string $enableExpr,
+    string $animationParams
+  ): string {
+    return sprintf("drawtext=text='%s':%s:%s%s:%s%s",
+      $escapedText,
+      $fontParams,
+      $positionParams,
+      $boxParams,
+      $enableExpr,
+      $animationParams
+    );
+  }
+
+
+  /**
+   * Builds the base FFmpeg command with input files.
+   *
+   * @param array $imagePaths
+   *   Array of image file paths.
+   * @param string $audioPath
+   *   Path to the audio file.
+   *
+   * @return string
+   *   The base command.
+   */
+  protected function buildBaseCommand(array $imagePaths, string $audioPath): string {
+    $ffmpegCmd = "ffmpeg";
+
+    // Add input images
+    foreach ($imagePaths as $index => $path) {
+      $ffmpegCmd .= " -loop 1 -i " . escapeshellarg($path);
     }
 
-    // Return the full drawtext parameter string with animations
-    return sprintf("drawtext=text='%s':fontsize=%d:fontcolor=%s%s%s:%s%s:%s%s",
-      $escapedText,
-      $fontSize,
-      $fontColor,
-      $fontParam,
-      $styleParams,
-      $position,
-      $boxParam,
-      $enableExpr,
-      $additionalParams
+    // Add audio input
+    $ffmpegCmd .= " -i " . escapeshellarg($audioPath);
+
+    return $ffmpegCmd;
+  }
+
+  /**
+   * Calculates image durations adjusted to match audio.
+   *
+   * @param array $imageFiles
+   *   Array of image file information.
+   * @param string $audioPath
+   *   Path to the audio file.
+   * @param float $transitionDuration
+   *   Duration of transitions between images.
+   *
+   * @return array
+   *   Array of adjusted durations.
+   */
+  protected function calculateImageDurations(array $imageFiles, string $audioPath, float $transitionDuration): array {
+    // Calculate initial durations from image settings
+    $durations = [];
+    $totalDuration = 0;
+
+    for ($i = 0; $i < count($imageFiles); $i++) {
+      $durations[$i] = isset($imageFiles[$i]['video_settings']['duration']) ?
+        (float)$imageFiles[$i]['video_settings']['duration'] : 5.0;
+      $totalDuration += $durations[$i];
+    }
+
+    // Calculate total transition time
+    $totalTransitionTime = ($transitionDuration * (count($imageFiles) - 1));
+
+    // Get audio duration
+    $audioDuration = $this->getAudioDuration($audioPath);
+
+    // Log the timing calculations for debugging
+    $this->loggerFactory->get('pipeline')->debug(
+      sprintf("Timing details:\n- Audio duration: %.2f\n- Total image duration: %.2f\n- Transition time: %.2f",
+        $audioDuration, $totalDuration, $totalTransitionTime)
     );
+
+    // Adjust image durations to match audio duration
+    if ($audioDuration > 0 && abs($totalDuration - $totalTransitionTime - $audioDuration) > 0.1) {
+      $scaleFactor = $audioDuration / ($totalDuration - $totalTransitionTime);
+      for ($i = 0; $i < count($durations); $i++) {
+        $durations[$i] = $durations[$i] * $scaleFactor;
+      }
+      $this->loggerFactory->get('pipeline')->debug(
+        sprintf("Adjusted durations: %s, Total after adjustment: %.2f",
+          json_encode($durations), array_sum($durations))
+      );
+    }
+
+    return $durations;
+  }
+
+  /**
+   * Builds image filters with text overlays.
+   *
+   * @param array $imagePaths
+   *   Array of image file paths.
+   * @param array $imageFiles
+   *   Array of image file information.
+   * @param array $durations
+   *   Array of image durations.
+   * @param int $width
+   *   Video width.
+   * @param int $height
+   *   Video height.
+   * @param string $resolution
+   *   Video resolution string.
+   * @param array $config
+   *   Configuration options.
+   * @param array $context
+   *   Pipeline context.
+   * @param int $framerate
+   *   Video frame rate.
+   *
+   * @return string
+   *   The filter complex string for image processing.
+   */
+  protected function buildImageFiltersWithText(
+    array $imagePaths,
+    array $imageFiles,
+    array $durations,
+    int $width,
+    int $height,
+    string $resolution,
+    array $config,
+    array $context,
+    int $framerate
+  ): string {
+    $filterComplex = "";
+
+    // Process each image - scale and apply text blocks
+    for ($i = 0; $i < count($imagePaths); $i++) {
+      // Start with basic scaling filter for this image
+      $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p",
+        $i, $resolution);
+
+      // Apply Ken Burns effect if enabled
+      if (!empty($config['ken_burns']['ken_burns_enabled'])) {
+        $kenBurnsParams = $this->getKenBurnsParameters(
+          $config['ken_burns']['ken_burns_style'] ?? 'random',
+          $config['ken_burns']['ken_burns_intensity'] ?? 'moderate',
+          $i,
+          $durations[$i] ?? 5,
+          $framerate
+        );
+        $filterComplex .= "," . $kenBurnsParams;
+      }
+
+      // Add text overlays for this image
+      $filterComplex = $this->addTextOverlays(
+        $filterComplex,
+        $imageFiles[$i] ?? [],
+        $width,
+        $height,
+        $durations[$i],
+        $context
+      );
+
+      // Close this video's filter chain
+      $filterComplex .= sprintf("[v%d];", $i);
+    }
+
+    // Add trim filters for each video segment
+    for ($i = 0; $i < count($imagePaths); $i++) {
+      $filterComplex .= sprintf("[v%d]trim=duration=%s,setpts=PTS-STARTPTS[hold%d];", $i, $durations[$i], $i);
+    }
+
+    return $filterComplex;
+  }
+
+  /**
+   * Adds text overlays to an image filter chain.
+   *
+   * @param string $filterComplex
+   *   Current filter complex string.
+   * @param array $imageInfo
+   *   Image information.
+   * @param int $width
+   *   Video width.
+   * @param int $height
+   *   Video height.
+   * @param float $duration
+   *   Image duration.
+   * @param array $context
+   *   Pipeline context.
+   *
+   * @return string
+   *   Updated filter complex string.
+   */
+  protected function addTextOverlays(
+    string $filterComplex,
+    array $imageInfo,
+    int $width,
+    int $height,
+    float $duration,
+    array $context
+  ): string {
+    // Check for text blocks and add them to the filter chain
+    if (isset($imageInfo['text_blocks']) && is_array($imageInfo['text_blocks'])) {
+      foreach ($imageInfo['text_blocks'] as $block) {
+        if (empty($block['enabled'])) continue;
+
+        $text = $this->processTextContent($block['text'] ?? '', $context);
+        if (empty($text)) continue;
+
+        // Build draw text parameters for this block
+        $drawTextParams = $this->buildDrawTextWithLocalTimeline(
+          $block,
+          "$width:$height",
+          $text,
+          $duration
+        );
+
+        $filterComplex .= ',' . $drawTextParams;
+      }
+    }
+
+    return $filterComplex;
+  }
+
+  /**
+   * Builds transition sequence between images.
+   *
+   * @param string $filterComplex
+   *   Current filter complex string.
+   * @param int $imageCount
+   *   Number of images.
+   * @param array $durations
+   *   Array of image durations.
+   * @param string $transitionType
+   *   Type of transition effect.
+   * @param float $transitionDuration
+   *   Duration of transitions.
+   *
+   * @return string
+   *   Label of the last output stream.
+   */
+  protected function buildTransitionSequence(
+    string &$filterComplex,
+    int $imageCount,
+    array $durations,
+    string $transitionType,
+    float $transitionDuration
+  ): string {
+    // First image becomes our initial output
+    $lastOutput = "hold0";
+
+    // Initialize offset for transitions
+    $currentOffset = $durations[0] - $transitionDuration;
+
+    // Process remaining images with transitions
+    for ($i = 1; $i < $imageCount; $i++) {
+      $offsetTime = max(0, $currentOffset);
+
+      $filterComplex .= sprintf("[%s][hold%d]xfade=transition=%s:duration=%s:offset=%s[trans%d];",
+        $lastOutput, $i, $transitionType, $transitionDuration, $offsetTime, $i);
+
+      $lastOutput = sprintf("trans%d", $i);
+
+      // Update the offset for the next transition
+      $currentOffset += $durations[$i] - $transitionDuration;
+    }
+
+    return $lastOutput;
+  }
+
+  /**
+   * Finalizes the FFmpeg command with mapping and encoding options.
+   *
+   * @param string $ffmpegCmd
+   *   Base FFmpeg command.
+   * @param string $filterComplex
+   *   Filter complex string.
+   * @param string $lastOutput
+   *   Label of last output stream.
+   * @param int $imageCount
+   *   Number of images.
+   * @param string $outputPath
+   *   Output file path.
+   * @param int $framerate
+   *   Frame rate.
+   * @param string $bitrate
+   *   Video bitrate.
+   *
+   * @return string
+   *   Complete FFmpeg command.
+   */
+  protected function finalizeCommand(
+    string $ffmpegCmd,
+    string $filterComplex,
+    string $lastOutput,
+    int $imageCount,
+    string $outputPath,
+    int $framerate,
+    string $bitrate
+  ): string {
+    // Add filter complex
+    $ffmpegCmd .= " -filter_complex " . escapeshellarg($filterComplex);
+
+    // Add mapping
+    $ffmpegCmd .= " -map \"[" . $lastOutput . "]\" -map " . $imageCount . ":a";
+
+    // Add encoding options
+    $ffmpegCmd .= " -c:v libx264 -c:a aac -pix_fmt yuv420p";
+    $ffmpegCmd .= " -r " . $framerate . " -b:v " . $bitrate;
+
+    // Add output options
+    $ffmpegCmd .= " -shortest " . escapeshellarg($outputPath);
+    $ffmpegCmd .= " -y";
+
+    return $ffmpegCmd;
   }
 
   /**
