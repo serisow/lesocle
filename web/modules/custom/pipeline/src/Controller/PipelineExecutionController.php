@@ -209,7 +209,17 @@ class PipelineExecutionController extends ControllerBase {
           if ($result['output_type'] === 'featured_image') {
             // Add this condition to check if the step type is NOT UploadImageStep
             if ($step_type->getPluginId() !== 'upload_image_step') {
-              $image_data = $this->imageDownloadService->downloadImage($result['data']);
+              $image_url = $result['data'];
+
+              // Check if data is a JSON string containing an image URL
+              if (is_string($image_url) && $this->isJson($image_url)) {
+                $image_data_obj = json_decode($image_url, TRUE);
+                if (isset($image_data_obj['url'])) {
+                  $image_url = $image_data_obj['url'];
+                }
+              }
+
+              $image_data = $this->imageDownloadService->downloadImage($image_url);
               $step_result['data'] = $image_data;
               $step_results[$step_uuid] = $step_result;
               $context['results'][$step_uuid]['data'] = $image_data;
@@ -320,5 +330,14 @@ class PipelineExecutionController extends ControllerBase {
 
 
     return new JsonResponse($response_data);
+  }
+
+  /**
+   * Helper method to check if a string is valid JSON.
+   */
+  private function isJson($string): bool
+  {
+    json_decode($string);
+    return json_last_error() === JSON_ERROR_NONE;
   }
 }
