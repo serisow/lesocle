@@ -133,8 +133,8 @@ class PipelineExecutionController extends ControllerBase {
     });
 
     // Create PipelineRun entity
+    /** @var \Drupal\pipeline_run\Entity\PipelineRun $pipeline_run */
     $pipeline_run = $this->entityTypeManager->getStorage('pipeline_run')->create([
-      'pipeline_id' => $pipeline->id(),
       'status' => $data['success'] ? 'completed' : 'failed',
       'start_time' => $data['start_time'] ?? \Drupal::time()->getCurrentTime(),
       'end_time' => $data['end_time'] ?? \Drupal::time()->getCurrentTime(),
@@ -176,6 +176,7 @@ class PipelineExecutionController extends ControllerBase {
 
           if ($step_type->getPluginId() === 'action_step') {
             $action_config_id = $config['data']['action_config'];
+            /** @var \Drupal\pipeline\Entity\ActionConfig $action_config */
             $action_config = $this->entityTypeManager->getStorage('action_config')->load($action_config_id);
             if ($action_config) {
               // Only execute if this is a Drupal-side action or if execution_location is not set (backward compatibility)
