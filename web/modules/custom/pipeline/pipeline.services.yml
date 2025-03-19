@@ -78,3 +78,40 @@ services:
 
   pipeline.font_service:
     class: Drupal\pipeline\Service\FontService
+
+  pipeline.step_handler.manager:
+    class: Drupal\pipeline\StepHandler\StepHandlerManager
+    factory: Drupal\pipeline\StepHandler\StepHandlerManager::create
+    arguments: ['@service_container']
+    
+  pipeline.step_handler.llm:
+    class: Drupal\pipeline\StepHandler\LlmStepHandler
+    arguments: ['@plugin.manager.model_manager', '@logger.factory']
+    
+  pipeline.step_handler.action:
+    class: Drupal\pipeline\StepHandler\ActionStepHandler
+    arguments: ['@logger.factory']
+    
+  pipeline.step_handler.google_search:
+    class: Drupal\pipeline\StepHandler\GoogleSearchStepHandler
+    arguments: ['@logger.factory']
+    
+  pipeline.step_handler.news_api:
+    class: Drupal\pipeline\StepHandler\NewsApiStepHandler
+    arguments: ['@logger.factory']
+    
+  pipeline.step_handler.social_media:
+    class: Drupal\pipeline\StepHandler\SocialMediaStepHandler
+    arguments: ['@logger.factory']
+    
+  pipeline.step_handler.upload_image:
+    class: Drupal\pipeline\StepHandler\UploadImageStepHandler
+    arguments: ['@logger.factory', '@file_url_generator']
+    
+  pipeline.step_handler.upload_audio:
+    class: Drupal\pipeline\StepHandler\UploadAudioStepHandler
+    arguments: ['@logger.factory']
+    
+  pipeline.step_handler.image_enrichment:
+    class: Drupal\pipeline\StepHandler\ImageEnrichmentStepHandler
+    arguments: ['@logger.factory']

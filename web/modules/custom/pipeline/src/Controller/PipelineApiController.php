@@ -1,37 +1,36 @@
 <?php
 
 /**
- * Provides API endpoints for Go service interaction.
+ * This controller provides the API interface between Drupal and an external Go service
+ * for managing AI/ML pipelines. It is part of the Pipeline module which handles
+ * configurable, automated workflows combining Large Language Models (LLMs) with
+ * custom actions.
  *
- * This controller exposes the necessary endpoints for the Go service to fetch
- * pipeline configurations and manage scheduled executions. It serves as the
- * primary interface for the Go service to interact with Drupal's pipeline system.
+ * The controller enables the Go service to:
+ * 1. Retrieve pipeline configurations that are scheduled to run
+ * 2. Get detailed pipeline settings including LLM configurations and action steps
+ * 3. Manage the execution lifecycle of pipelines
  *
- * Key endpoints:
- * - GET /api/pipelines/scheduled: Returns scheduled pipelines due for execution
- * - GET /api/pipelines/{id}: Returns complete pipeline configuration
+ * Key endpoints exposed:
+ * - GET /api/pipelines/scheduled: Fetches pipelines that are due for execution based
+ *   on their configured schedule
+ * - GET /api/pipelines/{id}: Retrieves full configuration for a specific pipeline
  *
- * Critical functionalities:
- * - Filters and returns scheduled pipelines based on execution criteria
- * - Validates pipeline execution eligibility (status, failure counts)
- * - Provides complete pipeline configurations including steps
- * - Handles authentication and access control(@TODO: SSOW - THIS IS NEED TO BE COMPLETED)
+ * The controller handles:
+ * - Schedule management (one-time and recurring executions)
+ * - Execution validation (status checks, failure handling)
+ * - Pipeline configuration retrieval
+ * - Security and access control (pending implementation)
  *
- * Pipeline scheduling logic:
- * - Handles both one-time and recurring schedules
- * - Validates execution windows
- * - Checks failure thresholds
- * - Manages execution timing
+ * Each pipeline can contain:
+ * - Multiple ordered steps combining LLM calls and actions
+ * - Scheduling configuration
+ * - Execution constraints and retry logic
+ * - Dependencies between steps
  *
- * Response formats:
- * - Returns detailed pipeline configurations
- * - Includes step configurations and dependencies
- * - Provides LLM and action configurations
- * - Includes execution history and status
- *
- * Note: This controller is specifically designed for machine-to-machine
- * communication with the Go service and implements appropriate security
- * and validation measures.
+ * The controller ensures proper machine-to-machine communication between
+ * Drupal (which stores configurations and manages scheduling) and the Go service
+ * (which handles actual pipeline execution).
  *
  * @see \Drupal\pipeline\Entity\Pipeline
  * @see \Drupal\pipeline\Controller\PipelineExecutionController
@@ -47,6 +46,7 @@ use Drupal\pipeline\Plugin\ModelManager;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Drupal\pipeline\StepHandler\StepHandlerManager;
 
 /**
  * Controller for Pipeline API endpoints.
@@ -74,6 +74,12 @@ class PipelineApiController extends ControllerBase {
    */
   protected $logger;
 
+  /**
+   * The step handler manager.
+   *
+   * @var \Drupal\pipeline\StepHandler\StepHandlerManager
+   */
+  protected $stepHandlerManager;
 
   /**
    * Constructs a PipelineApiController object.
@@ -83,16 +89,20 @@ class PipelineApiController extends ControllerBase {
    * @param \Drupal\pipeline\Plugin\ModelManager $model_manager
    *   The model manager.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
-   * The logger factory.
+   *   The logger factory.
+   * @param \Drupal\pipeline\StepHandler\StepHandlerManager $step_handler_manager
+   *   The step handler manager.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     ModelManager $model_manager,
-    LoggerChannelFactoryInterface $logger_factory
+    LoggerChannelFactoryInterface $logger_factory,
+    StepHandlerManager $step_handler_manager
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->modelManager = $model_manager;
     $this->logger = $logger_factory->get('pipeline');
+    $this->stepHandlerManager = $step_handler_manager;
   }
 
   /**
@@ -102,16 +112,11 @@ class PipelineApiController extends ControllerBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.model_manager'),
-      $container->get('logger.factory')
+      $container->get('logger.factory'),
+      $container->get('pipeline.step_handler.manager')
     );
   }
 
-  /**
-   * Returns a list of scheduled pipelines.
-   *
-   * @return \Symfony\Component\HttpFoundation\JsonResponse
-   *   A JSON response containing scheduled pipelines.
-   */
   /**
    * Returns a list of scheduled pipelines.
    *
@@ -163,6 +168,7 @@ class PipelineApiController extends ControllerBase {
 
     $scheduled_pipelines = [];
     foreach ($pipeline_ids as $id) {
+      /** @var \Drupal\pipeline\Entity\Pipeline $pipeline */
       $pipeline = $pipeline_storage->load($id);
 
       // Fetch the most recent pipeline run
@@ -176,6 +182,7 @@ class PipelineApiController extends ControllerBase {
 
       $last_run_time = 0;
       if (!empty($last_run_ids)) {
+        /** @var \Drupal\pipeline_run\Entity\PipelineRun $last_run */
         $last_run = $pipeline_run_storage->load(reset($last_run_ids));
         $last_run_time = (int) $last_run->getEndTime();
       }
@@ -226,6 +233,7 @@ class PipelineApiController extends ControllerBase {
    *   A JSON response containing the pipeline data.
    */
   public function getPipeline($id) {
+    /** @var \Drupal\pipeline\Entity\Pipeline $pipeline */
     $pipeline = $this->entityTypeManager->getStorage('pipeline')->load($id);
 
     if (!$pipeline) {
@@ -269,173 +277,17 @@ class PipelineApiController extends ControllerBase {
       if (isset($configuration['data'])) {
         // Include required_steps
         $step_data['required_steps'] = $configuration['data']['required_steps'] ?? '';
-
-        // Handle specific step types
-        switch ($step_data['type']) {
-          case 'llm_step':
-            $step_data['prompt'] = $configuration['data']['prompt'] ?? '';
-            $step_data['llm_config'] = $configuration['data']['llm_config'] ?? '';
-
-            if (isset($configuration['data']['llm_config'])) {
-              $llm_config = $this->entityTypeManager->getStorage('llm_config')->load($configuration['data']['llm_config']);
-              if ($llm_config) {
-                $model_plugin = $this->modelManager->createInstanceFromModelName($llm_config->getModelName());
-                $step_data['llm_service'] = [
-                  'id' => $llm_config->id(),
-                  'label' => $llm_config->label(),
-                  'api_key' => $llm_config->getApiKey(),
-                  'model_name' => $llm_config->getModelName(),
-                  'api_url' => $llm_config->getApiUrl(),
-                  'parameters' => $llm_config->getParameters(),
-                  'service_name' => $model_plugin->getServiceId(),
-                ];
-              }
-            }
-            break;
-
-          case 'action_step':
-            $step_data['action_config'] = $configuration['data']['action_config'] ?? '';
-            // Load and add action configuration details
-            if (isset($configuration['data']['action_config'])) {
-              $action_config = $this->entityTypeManager->getStorage('action_config')
-                ->load($configuration['data']['action_config']);
-
-              if ($action_config) {
-                $action_configuration = $action_config->getConfiguration();
-                if (empty($action_configuration)) {
-                  $action_configuration = (object) [];
-                }
-                $step_data['action_details'] = [
-                  'id' => $action_config->id(),
-                  'label' => $action_config->label(),
-                  'action_service' => $action_config->getActionService(),
-                  'execution_location' => $action_config->get('execution_location') ?? 'drupal',
-                  'configuration' => $action_configuration,
-                ];
-              }
-            }
-            break;
-
-          case 'google_search':
-            $step_data['google_search_config'] = [
-              'query' => $configuration['data']['query'] ?? '',
-              'category' => $configuration['data']['category'] ?? '',
-              'advanced_params' => $configuration['data']['advanced_params'] ?? [],
-            ];
-            break;
-
-          case 'news_api_search':
-            $step_data['news_api_config'] = [
-              'query' => $configuration['data']['query'] ?? '',
-              'advanced_params' => [
-                'language' => $configuration['data']['advanced_params']['language'] ?? 'en',
-                'sort_by' => $configuration['data']['advanced_params']['sort_by'] ?? 'publishedAt',
-                'page_size' => $configuration['data']['advanced_params']['page_size'] ?? 20,
-                'date_range' => [
-                  'from' => $configuration['data']['advanced_params']['date_range']['from'] ?? null,
-                  'to' => $configuration['data']['advanced_params']['date_range']['to'] ?? null,
-                ],
-              ],
-            ];
-            break;
-
-          case 'social_media_step':
-            if (isset($configuration['data']['article'])) {
-              $string = trim($configuration['data']['article'], '"');
-              if (preg_match('/\((\d+)\)$/', $string, $matches)) {
-                $nid = (int) $matches[1];
-                $node = $this->entityTypeManager->getStorage('node')->load($nid);
-                if ($node) {
-                  // Add article data to step configuration
-                  $step_data['article_data'] = [
-                    'nid' => $node->id(),
-                    'title' => $node->getTitle(),
-                    'summary' => $node->hasField('field_summary') && !$node->get('field_summary')->isEmpty() ?
-                      $node->get('field_summary')->value :
-                      (!$node->get('body')->isEmpty() ? $node->get('body')->summary : $node->get('body')->value),
-                  ];
-
-                  // Add image URL if available
-                  if ($node->hasField('field_media_image') && !$node->get('field_media_image')->isEmpty()) {
-                    // Retrieve the media entity.
-                    $media = $node->get('field_media_image')->entity;
-                    if ($media && !$media->get('field_media_image')->isEmpty()) {
-                      // Retrieve the file entity from the media entity.
-                      $file = $media->get('field_media_image')->entity;
-                      if ($file) {
-                        // Get the file URI and generate the URL.
-                        $uri = $file->getFileUri();
-                        $url = \Drupal::service('file_url_generator')->generateAbsoluteString($uri);
-                        $step_data['article_data']['image_url'] = $url;
-                      }
-                    }
-                  }
-
-                  // Retrieve the node URL (canonical URL) and set it.
-                  $node_url = $node->toUrl('canonical', ['absolute' => TRUE])->toString();
-                  $step_data['article_data']['url'] = $node_url;
-                }
-              }
-            }
-            break;
-          case 'upload_image_step':
-            // Add image file information if available
-            if (!empty($configuration['data']['image_file_id'])) {
-              $file_id = $configuration['data']['image_file_id'];
-              $file = $this->entityTypeManager->getStorage('file')->load($file_id);
-              if ($file) {
-                $step_data['upload_image_config']['image_file_id'] = $file_id;
-                $step_data['upload_image_config']['image_file_url'] = $file->createFileUrl(FALSE);
-                $step_data['upload_image_config']['image_file_uri'] = $file->getFileUri();
-                $step_data['upload_image_config']['image_file_mime'] = $file->getMimeType();
-                $step_data['upload_image_config']['image_file_name'] = $file->getFilename();
-                $step_data['upload_image_config']['image_file_size'] = $file->getSize();
-                $step_data['upload_image_config']['duration'] = (float) $configuration['data']['video_settings']['duration'];
-                if (!empty($configuration['data']['text_blocks'])) {
-                  $step_data['upload_image_config']['text_blocks'] = $configuration['data']['text_blocks'];
-                }
-              }
-            }
-            break;
-          case 'upload_audio_step':
-            // Add audio file information if available
-            if (!empty($configuration['data']['audio_file_id'])) {
-              $file_id = $configuration['data']['audio_file_id'];
-              $file = $this->entityTypeManager->getStorage('file')->load($file_id);
-              if ($file) {
-                $step_data['upload_audio_config']['audio_file_id'] = $file_id;
-                $step_data['upload_audio_config']['audio_file_url'] = $file->createFileUrl(FALSE);
-                $step_data['upload_audio_config']['audio_file_uri'] = $file->getFileUri();
-                $step_data['upload_audio_config']['audio_file_mime'] = $file->getMimeType();
-                $step_data['upload_audio_config']['audio_file_name'] = $file->getFilename();
-                $step_data['upload_audio_config']['audio_file_duration'] = $this->getAudioDuration($file);
-                $step_data['upload_audio_config']['audio_file_size'] = $file->getSize();
-              }
-            }
-            break;
-          case 'image_enrichment_step':
-            // Format ImageEnrichmentStep data to be compatible with UploadImageStep
-            // Include the duration and text blocks configuration
-            $step_data['image_enrichment_config']['duration'] = (float) ($configuration['data']['duration'] ?? 5.0);
-            // Include text blocks if available
-            if (!empty($configuration['data']['text_blocks'])) {
-              $step_data['image_enrichment_config']['text_blocks'] = $configuration['data']['text_blocks'];
-            }
-            // Note: The actual image file data will be populated during execution by the Go service
-            // We're just ensuring the structure is compatible for the Go service to process
-            $this->logger->debug('ImageEnrichmentStep data prepared for Go service: @data', [
-              '@data' => json_encode($step_data),
-            ]);
-            break;
-        }
-
+        
+        // Process step-specific configuration using the appropriate handler
+        $step_handler = $this->stepHandlerManager->getHandler($step_data['type']);
+        $step_handler->processStepData($step_data, $configuration['data'], $this->entityTypeManager);
+        
         // Remove the 'data' key as we've extracted its contents
         unset($configuration['data']);
       }
 
       // Merge any remaining configuration
       $step_data = array_merge($step_data, $configuration);
-
       $pipeline_data['steps'][] = $step_data;
     }
 
