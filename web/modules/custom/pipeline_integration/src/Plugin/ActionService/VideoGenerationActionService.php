@@ -319,6 +319,7 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
       $imageEntities = [];
       $imagePaths = [];
       foreach ($imageFiles as $index => $imageFile) {
+        /** @var \Drupal\file\Entity\File $file */
         $file = $this->entityTypeManager->getStorage('file')->load($imageFile['file_id']);
         if (!$file) {
           throw new \Exception("Image file not found with ID: " . $imageFile['file_id']);
@@ -327,6 +328,7 @@ class VideoGenerationActionService extends PluginBase implements ActionServiceIn
         $imagePaths[$index] = \Drupal::service('file_system')->realpath($file->getFileUri());
       }
 
+      /** @var \Drupal\file\Entity\File $audioFile */
       $audioFile = $this->entityTypeManager->getStorage('file')->load($audioFileInfo['file_id']);
       if (!$audioFile) {
         throw new \Exception("Audio file not found with ID: " . $audioFileInfo['file_id']);
