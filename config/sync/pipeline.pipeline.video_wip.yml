@@ -6,9 +6,9 @@ id: video_wip
 label: 'Video WIP'
 instructions: 'Testing prompt for video generation.'
 created: 1741707610
-changed: 1742303707
+changed: 1742567862
 execution_type: scheduled
-scheduled_time: 1742256120
+scheduled_time: 1742567580
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -22,11 +22,11 @@ step_types:
       required_steps: ''
       step_output_key: step1
       output_type: generic_content
-      query: 'opensource AI model'
+      query: 'MCP servers or Model Context Protocol'
       advanced_params:
         language: en
         sort_by: publishedAt
-        page_size: '2'
+        page_size: '3'
         date_range:
           from: ''
           to: ''
@@ -66,18 +66,18 @@ step_types:
       output_type: audio_content
       audio_file_id: 565
       response: ''
-    weight: -5
+    weight: -4
     uuid: e0ba46dd-fbf6-45e1-8e4b-f77b8003c68d
   dd187d70-d0d4-4890-8326-67a280714660:
     id: action_step
     data:
       step_description: 'Video generation'
-      required_steps: "image_data_1\r\nimage_data_2\r\naudio_data"
+      required_steps: "image_data_1\r\nimage_data_2\r\nimage_data_3\r\naudio_data"
       step_output_key: video_content
       output_type: video_content
       action_config: video_generation
       response: ''
-    weight: -4
+    weight: -3
     uuid: dd187d70-d0d4-4890-8326-67a280714660
   6cc456a3-0ce2-410a-a977-a5394eaba460:
     id: image_enrichment_step
@@ -86,31 +86,31 @@ step_types:
       required_steps: step2
       step_output_key: image_data_1
       output_type: featured_image
-      duration: '30'
+      duration: '20'
       text_blocks:
         -
           id: title_block
           enabled: 1
           text: 'default title'
           position: top_left
-          font_size: '30'
+          font_size: '28'
           font_color: red
           font_family: OpenSans-ExtraBold
           font_style: normal
-          background_color: '#FFFFFF'
+          background_color: '#F0F0F0'
           custom_x: '0'
           custom_y: '0'
           animation:
             type: fade
             duration: '1'
             delay: '0'
-            easing: linear
+            easing: ease-in
         -
           id: subtitle_block
           enabled: 1
           text: 'default subtitle'
           position: top_right
-          font_size: '27'
+          font_size: '24'
           font_color: red
           font_family: OpenSans-ExtraBold
           font_style: normal
@@ -121,7 +121,7 @@ step_types:
             type: fade
             duration: '1'
             delay: '0.5'
-            easing: linear
+            easing: ease-in
         -
           id: body_block
           enabled: 1
@@ -166,14 +166,14 @@ step_types:
       required_steps: step2
       step_output_key: image_data_2
       output_type: featured_image
-      duration: '30'
+      duration: '20'
       text_blocks:
         -
           id: title_block
           enabled: 1
           text: 'default title'
           position: top_left
-          font_size: '30'
+          font_size: '28'
           font_color: red
           font_family: OpenSans-ExtraBold
           font_style: normal
@@ -184,24 +184,24 @@ step_types:
             type: fade
             duration: '1'
             delay: '0'
-            easing: linear
+            easing: ease-in
         -
           id: subtitle_block
           enabled: 1
           text: 'default subtitle'
           position: top_right
-          font_size: '27'
+          font_size: '24'
           font_color: red
           font_family: OpenSans-ExtraBold
           font_style: normal
-          background_color: '#FFFFFF'
+          background_color: '#F0F0F0'
           custom_x: '0'
           custom_y: '0'
           animation:
             type: fade
             duration: '1'
             delay: '0.5'
-            easing: linear
+            easing: ease-in
         -
           id: body_block
           enabled: 1
@@ -239,3 +239,83 @@ step_types:
       response: ''
     weight: -6
     uuid: b232c058-67ce-4007-9d65-0f7655c7320f
+  4b1101d2-a705-4894-a653-ff43f3b96f4d:
+    id: image_enrichment_step
+    data:
+      step_description: 'Image enrichement 3'
+      required_steps: ''
+      step_output_key: image_data_3
+      output_type: featured_image
+      duration: '20'
+      text_blocks:
+        -
+          id: title_block
+          enabled: 1
+          text: 'default title'
+          position: top_left
+          font_size: '28'
+          font_color: red
+          font_family: OpenSans-ExtraBold
+          font_style: normal
+          background_color: '#F0F0F0'
+          custom_x: '0'
+          custom_y: '0'
+          animation:
+            type: fade
+            duration: '1'
+            delay: '0.5'
+            easing: ease-in
+        -
+          id: subtitle_block
+          enabled: 1
+          text: 'default subtitle'
+          position: top_right
+          font_size: '24'
+          font_color: red
+          font_family: OpenSans-ExtraBold
+          font_style: normal
+          background_color: '#F0F0F0'
+          custom_x: '0'
+          custom_y: '0'
+          animation:
+            type: slide
+            duration: '1'
+            delay: '0.5'
+            easing: ease-in
+        -
+          id: body_block
+          enabled: 1
+          text: 'default body'
+          position: bottom
+          font_size: '24'
+          font_color: white
+          font_family: OpenSans-ExtraBold
+          font_style: normal
+          background_color: black
+          custom_x: '0'
+          custom_y: '60'
+          animation:
+            type: fade
+            duration: '1'
+            delay: '1'
+            easing: ease-in
+        -
+          id: caption_block
+          enabled: 0
+          text: ''
+          position: bottom
+          font_size: '20'
+          font_color: white
+          font_family: default
+          font_style: normal
+          background_color: ''
+          custom_x: '0'
+          custom_y: '0'
+          animation:
+            type: fade
+            duration: '1'
+            delay: '1.5'
+            easing: linear
+      response: ''
+    weight: -5
+    uuid: 4b1101d2-a705-4894-a653-ff43f3b96f4d

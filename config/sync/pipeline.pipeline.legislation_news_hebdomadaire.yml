@@ -4,11 +4,11 @@ status: true
 dependencies: {  }
 id: legislation_news_hebdomadaire
 label: 'Legislation news hebdomadaire'
-instructions: 'Create an informative article about climate change with an accompanying image.'
+instructions: 'Create an informative article about Legislation news hebdomadaire.'
 created: 1740406614
-changed: 1741706917
+changed: 1742577821
 execution_type: scheduled
-scheduled_time: 1739904060
+scheduled_time: 1742577600
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -22,7 +22,7 @@ step_types:
       required_steps: "step1\r\n"
       step_output_key: step2
       output_type: generic_content
-      llm_config: gpt_4o_mini
+      llm_config: gemini_2_0_flash
       prompt_template: 'Cybersecurity Newsletters (cybersecurity_newsletters)'
       prompt: "Analysez ces articles juridiques français ci-dessous pour créer un rapport législatif structuré :\r\n 1. Identifiez les textes majeurs (lois organiques vs ordinaires)\r\n 2. Détaillez le parcours parlementaire (navette, commissions)\r\n 3. Notez les modifications du Conseil Constitutionnel\r\n 4. Listez les articles modifiés/clés\r\n\r\nLes articles:\r\n####\r\n{step1}\r\n####\r\n"
       response: ''
@@ -108,9 +108,9 @@ step_types:
       advanced_params:
         language: fr
         sort_by: relevancy
-        page_size: '10'
+        page_size: '5'
         date_range:
-          from: '2025-02-12'
+          from: ''
           to: ''
       response: ''
     weight: -10

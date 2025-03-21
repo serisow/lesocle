@@ -129,6 +129,8 @@ abstract class AbstractLLMStepType extends ConfigurableStepTypeBase  implements 
       throw new \Exception("LLM Configuration is not set for this step.");
     }
 
+    /** @var \Drupal\pipeline\Entity\LLMConfig $llm_config */
+
     $llm_config = $this->entityTypeManager->getStorage('llm_config')->load($config['llm_config']);
     if (!$llm_config) {
       throw new \Exception("LLM Configuration not found: " . $config['llm_config']);

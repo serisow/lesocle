@@ -135,6 +135,7 @@ class PipelineExecutionController extends ControllerBase {
     // Create PipelineRun entity
     /** @var \Drupal\pipeline_run\Entity\PipelineRun $pipeline_run */
     $pipeline_run = $this->entityTypeManager->getStorage('pipeline_run')->create([
+      'pipeline_id' => $pipeline->id(),
       'status' => $data['success'] ? 'completed' : 'failed',
       'start_time' => $data['start_time'] ?? \Drupal::time()->getCurrentTime(),
       'end_time' => $data['end_time'] ?? \Drupal::time()->getCurrentTime(),

@@ -1,14 +1,14 @@
 uuid: a1478b94-41eb-404f-a70b-cbefe004f548
 langcode: en
-status: true
+status: false
 dependencies: {  }
 id: generate_video_using_upload
 label: 'Generate video using upload'
 instructions: 'Generate video using upload'
 created: 1740931404
-changed: 1742161707
+changed: 1742557903
 execution_type: scheduled
-scheduled_time: 1742151180
+scheduled_time: 1742556360
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
@@ -61,23 +61,6 @@ step_types:
             delay: 0.0
             easing: ease-in-out
         -
-          id: subtitle_block
-          enabled: true
-          text: |-
-            Our latest news from trusted sources it's so
-            cool.
-          position: top_right
-          font_size: 28
-          font_color: black
-          font_family: OpenSans-Regular
-          font_style: shadow
-          background_color: white
-          animation:
-            type: fade
-            duration: 1.0
-            delay: 0.5
-            easing: ease-in
-        -
           id: body_block
           enabled: true
           text: |-
@@ -119,19 +102,8 @@ step_types:
           position: top_left
           font_size: 32
           font_color: white
-          background_color: 'rgb(30, 42, 62)'
-          animation:
-            type: scale
-            duration: 1.0
-            delay: 0.0
-            easing: ease-in
-        -
-          id: subtitle_block
-          enabled: true
-          text: 'This is the subtitle text hold my bear.'
-          position: top_right
-          font_size: 28
-          font_color: white
+          font_family: default
+          font_style: normal
           background_color: 'rgb(30, 42, 62)'
           animation:
             type: scale
@@ -145,9 +117,11 @@ step_types:
             Testing API Integrations: Start by integrating one platform (e.g., YouTube) and iteratively build
             support for additional channels. User Feedback Loop: Keep the manual review step in Drupal to
             maintain quality control until you’re confident in the automation.
-          position: center
+          position: bottom
           font_size: 22
           font_color: white
+          font_family: default
+          font_style: normal
           background_color: 'rgb(30, 42, 62)'
           animation:
             type: fade
@@ -175,20 +149,9 @@ step_types:
           position: top_left
           font_size: 32
           font_color: white
+          font_family: OpenSans-Bold
+          font_style: normal
           background_color: 'rgba(0,0,0,0.5)'
-          animation:
-            type: fade
-            duration: 2.0
-            delay: 0.0
-            easing: ease-in
-        -
-          id: subtitle_block
-          enabled: true
-          text: 'Understanding is the key, if you know'
-          position: bottom_left
-          font_size: 28
-          font_color: white
-          background_color: red
           animation:
             type: fade
             duration: 2.0
@@ -202,9 +165,11 @@ step_types:
             methods (often OAuth-based). Your pipeline will need to handle these robustly. Content Formatting &
             Requirements: Video formats, metadata, and even thumbnail requirements differ by platform. Ensure
             that the pipeline step for each social media channel accommodates these specifications.
-          position: center
+          position: bottom
           font_size: 22
           font_color: orange
+          font_family: OpenSans-Bold
+          font_style: normal
           background_color: black
           animation:
             type: scale

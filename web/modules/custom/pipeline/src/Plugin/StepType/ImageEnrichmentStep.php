@@ -19,6 +19,13 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ImageEnrichmentStep extends ConfigurableStepTypeBase implements StepTypeExecutableInterface {
 
   /**
+   * Static variable to store news item count between methods.
+   *
+   * @var int
+   */
+  protected static $newsItemCount = 0; // Will be set dynamically during execution
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -486,7 +493,12 @@ class ImageEnrichmentStep extends ConfigurableStepTypeBase implements StepTypeEx
               // Check if this looks like our news items array (has elements with article_id, image_info)
               if (!empty($decoded[0]) && isset($decoded[0]['article_id']) && isset($decoded[0]['image_info'])) {
                 $newsItems = $decoded;
-                $this->logger->debug('Found news items in step @key', ['@key' => $step_key]);
+                // Store the count in our static variable for use by getTargetIndex
+                self::$newsItemCount = count($newsItems);
+                $this->logger->debug('Found @count news items in step @key', [
+                  '@count' => self::$newsItemCount,
+                  '@key' => $step_key
+                ]);
                 break;
               }
             }
@@ -494,7 +506,12 @@ class ImageEnrichmentStep extends ConfigurableStepTypeBase implements StepTypeEx
           // If it's already an array, check its structure
           elseif (is_array($data) && !empty($data[0]) && isset($data[0]['article_id']) && isset($data[0]['image_info'])) {
             $newsItems = $data;
-            $this->logger->debug('Found news items in step @key', ['@key' => $step_key]);
+            // Store the count in our static variable for use by getTargetIndex
+            self::$newsItemCount = count($newsItems);
+            $this->logger->debug('Found @count news items in step @key', [
+              '@count' => self::$newsItemCount,
+              '@key' => $step_key
+            ]);
             break;
           }
         }
@@ -504,7 +521,13 @@ class ImageEnrichmentStep extends ConfigurableStepTypeBase implements StepTypeEx
         throw new \Exception('No news items found in the context. Make sure a news generation step comes before this step.');
       }
 
-      // Get target news item based on position
+      // Make sure we have at least one item
+      if (self::$newsItemCount < 1) {
+        $this->logger->warning('News items array is empty, something went wrong with the data structure');
+        self::$newsItemCount = 1; // Fallback to avoid division by zero
+      }
+
+      // Get target news item based on weight using the modulo approach
       $targetIndex = $this->getTargetIndex();
       $this->logger->debug('Using target index @index for enrichment', ['@index' => $targetIndex]);
 
@@ -526,6 +549,7 @@ class ImageEnrichmentStep extends ConfigurableStepTypeBase implements StepTypeEx
       }
 
       // Load the file to validate
+      /** @var \Drupal\file\FileInterface $file */
       $file = $this->entityTypeManager->getStorage('file')->load($newsItem['image_info']['file_id']);
       if (!$file) {
         throw new \Exception('Image file not found: ID ' . $newsItem['image_info']['file_id']);
@@ -587,28 +611,39 @@ class ImageEnrichmentStep extends ConfigurableStepTypeBase implements StepTypeEx
     }
   }
 
-  /**
-   * Gets the index of the news item to process based on this step's position.
-   */
-  /**
-   * Gets the index of the news item to process based on this step's UUID.
-   */
-  protected function getTargetIndex() {
-    // Use the last character of the UUID as a simple deterministic index
-    $uuid = $this->getUuid();
-    $lastChar = substr($uuid, -1);
 
-    // Convert the last character to a numeric index
-    $index = hexdec($lastChar) % 10; // Will give a value between 0-9
-
-    // Add logging
-    $this->logger->debug('Generated target index @index from UUID @uuid', [
-      '@index' => $index,
-      '@uuid' => $uuid,
+/**
+ * Gets the index of the news item to process based on this step's weight.
+ * 
+ * Uses the same algorithm as the Go service for consistent behavior.
+ */
+protected function getTargetIndex() {
+  // Get the news item count from our static variable
+  $newsItemCount = self::$newsItemCount;
+  
+  // Safety check - if no news items were found, default to 1 to avoid division by zero
+  if ($newsItemCount < 1) {
+    $this->logger->warning('No news items found (count: @count), defaulting to 1', [
+      '@count' => $newsItemCount
     ]);
-
-    return $index;
+    $newsItemCount = 1;
   }
+  
+  // Get the step's weight
+  $stepWeight = $this->getWeight();
+  
+  // Handle negative weights by converting to positive index
+  // For negative values, modulo can return negative, so we add length and take modulo again
+  $targetIndex = (($stepWeight % $newsItemCount) + $newsItemCount) % $newsItemCount;
+  
+  $this->logger->debug('Selected news item based on weight', [
+    'weight' => $stepWeight,
+    'index' => $targetIndex,
+    'total_items' => $newsItemCount,
+  ]);
+  
+  return $targetIndex;
+}
 
   /**
    * Formats text for display in video overlays.

@@ -266,7 +266,7 @@ abstract class StepTypeBase extends PluginBase implements StepTypeInterface, Con
   public function defaultConfiguration() {
     return [
         'step_description' => '',
-      ] + parent::defaultConfiguration();
+      ];
   }
 
   /**
