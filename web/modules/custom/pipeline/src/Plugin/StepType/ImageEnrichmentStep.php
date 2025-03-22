@@ -7,6 +7,7 @@ use Drupal\pipeline\ConfigurableStepTypeBase;
 use Drupal\pipeline\Plugin\StepTypeExecutableInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
+
 /**
  * Provides an image enrichment step type.
  *

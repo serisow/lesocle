@@ -48,6 +48,8 @@ class MediaCreationService implements ContainerInjectionInterface {
         'name' => $image_info['filename'],
         'field_media_image' => [
           'target_id' => $file->id(),
+          // TODO: Add alt text to the image should come from the image_info array
+          // The LLM should generate a good alt text for the image
           'alt' => 'Generated image for AI article',
         ],
       ]);
