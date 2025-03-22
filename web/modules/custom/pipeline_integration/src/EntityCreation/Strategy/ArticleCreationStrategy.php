@@ -47,7 +47,7 @@ class ArticleCreationStrategy extends EntityCreationStrategyBase {
     // Process taxonomy terms
     $selected_terms = $this->processTerms($stepResults);
 
-    // Create node
+    /** @var \Drupal\node\Entity\Node $node */
     $node = $this->entityTypeManager->getStorage('node')->create([
       'type' => 'article',
       'title' => $seo_content['title'] ?? substr($data['title'], 0, 255),
