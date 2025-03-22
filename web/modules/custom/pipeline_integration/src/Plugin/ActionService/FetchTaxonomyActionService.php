@@ -99,8 +99,11 @@ class FetchTaxonomyActionService extends PluginBase implements ActionServiceInte
     }
 
     $result = [];
+    /** @var \Drupal\taxonomy\TermStorageInterface $termStorage */
+    $termStorage = $this->entityTypeManager->getStorage('taxonomy_term');
     foreach ($vocabularies as $vid) {
-      $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree($vid);
+
+      $terms = $termStorage->loadTree($vid);
       foreach ($terms as $term) {
         $result[] = [
           'vid' => $vid,

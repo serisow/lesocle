@@ -83,6 +83,7 @@ class MediaCreationService implements ContainerInjectionInterface {
         throw new \Exception('Invalid file ID.');
       }
 
+      /** @var \Drupal\media\Entity\Media $media */
       $media = $this->entityTypeManager->getStorage('media')->create([
         'bundle' => 'video',
         'name' => $video_info['filename'] ?? 'Pipeline generated video',
