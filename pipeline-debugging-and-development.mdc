@@ -1,0 +1,388 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Pipeline Debugging and Development Guide
+
+## Debugging Pipeline Executions
+
+### Common Failure Patterns
+
+#### LLM Service Failures
+- **API Timeouts**: Check network connectivity and rate limits
+- **Authentication Failures**: Verify API keys in LLMConfig entities
+- **Content Policy Violations**: Review prompt content for restricted content
+- **Response Format Issues**: Ensure you're parsing the response correctly
+- **Token Limits**: Check if your prompt exceeds model context window
+
+#### Sample Debugging Code:
+```php
+// Debugging LLM service responses
+try {
+  $response = $this->llmService->generateCompletion($prompt, $model);
+  \Drupal::logger('pipeline')->debug('LLM response: @response', ['@response' => json_encode($response)]);
+} 
+catch (\Exception $e) {
+  \Drupal::logger('pipeline')->error('LLM failure: @error', ['@error' => $e->getMessage()]);
+  // Check for specific error patterns
+  if (strpos($e->getMessage(), 'rate limit') !== FALSE) {
+    // Handle rate limiting with exponential backoff
+  }
+}
+```
+
+#### Step Configuration Issues
+- **Missing Required Configuration**: Check that all required fields are filled
+- **Invalid Plugin IDs**: Verify plugin IDs exist and are properly registered
+- **Weight Order Problems**: Check for circular dependencies or incorrect ordering
+- **Service Dependencies**: Verify all required services are available
+- **Context Data Issues**: Ensure data is properly formatted between steps
+
+#### Entity Creation Failures
+- **Missing Required Fields**: Check that all required entity fields are populated
+- **Field Format Errors**: Verify data types match field expectations
+- **Media Entity Issues**: Check file references and media bundles
+- **Taxonomy Term Problems**: Verify vocabulary and term existence
+- **Entity Reference Validation**: Ensure referenced entities exist
+
+### Using the PipelineErrorHandler
+
+The PipelineErrorHandler service provides sophisticated error capturing:
+
+```php
+// Capturing errors for a specific step
+$this->errorHandler->startErrorCapture($step_uuid);
+try {
+  // Your code here
+}
+catch (\Exception $e) {
+  $this->errorHandler->logException($e);
+}
+$errors = $this->errorHandler->getErrorMessages();
+$this->errorHandler->stopErrorCapture();
+```
+
+### Log File Analysis
+
+Pipeline log files use a structured format for analysis:
+
+1. **Log File Location**: Check the PipelineRun entity's log_file field
+2. **Standard Format**: Timestamp, severity, message, context
+3. **Error Backtraces**: Full stack traces for PHP exceptions
+4. **Step Context**: Each log entry includes the current step ID
+5. **Performance Metrics**: Timing information for performance analysis
+
+Example log entry:
+```
+[2023-06-15 14:23:45] pipeline.ERROR: Error in step llm_step_1: OpenAI API request failed: timeout (context: {"step_uuid":"12345","prompt":"What is the meaning of life?","model":"gpt-4"})
+```
+
+## Development Workflows
+
+### Creating New Step Types
+
+#### Basic Step Type Implementation:
+```php
+/**
+ * @StepType(
+ *   id = "custom_step",
+ *   label = @Translation("Custom Step"),
+ *   description = @Translation("Performs a custom operation")
+ * )
+ */
+class CustomStep extends ConfigurableStepTypeBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return [
+      'data' => [
+        'some_setting' => '',
+      ],
+    ] + parent::defaultConfiguration();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $form = parent::buildConfigurationForm($form, $form_state);
+    $config = $this->getConfiguration();
+
+    $form['data']['some_setting'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Some setting'),
+      '#default_value' => $config['data']['some_setting'] ?? '',
+      '#required' => TRUE,
+    ];
+
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function executeStep(array &$context) {
+    $config = $this->getConfiguration();
+    $some_setting = $config['data']['some_setting'];
+    
+    // Your step logic here
+    $result = $this->processData($some_setting, $context);
+    
+    return [
+      'output_type' => 'text',
+      'data' => $result,
+    ];
+  }
+}
+```
+
+### Creating New Action Services
+
+#### Action Service Implementation:
+```php
+/**
+ * @ActionService(
+ *   id = "custom_action",
+ *   label = @Translation("Custom Action")
+ * )
+ */
+class CustomActionService extends ActionServiceBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state, array $default_values = []) {
+    $form['custom_setting'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Custom Setting'),
+      '#default_value' => $default_values['custom_setting'] ?? '',
+      '#required' => TRUE,
+    ];
+    
+    return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function executeAction(array $configuration, array $context) {
+    $setting = $configuration['custom_setting'];
+    
+    // Your action logic here
+    $result = $this->performAction($setting, $context);
+    
+    return [
+      'action_output' => $result,
+    ];
+  }
+}
+```
+
+### Testing Pipeline Components
+
+#### Unit Testing:
+```php
+/**
+ * @coversDefaultClass \Drupal\pipeline\Plugin\StepType\CustomStep
+ * @group pipeline
+ */
+class CustomStepTest extends UnitTestCase {
+
+  /**
+   * @covers ::executeStep
+   */
+  public function testExecuteStep() {
+    // Create a mock step
+    $step = $this->createPartialMock(CustomStep::class, ['getConfiguration']);
+    $step->method('getConfiguration')
+      ->willReturn([
+        'data' => ['some_setting' => 'test value'],
+      ]);
+    
+    // Execute the step
+    $context = [];
+    $result = $step->executeStep($context);
+    
+    // Assert the results
+    $this->assertEquals('text', $result['output_type']);
+    $this->assertNotEmpty($result['data']);
+  }
+}
+```
+
+#### Kernel Testing:
+```php
+/**
+ * @coversDefaultClass \Drupal\pipeline\Plugin\StepType\CustomStep
+ * @group pipeline
+ */
+class CustomStepKernelTest extends KernelTestBase {
+
+  protected static $modules = ['pipeline', 'user', 'system'];
+
+  protected function setUp(): void {
+    parent::setUp();
+    $this->installEntitySchema('user');
+    $this->installConfig(['system']);
+  }
+
+  /**
+   * Tests the custom step integration.
+   */
+  public function testStepExecution() {
+    // Get the step manager
+    $step_manager = $this->container->get('plugin.manager.step_type');
+    
+    // Create step instance
+    $step = $step_manager->createInstance('custom_step', [
+      'data' => ['some_setting' => 'test value'],
+    ]);
+    
+    // Execute the step
+    $context = [];
+    $result = $step->executeStep($context);
+    
+    // Assert results
+    $this->assertEquals('text', $result['output_type']);
+  }
+}
+```
+
+### Debugging Go Service Integration
+
+#### API Endpoint Testing:
+Use Postman or curl to test API endpoints:
+
+```bash
+# Get scheduled pipelines
+curl -X GET http://your-drupal-site/api/pipelines/scheduled
+
+# Get specific pipeline config
+curl -X GET http://your-drupal-site/api/pipelines/your_pipeline_id
+
+# Test execution result submission
+curl -X POST http://your-drupal-site/pipeline/your_pipeline_id/execution \
+  -H "Content-Type: application/json" \
+  -d '{"success":true,"start_time":1623763200,"end_time":1623763300,"step_results":{}}'
+```
+
+#### Mock Data Generation:
+To test pipeline execution without the Go service:
+
+```php
+// Create mock execution data
+$mock_data = [
+  'success' => TRUE,
+  'start_time' => time() - 60,
+  'end_time' => time(),
+  'step_results' => [
+    'step_1_uuid' => [
+      'status' => 'completed',
+      'data' => 'Sample output',
+      'output_type' => 'text',
+      'step_description' => 'Test step',
+      'sequence' => 0,
+      'start_time' => time() - 60,
+      'end_time' => time(),
+    ],
+  ],
+];
+
+// Submit to execution controller
+$pipeline = \Drupal::entityTypeManager()->getStorage('pipeline')->load('your_pipeline_id');
+$controller = \Drupal::service('controller_resolver')->getControllerFromDefinition('\Drupal\pipeline\Controller\PipelineExecutionController::receiveExecutionResult');
+$request = new Request([], [], [], [], [], [], json_encode($mock_data));
+$response = $controller($request, $pipeline);
+```
+
+## Performance Optimization
+
+### Step Execution Optimization
+
+#### Optimizing LLM Steps:
+- Use the smallest appropriate model
+- Minimize prompt size and complexity
+- Cache intermediate results when possible
+- Implement retry with exponential backoff
+- Consider batching related requests
+
+#### Optimizing Action Steps:
+- Use Drupal's entity storage API efficiently
+- Minimize database operations
+- Use batch operations for large datasets
+- Cache expensive operations
+- Use targeted queries instead of loading full entities
+
+### Memory Management
+
+Managing memory for large pipelines:
+
+```php
+// Clear entity caches after processing
+\Drupal::entityTypeManager()->getStorage('node')->resetCache([$nid]);
+
+// Free memory from large variables
+unset($large_variable);
+
+// Use generators for processing large datasets
+function processLargeDataset($items) {
+  foreach ($items as $item) {
+    yield processItem($item);
+  }
+}
+
+// Use database streaming for large queries
+$query = \Drupal::database()->select('large_table', 't');
+$query->fields('t', ['id', 'data']);
+$result = $query->execute();
+while ($row = $result->fetchAssoc()) {
+  processRow($row);
+}
+```
+
+## Development Best Practices
+
+### Code Organization
+
+#### Step Type Plugin Structure:
+- Keep configuration simple and focused
+- Use helper methods for complex logic
+- Leverage dependency injection
+- Document input/output expectations
+- Implement proper error handling
+
+#### Action Service Structure:
+- Focus on a single responsibility
+- Clearly document configuration options
+- Handle dependencies properly
+- Implement proper validation
+- Provide clear error messages
+
+### Dependency Management
+
+#### Service Definition:
+```yaml
+# Example service definition
+services:
+  pipeline.custom_service:
+    class: Drupal\pipeline\Service\CustomService
+    arguments: ['@entity_type.manager', '@logger.factory', '@file_system']
+    tags:
+      - { name: 'pipeline.step_handler', step_type: 'custom_step' }
+```
+
+#### Plugin Annotation Best Practices:
+```php
+/**
+ * @StepType(
+ *   id = "custom_step",
+ *   label = @Translation("Custom Step"),
+ *   description = @Translation("Performs a custom operation"),
+ *   providers = {"openai", "anthropic"},
+ *   weight = 10
+ * )
+ */
+``` 
