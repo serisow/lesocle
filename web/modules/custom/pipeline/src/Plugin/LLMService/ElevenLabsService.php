@@ -89,7 +89,7 @@ class ElevenLabsService extends PluginBase implements LLMServiceInterface, Conta
           throw new \Exception('Missing required configuration: API key or voice ID');
         }
 
-        $response = $this->httpClient->post($config['api_url'] . '/' . $config['parameters']['voice_id'], [
+        $response = $this->httpClient->request('POST', $config['api_url'] . '/' . $config['parameters']['voice_id'], [
           'headers' => [
             'xi-api-key' => $config['api_key'],
             'Content-Type' => 'application/json',
