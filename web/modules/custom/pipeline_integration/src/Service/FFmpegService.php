@@ -232,7 +232,7 @@ class FFmpegService
     // Get font file path if a specific font is selected
     $fontParam = '';
     if ($fontFamily !== 'default') {
-      $fontFile = $this->getFontFilePath($fontFamily);
+      $fontFile = $this->fontService->getFontFilePath($fontFamily);
       if ($fontFile) {
         $fontParam = ":fontfile='" . $fontFile . "'";
       }
@@ -632,7 +632,8 @@ class FFmpegService
     return $durations;
   }
 
-  /**
+
+/**
    * Builds image filters with text overlays.
    *
    * @param array $imagePaths
@@ -642,11 +643,11 @@ class FFmpegService
    * @param array $durations
    *   Array of image durations.
    * @param int $width
-   *   Video width.
+   *   Video width (target canvas width).
    * @param int $height
-   *   Video height.
+   *   Video height (target canvas height).
    * @param string $resolution
-   *   Video resolution string.
+   *   Video resolution string (informational).
    * @param array $config
    *   Configuration options.
    * @param array $context
@@ -670,27 +671,48 @@ class FFmpegService
   ): string {
     $filterComplex = "";
 
-    // Process each image - scale and apply text blocks
+    // Process each image
     for ($i = 0; $i < count($imagePaths); $i++) {
-      // Start with basic scaling filter for this image
-      $filterComplex .= sprintf("[%d:v]scale=%s:force_divisible_by=2,setsar=1,format=yuv420p",
-        $i, $resolution);
+      // Start building the filter chain string for this specific image
+      $imageFilterChain = sprintf("[%d:v]", $i); // Input stream
 
-      // Apply Ken Burns effect if enabled
+      // --- START FINAL FIX - Scale(Increase) -> Crop -> KenBurns ---
+
+      // 1. Scale the image to COVER the target dimensions, preserving aspect ratio.
+      //    One dimension will match target, the other will overshoot.
+      $imageFilterChain .= sprintf("scale=%d:%d:force_original_aspect_ratio=increase:force_divisible_by=2",
+          $width, $height);
+
+      // 2. Crop the scaled image back down to the exact target dimensions.
+      //    Performs a center crop automatically.
+      $imageFilterChain .= sprintf(",crop=%d:%d:(iw-ow)/2:(ih-oh)/2",
+          $width, $height);
+
+      // 3. Apply Ken Burns effect (if enabled) AFTER cropping.
+      //    Operates on the correctly sized WxH frame.
+      //    Still pass W/H and use s=WxH in getKenBurnsParameters for robustness.
       if (!empty($config['ken_burns']['ken_burns_enabled'])) {
         $kenBurnsParams = $this->getKenBurnsParameters(
           $config['ken_burns']['ken_burns_style'] ?? 'random',
           $config['ken_burns']['ken_burns_intensity'] ?? 'moderate',
           $i,
           $durations[$i] ?? 5,
-          $framerate
+          $framerate,
+          $width,  // Pass target width
+          $height  // Pass target height
         );
-        $filterComplex .= "," . $kenBurnsParams;
+        // Append the Ken Burns filter
+        $imageFilterChain .= "," . $kenBurnsParams;
       }
 
-      // Add text overlays for this image
-      $filterComplex = $this->addTextOverlays(
-        $filterComplex,
+      // 4. Set SAR and Pixel Format (apply to the final geometry)
+      $imageFilterChain .= ",setsar=1,format=yuv420p";
+
+      // --- END FINAL FIX ---
+
+      // 5. Add text overlays (operates on the final cropped/Ken Burns'd frame)
+      $imageFilterChain = $this->addTextOverlays(
+        $imageFilterChain, // Pass the chain built so far
         $imageFiles[$i] ?? [],
         $width,
         $height,
@@ -698,11 +720,11 @@ class FFmpegService
         $context
       );
 
-      // Close this video's filter chain
-      $filterComplex .= sprintf("[v%d];", $i);
+      // Append the completed filter chain for this image and label output [vX]
+      $filterComplex .= $imageFilterChain . sprintf("[v%d];", $i);
     }
 
-    // Add trim filters for each video segment
+    // Add trim filters (remains the same)
     for ($i = 0; $i < count($imagePaths); $i++) {
       $filterComplex .= sprintf("[v%d]trim=duration=%s,setpts=PTS-STARTPTS[hold%d];", $i, $durations[$i], $i);
     }
@@ -711,10 +733,11 @@ class FFmpegService
   }
 
   /**
-   * Adds text overlays to an image filter chain.
+   * Adds text overlays to an image filter chain fragment.
+   * (Modified slightly to directly append to the passed string)
    *
-   * @param string $filterComplex
-   *   Current filter complex string.
+   * @param string $imageFilterChain
+   *   Current filter chain string fragment for the image.
    * @param array $imageInfo
    *   Image information.
    * @param int $width
@@ -727,10 +750,10 @@ class FFmpegService
    *   Pipeline context.
    *
    * @return string
-   *   Updated filter complex string.
+   *   Updated filter chain string fragment with text overlays appended.
    */
   protected function addTextOverlays(
-    string $filterComplex,
+    string $imageFilterChain, // Receive the current chain string
     array $imageInfo,
     int $width,
     int $height,
@@ -753,13 +776,14 @@ class FFmpegService
           $duration
         );
 
-        $filterComplex .= ',' . $drawTextParams;
+        // Append the drawtext filter directly to the chain string
+        $imageFilterChain .= ',' . $drawTextParams;
       }
     }
-
-    return $filterComplex;
+    // Return the modified chain string
+    return $imageFilterChain;
   }
-
+  
   /**
    * Builds transition sequence between images.
    *
@@ -1093,59 +1117,102 @@ class FFmpegService
    *   The duration of the image in seconds.
    * @param int $framerate
    *   The frame rate of the video.
+   * @param int $targetWidth   // <-- ADDED: Target video width
+   * @param int $targetHeight  // <-- ADDED: Target video height
    *
    * @return string
    *   FFmpeg zoompan filter parameters.
    */
-  protected function getKenBurnsParameters(string $style, string $intensity, int $imageIndex, float $duration, int $framerate): string {
+  protected function getKenBurnsParameters(
+    string $style,
+    string $intensity,
+    int $imageIndex,
+    float $duration,
+    int $framerate,
+    int $targetWidth,    // <-- ADDED
+    int $targetHeight    // <-- ADDED
+  ): string {
     // Convert duration to frames
-    $frames = round($duration * $framerate);
+    $frames = max(1, round($duration * $framerate)); // Ensure at least 1 frame
 
-    // Set zoom speed based on intensity
+    // Zoom speed based on intensity
     $zoomSpeed = [
-      'subtle' => 0.0005,
-      'moderate' => 0.001,
-      'strong' => 0.002,
+        'subtle' => 0.0005,
+        'moderate' => 0.001,
+        'strong' => 0.002,
     ][$intensity] ?? 0.001;
 
-    // Set pan speed based on intensity (pixels per frame)
-    $panSpeed = [
-      'subtle' => 0.5,
-      'moderate' => 0.8,
-      'strong' => 1.2,
-    ][$intensity] ?? 0.8;
+    // Pan speed based on intensity (relative to dimension per second -> adjusted for frame rate)
+    // Let's define pan speed relative to the smaller dimension to be somewhat consistent
+    $minDim = min($targetWidth, $targetHeight);
+    $panSpeedFactor = [
+        'subtle' => 0.05,  // e.g., 5% of the smaller dimension per second
+        'moderate' => 0.1, // 10%
+        'strong' => 0.15, // 15%
+    ][$intensity] ?? 0.1;
+    $panSpeedPixelsPerFrame = ($minDim * $panSpeedFactor) / $framerate;
 
-    // Determine effect direction based on style or random
+
+    // Determine effect direction
     if ($style === 'random') {
-      $styles = ['zoom_in', 'zoom_out', 'pan_left', 'pan_right'];
-      $style = $styles[$imageIndex % count($styles)];
+        $styles = ['zoom_in', 'zoom_out', 'pan_left', 'pan_right', 'pan_up', 'pan_down']; // Added up/down
+        // Simple pseudo-random selection based on index
+        $style = $styles[($imageIndex + (int)($duration * 10)) % count($styles)];
     }
+
+    // CRITICAL: Define the output size for zoompan
+    $outputSize = sprintf("s=%dx%d", $targetWidth, $targetHeight);
 
     // Build the appropriate zoompan parameters
+    // NOTE: x/y expressions calculate positioning based on the *input* dimensions (iw, ih)
+    // but the effect is rendered onto the output size 's'.
     switch ($style) {
-      case 'zoom_in':
-        return sprintf('zoompan=z=\'min(1.0+%f*on,1.3)\':d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\'',
-          $zoomSpeed, $frames);
+        case 'zoom_in':
+            // Zoom in from 1.0 up to 1.2 (adjust max zoom if needed)
+            return sprintf('zoompan=z=\'min(max(zoom,1.0)+%f,1.2)\':d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\':%s',
+                $zoomSpeed, $frames, $outputSize);
 
-      case 'zoom_out':
-        return sprintf('zoompan=z=\'max(1.3-%f*on,1.0)\':d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\'',
-          $zoomSpeed, $frames);
+        case 'zoom_out':
+            // Zoom out from 1.2 down to 1.0
+            return sprintf('zoompan=z=\'max(1.2-%f*on,1.0)\':d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\':%s',
+                $zoomSpeed, $frames, $outputSize);
 
-      case 'pan_left':
-        return sprintf('zoompan=z=\'1.1\':d=%d:x=\'if(lte(on,%d),0,min(iw-(iw/zoom),%f*on))\':y=\'ih/2-(ih/zoom/2)\'',
-          $frames, $frames/10, $panSpeed);
+        case 'pan_left':
+             // Start right, move left. Ensure x doesn't go below 0.
+             // Start at x = max(0, iw-iw/zoom)
+             $startX = 'max(0,iw-iw/zoom)';
+             $moveX = sprintf('%f*on', $panSpeedPixelsPerFrame);
+            return sprintf('zoompan=z=1.1:d=%d:x=\'max(0,%s-%s)\':y=\'ih/2-(ih/zoom/2)\':%s', // Use z=1.1 for slight zoom with pan
+                 $frames, $startX, $moveX, $outputSize);
 
-      case 'pan_right':
-        return sprintf('zoompan=z=\'1.1\':d=%d:x=\'if(lte(on,%d),iw-(iw/zoom),max(0,iw-(iw/zoom)-%f*on))\':y=\'ih/2-(ih/zoom/2)\'',
-          $frames, $frames/10, $panSpeed);
+        case 'pan_right':
+             // Start left, move right. Ensure x doesn't exceed iw-iw/zoom.
+             // Start at x = 0
+             $startX = '0';
+             $maxX = 'iw-iw/zoom'; // Max x offset
+             $moveX = sprintf('%f*on', $panSpeedPixelsPerFrame);
+            return sprintf('zoompan=z=1.1:d=%d:x=\'min(%s,%s+%s)\':y=\'ih/2-(ih/zoom/2)\':%s',
+                 $frames, $maxX, $startX, $moveX, $outputSize);
 
-      default:
-        // Default to zoom in if unknown style
-        return sprintf('zoompan=z=\'min(1.0+%f*on,1.3)\':d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\'',
-          $zoomSpeed, $frames);
+        case 'pan_up':
+            // Start bottom, move up.
+            $startY = 'max(0,ih-ih/zoom)';
+            $moveY = sprintf('%f*on', $panSpeedPixelsPerFrame);
+           return sprintf('zoompan=z=1.1:d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'max(0,%s-%s)\':%s',
+                $frames, $startY, $moveY, $outputSize);
+
+        case 'pan_down':
+            // Start top, move down.
+            $startY = '0';
+            $maxY = 'ih-ih/zoom';
+            $moveY = sprintf('%f*on', $panSpeedPixelsPerFrame);
+           return sprintf('zoompan=z=1.1:d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'min(%s,%s+%s)\':%s',
+                $frames, $maxY, $startY, $moveY, $outputSize);
+
+        default: // Default to zoom_in
+           return sprintf('zoompan=z=\'min(max(zoom,1.0)+%f,1.2)\':d=%d:x=\'iw/2-(iw/zoom/2)\':y=\'ih/2-(ih/zoom/2)\':%s',
+                $zoomSpeed, $frames, $outputSize);
     }
   }
-  protected function getFontFilePath(string $fontId): string {
-    return $this->fontService->getFontFilePath($fontId);
-  }
+
 }
