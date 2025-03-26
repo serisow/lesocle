@@ -76,3 +76,5 @@ node_modules
 /backup-files/*
 /.phpunit.result.cache
 /ssow-ideas
+/output
+create_pipeline_llm_context.sh
