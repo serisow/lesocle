@@ -55,7 +55,7 @@ class MediaEntityCreator
    * @return int|null
    *   The created media entity ID, or NULL if creation failed.
    */
-  public function createMediaEntityFromFile(FileInterface $file, string $bundle = 'video', ?string $name = NULL): ?int
+  public function createMediaEntityFromFile(FileInterface $file, string $bundle = 'image', ?string $name = NULL): ?int
   {
     try {
       // Determine the appropriate source field based on bundle type

@@ -57,10 +57,6 @@ class UploadImageStepHandler implements StepHandlerInterface {
         $step_data['upload_image_config']['image_file_mime'] = $file->getMimeType();
         $step_data['upload_image_config']['image_file_name'] = $file->getFilename();
         $step_data['upload_image_config']['image_file_size'] = $file->getSize();
-        $step_data['upload_image_config']['duration'] = (float) $configuration['video_settings']['duration'];
-        if (!empty($configuration['text_blocks'])) {
-          $step_data['upload_image_config']['text_blocks'] = $configuration['text_blocks'];
-        }
       }
     }
   }

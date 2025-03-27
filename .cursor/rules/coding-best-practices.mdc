@@ -1,3 +1,8 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
 # Best practice
 
 - Always prefer simple solutions
@@ -11,3 +16,4 @@
 - Mocking data is only needed for tests, never mock data for dev or prod
 - Never add stubbing or fake data patterns to code that affects the dev or prod environments
 - Never overwrite my .env file without first asking and confirming
+-Never execute drush command or composer command i will do it my self
