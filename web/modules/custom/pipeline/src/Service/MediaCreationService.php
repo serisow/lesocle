@@ -62,48 +62,4 @@ class MediaCreationService implements ContainerInjectionInterface {
     }
   }
 
-  /**
-   * Creates a video media entity from a file.
-   *
-   * @param array $video_info
-   *   Array containing video information including 'file_id'.
-   *
-   * @return int|null
-   *   The media entity ID, or NULL if creation failed.
-   */
-  public function createVideoMedia(array $video_info): ?int {
-    try {
-      if (empty($video_info['file_id'])) {
-        throw new \Exception('Invalid file ID.');
-      }
-
-      $file = $this->entityTypeManager->getStorage('file')->load($video_info['file_id']);
-
-      if (!$file instanceof FileInterface) {
-        throw new \Exception('Invalid file ID.');
-      }
-
-      /** @var \Drupal\media\Entity\Media $media */
-      $media = $this->entityTypeManager->getStorage('media')->create([
-        'bundle' => 'video',
-        'name' => $video_info['filename'] ?? 'Pipeline generated video',
-        'field_media_video_file' => [
-          'target_id' => $file->id(),
-          'description' => 'Generated video from pipeline',
-        ],
-      ]);
-
-      // Add duration if available
-      if (!empty($video_info['duration']) && $media->hasField('field_duration')) {
-        $media->set('field_duration', $video_info['duration']);
-      }
-
-      $media->save();
-      return $media->id();
-    }
-    catch (\Exception $e) {
-      \Drupal::logger('pipeline')->error('Error creating video media entity: @error', ['@error' => $e->getMessage()]);
-      return null;
-    }
-  }
 }

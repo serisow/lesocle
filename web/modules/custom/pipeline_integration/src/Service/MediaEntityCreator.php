@@ -141,6 +141,7 @@ class MediaEntityCreator
   public function updateMediaEntity(int $mediaId, array $values): bool
   {
     try {
+      /** @var \Drupal\media\Entity\Media $media */
       $media = $this->entityTypeManager->getStorage('media')->load($mediaId);
       if (!$media) {
         return FALSE;

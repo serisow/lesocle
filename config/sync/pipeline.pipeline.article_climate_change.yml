@@ -6,13 +6,13 @@ id: article_climate_change
 label: 'Create article about climate change'
 instructions: 'Create an informative article about climate change with an accompanying image.'
 created: 1728600704
-changed: 1742250988
+changed: 1742734257
 execution_type: scheduled
-scheduled_time: 1742250900
-schedule_type: one_time
+scheduled_time: null
+schedule_type: none
 recurring_frequency: null
 recurring_time: null
-execution_interval: 10
+execution_interval: null
 execution_failures: 0
 step_types:
   b68b0e72-703c-4aae-a8ed-7e3e315b32fa:
@@ -99,7 +99,7 @@ step_types:
       prompt_template: ''
       prompt: "Your task is to create a comprehensive and well-informed article about climate change based on the provided content, then format it as a beautifully styled HTML snippet wrapped in a JSON structure. Follow these steps:\r\n\r\n1. Carefully analyze ALL elements of the content provided.\r\n2. Synthesize this information to create a balanced, factual, and cohesive article that incorporates key points from multiple sources without contradictions.\r\n3. Create a short, descriptive title for the content that captures its essence.\r\n4. Format the main content using semantic HTML5 tags, ensuring proper structure and readability.\r\n5. Include some basic CSS for styling (inline or in a <style> tag) to enhance visual appeal.\r\n6. Wrap the result in a JSON structure.\r\n\r\nHere is the content to base your article on:\r\n\r\n###\r\n{step2}\r\n###\r\n\r\nPlease provide your response in the following JSON structure. Do not add anything else, only the JSON structure:\r\n\r\n\"title\": \"Your generated title here\",\r\n\"body\": \"Your full HTML content here, including the title in an <h1> tag and the rest of the content\"\r\n\r\nEnsure that:\r\n1. The \"title\" field contains plain text (no HTML tags).\r\n2. The \"body\" field contains valid HTML, including the title in an <h1> tag and the full article content.\r\n3. All quotes within the HTML are properly escaped for valid JSON.\r\n4. The entire response is valid JSON that can be parsed without errors.\r\n"
       response: ''
-    weight: -5
+    weight: -3
     uuid: 1189ca36-ab04-4af9-a6ed-b6d50d8e67d5
   1b73e22b-1523-4691-8090-6b0bb66afa2a:
     id: action_step
@@ -116,5 +116,29 @@ step_types:
         }
         ```
       action_config: create_article_action
-    weight: -4
+    weight: -2
     uuid: 1b73e22b-1523-4691-8090-6b0bb66afa2a
+  0f9e6279-e14e-4eba-af8e-94615e58d81c:
+    id: action_step
+    data:
+      step_description: 'Load taxonomy term'
+      required_steps: step
+      step_output_key: taxo_data
+      output_type: generic_content
+      action_config: fetch_taxonomy
+      response: ''
+    weight: -5
+    uuid: 0f9e6279-e14e-4eba-af8e-94615e58d81c
+  7014ba55-d433-49ff-aad1-4715634e84a0:
+    id: llm_step
+    data:
+      step_description: 'Classify the content'
+      required_steps: "step2\r\ntaxo_data"
+      step_output_key: taxo_ids
+      output_type: taxonomy_term
+      llm_config: gemini_2_0_flash
+      prompt_template: 'Taxonomy classification (taxonomy_classification)'
+      prompt: "Classify the following content into the provided taxonomy terms. Return a JSON object with the selected term IDs.\r\n\r\nContent:\r\n{step2}\r\n\r\nTaxonomy Terms:\r\n{taxo_data}\r\n\r\nPlease return your response in the following JSON format:\r\n{\r\n  \"selected_terms\": [tid1, tid2, ...]\r\n}"
+      response: ''
+    weight: -4
+    uuid: 7014ba55-d433-49ff-aad1-4715634e84a0

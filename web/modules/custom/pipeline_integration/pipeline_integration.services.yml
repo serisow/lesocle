@@ -10,13 +10,6 @@ services:
     tags:
       - { name: entity_creation_strategy }
 
-  pipeline_integration.ffmpeg_service:
-    class: Drupal\pipeline_integration\Service\FFmpegService
-    arguments: [ '@logger.factory', '@pipeline.font_service' ]
-
-  pipeline_integration.video_file_manager:
-    class: Drupal\pipeline_integration\Service\VideoFileManager
-    arguments: [ '@file.repository', '@file_system' ]
 
   pipeline_integration.media_entity_creator:
     class: Drupal\pipeline_integration\Service\MediaEntityCreator

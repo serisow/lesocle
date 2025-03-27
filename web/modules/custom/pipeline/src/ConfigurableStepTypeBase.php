@@ -203,8 +203,6 @@ abstract class ConfigurableStepTypeBase extends StepTypeBase implements Configur
       'facebook_content'  => $this->t('Facebook Content'),
       // Select  this key for Upload Audio Step type
       'audio_content'  => $this->t('Audio Content'),
-      // Select  this key for action step Video Generation
-      'video_content'  => $this->t('Video Content'),
       // Use this key for LLM Step which process the news api data.The step come right after the step type
       // News API Search Step in UI.
       'structured_news'  => $this->t('Structured News'),

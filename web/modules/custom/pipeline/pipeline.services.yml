@@ -66,16 +66,6 @@ services:
   pipeline.file_manager:
     class: Drupal\pipeline\Service\PipelineFileManager
 
-  pipeline.video_download_service:
-    class: Drupal\pipeline\Service\VideoDownloadService
-    arguments:
-      - '@http_client'
-      - '@file_system'
-      - '@file.repository'
-      - '@entity_type.manager'
-      - '@pipeline.media_creation_service'
-      - '@logger.factory'
-
   pipeline.font_service:
     class: Drupal\pipeline\Service\FontService
 
