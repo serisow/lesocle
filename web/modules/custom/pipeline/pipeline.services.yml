@@ -29,12 +29,6 @@ services:
       - '@entity_type.manager'
       - '@logger.factory'
 
-  pipeline.go_service_image_processor:
-    class: Drupal\pipeline\Service\GoServiceImageProcessor
-    arguments:
-      - '@pipeline.image_download_service'
-      - '@entity_type.manager'
-      - '@logger.factory'
 
   pipeline.error_handler:
     class: Drupal\pipeline\Service\PipelineErrorHandler
@@ -97,11 +91,4 @@ services:
   pipeline.step_handler.upload_image:
     class: Drupal\pipeline\StepHandler\UploadImageStepHandler
     arguments: ['@logger.factory', '@file_url_generator']
-    
-  pipeline.step_handler.upload_audio:
-    class: Drupal\pipeline\StepHandler\UploadAudioStepHandler
-    arguments: ['@logger.factory']
-    
-  pipeline.step_handler.image_enrichment:
-    class: Drupal\pipeline\StepHandler\ImageEnrichmentStepHandler
-    arguments: ['@logger.factory']
+

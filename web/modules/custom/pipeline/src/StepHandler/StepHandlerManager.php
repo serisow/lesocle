@@ -30,8 +30,6 @@ class StepHandlerManager implements ContainerInjectionInterface {
     $instance->addHandler('news_api_search', $container->get('pipeline.step_handler.news_api'));
     $instance->addHandler('social_media_step', $container->get('pipeline.step_handler.social_media'));
     $instance->addHandler('upload_image_step', $container->get('pipeline.step_handler.upload_image'));
-    $instance->addHandler('upload_audio_step', $container->get('pipeline.step_handler.upload_audio'));
-    $instance->addHandler('image_enrichment_step', $container->get('pipeline.step_handler.image_enrichment'));
     
     return $instance;
   }

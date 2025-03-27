@@ -6,9 +6,9 @@ id: cybersecurity_news
 label: 'Cybersecurity news'
 instructions: 'Create an informative article about climate change with an accompanying image.'
 created: 1740406614
-changed: 1740406614
+changed: 1743084664
 execution_type: scheduled
-scheduled_time: 1739806800
+scheduled_time: 1743084660
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
