@@ -6,14 +6,16 @@ id: test_aws_polly
 label: 'Test AWS Polly'
 instructions: 'Test ElevenLabs TTS'
 created: 1740433889
-changed: 1743085319
+changed: 1743506258
 execution_type: scheduled
-scheduled_time: 1743085260
+scheduled_time: 1743506100
 schedule_type: one_time
 recurring_frequency: null
 recurring_time: null
 execution_interval: null
 execution_failures: 0
+entity_type: node
+bundle: article
 step_types:
   590cf2fd-5f45-429f-baaf-fe1b7f3a1288:
     id: llm_step

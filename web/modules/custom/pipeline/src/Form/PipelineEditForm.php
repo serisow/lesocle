@@ -9,6 +9,8 @@ use Drupal\Core\Form\FormState;
 use Drupal\pipeline\ConfigurableStepTypeInterface;
 use Drupal\pipeline\Plugin\StepTypeManager;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -27,7 +29,19 @@ class PipelineEditForm extends PipelineFormBase {
 
   protected $formBuilder;
 
+  /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
+  /**
+   * The entity type bundle info service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $entityTypeBundleInfo;
   /**
    * Constructs an PipelineEditForm object.
    *
@@ -35,13 +49,21 @@ class PipelineEditForm extends PipelineFormBase {
    *   The storage.
    * @param \Drupal\pipeline\Plugin\StepTypeManager $step_type_manager
    *   The step type manager service.
+   * @param \Drupal\Core\Form\FormBuilder $form_builder
+   *   The form builder service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager service.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle info service.
    */
   public function __construct(
     EntityStorageInterface $pipeline_storage,
     StepTypeManager        $step_type_manager,
-    FormBuilder            $form_builder
+    FormBuilder            $form_builder,
+    EntityTypeManagerInterface $entity_type_manager,
+    EntityTypeBundleInfoInterface $entity_type_bundle_info
   ) {
-    parent::__construct($pipeline_storage);
+    parent::__construct($pipeline_storage, $entity_type_manager, $entity_type_bundle_info);
     $this->stepTypeManager = $step_type_manager;
     $this->formBuilder = $form_builder;
   }
@@ -54,6 +76,8 @@ class PipelineEditForm extends PipelineFormBase {
       $container->get('entity_type.manager')->getStorage('pipeline'),
       $container->get('plugin.manager.step_type'),
       $container->get('form_builder'),
+      $container->get('entity_type.manager'),
+      $container->get('entity_type.bundle.info')
     );
   }
 
@@ -87,7 +111,8 @@ class PipelineEditForm extends PipelineFormBase {
         $form['status_container'],
         $form['langcode'],
         $form['execution_settings'],
-        $form['execution_type']
+        $form['execution_type'],
+        $form['application_context']
       );
       // Build the list of existing step types for this pipeline.
       $form['step_types'] = [
@@ -111,7 +136,7 @@ class PipelineEditForm extends PipelineFormBase {
           'id' => 'pipeline-step-types',
           'class' => ['pipeline-steps-table'],
         ],
-        '#empty' => t('There are currently no step types in this pipeline. Add one by selecting an option below.'),
+        '#empty' => $this->t('There are currently no step types in this pipeline. Add one by selecting an option below.'),
         // Render step types below parent elements.
         '#weight' => 5,
       ];
@@ -158,6 +183,7 @@ class PipelineEditForm extends PipelineFormBase {
         $uuid = $step_type->getUuid();
         $config = $step_type->getConfiguration();
         $llm_config_id = $config['data']['llm_config'] ?? '';
+        /** @var \Drupal\llm_config\Entity\LlmConfigInterface $llm_config */
         $llm_config = $this->entityTypeManager->getStorage('llm_config')->load($llm_config_id);
         $model_name = $llm_config ? $llm_config->getModelName() : 'N/A';
 

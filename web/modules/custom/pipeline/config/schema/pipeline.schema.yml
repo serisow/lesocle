@@ -45,6 +45,14 @@ pipeline.pipeline.*:
     execution_failures:
       type: integer
       label: 'Execution Failures Count'
+    entity_type:
+      type: string
+      label: 'Entity Type'
+      nullable: true
+    bundle:
+      type: string
+      label: 'Bundle'
+      nullable: true
     step_types:
       type: sequence
       sequence:

@@ -63,6 +63,11 @@ class PipelineListBuilder extends ConfigEntityListBuilder {
 
   /**
    * {@inheritdoc}
+   * @param \Drupal\pipeline\Entity\PipelineInterface $entity 
+   *   The pipeline entity.
+   *
+   * @return array
+   *   The row data.
    */
   public function buildRow(EntityInterface $entity) {
     $row['label'] = $entity->label();

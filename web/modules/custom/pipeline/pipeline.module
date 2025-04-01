@@ -1,8 +1,19 @@
 <?php
 
+/**
+ * @file
+ * Contains pipeline.module.
+ */
+
 use Drupal\Core\Url;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+
 /**
  * Implements hook_mail().
  */
@@ -46,6 +57,9 @@ function pipeline_theme($existing, $type, $theme, $path) {
       // This tells Drupal to look in themes for overrides
       'path' => $path . '/templates',  // Specify the path
       'template' => 'pipeline-dashboard',
+    ],
+    'pipeline' => [
+      'render element' => 'elements',
     ],
   ];
 }
@@ -214,4 +228,51 @@ function pipeline_execute_high_frequency_pipelines() {
 function pipeline_cron() {
   // Clean up voice previews older than 1 hour ??????
   \Drupal::service('pipeline.voice_preview_cleanup')->cleanup();
+}
+
+/**
+ * Implements hook_help().
+ */
+function pipeline_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.pipeline':
+      $output = '';
+      $output .= '<h3>' . \Drupal::service('string_translation')->translate('About') . '</h3>';
+      $output .= '<p>' . \Drupal::service('string_translation')->translate('The Pipeline module enables creation and management of AI-powered pipelines.') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * This is a placeholder implementation to prevent regression errors.
+ * When entity-level actions are implemented, this will be populated.
+ */
+function pipeline_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  // Empty implementation to prevent errors.
+  // Will be implemented in the future for entity-level pipeline actions.
+}
+
+/**
+ * Implements hook_entity_operation().
+ *
+ * This is a placeholder implementation to prevent regression errors.
+ * When entity-level actions are implemented, this will be populated.
+ */
+function pipeline_entity_operation(EntityInterface $entity) {
+  // Empty implementation to prevent errors.
+  // Will be implemented in the future for entity-level pipeline actions.
+  return [];
+}
+
+/**
+ * Custom submit handler for entity forms with pipeline actions.
+ *
+ * This is a placeholder implementation to prevent regression errors.
+ * When entity-level actions are implemented, this will be populated.
+ */
+function pipeline_entity_form_submit($form, FormStateInterface $form_state) {
+  // Empty implementation to prevent errors.
+  // Will be implemented in the future for entity-level pipeline actions.
 }

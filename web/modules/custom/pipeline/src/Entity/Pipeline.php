@@ -78,7 +78,9 @@ use Drupal\Core\Entity\EntityWithPluginCollectionInterface;
  *     "recurring_time",
  *     "execution_interval",
  *     "execution_type",
- *     "execution_failures"
+ *     "execution_failures",
+ *     "entity_type",
+ *     "bundle"
  *   }
  * )
  */
@@ -193,6 +195,20 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    * @var int
    */
   protected $execution_failures = 0;
+
+  /**
+   * The entity type this pipeline can be applied to.
+   *
+   * @var string|null
+   */
+  protected $entity_type;
+
+  /**
+   * The bundle this pipeline can be applied to.
+   *
+   * @var string|null
+   */
+  protected $bundle;
 
   /**
    * {@inheritdoc}
@@ -515,6 +531,52 @@ class Pipeline extends ConfigEntityBase  implements PipelineInterface, EntityWit
    */
   public function resetExecutionFailures() {
     $this->execution_failures = 0;
+    return $this;
+  }
+
+  /**
+   * Gets the entity type this pipeline is applicable to.
+   *
+   * @return string|null
+   *   The entity type ID, or NULL if not set.
+   */
+  public function getTargetEntityType() {
+    return $this->entity_type;
+  }
+
+  /**
+   * Sets the entity type this pipeline is applicable to.
+   *
+   * @param string|null $entity_type
+   *   The entity type ID.
+   *
+   * @return $this
+   */
+  public function setTargetEntityType($entity_type) {
+    $this->entity_type = $entity_type;
+    return $this;
+  }
+
+  /**
+   * Gets the bundle this pipeline is applicable to.
+   *
+   * @return string|null
+   *   The bundle, or NULL if not set or not applicable.
+   */
+  public function getTargetBundle() {
+    return $this->bundle;
+  }
+
+  /**
+   * Sets the bundle this pipeline is applicable to.
+   *
+   * @param string|null $bundle
+   *   The bundle.
+   *
+   * @return $this
+   */
+  public function setTargetBundle($bundle) {
+    $this->bundle = $bundle;
     return $this;
   }
 

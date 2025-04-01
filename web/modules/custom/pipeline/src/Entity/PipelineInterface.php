@@ -311,4 +311,40 @@ interface PipelineInterface extends ConfigEntityInterface {
    * @return $this
    */
   public function resetExecutionFailures();
+
+  /**
+   * Gets the entity type this pipeline is applicable to.
+   *
+   * @return string|null
+   *   The entity type ID, or NULL if not set.
+   */
+  public function getTargetEntityType();
+
+  /**
+   * Sets the entity type this pipeline is applicable to.
+   *
+   * @param string|null $entity_type
+   *   The entity type ID.
+   *
+   * @return $this
+   */
+  public function setTargetEntityType($entity_type);
+
+  /**
+   * Gets the bundle this pipeline is applicable to.
+   *
+   * @return string|null
+   *   The bundle, or NULL if not set or not applicable.
+   */
+  public function getTargetBundle();
+
+  /**
+   * Sets the bundle this pipeline is applicable to.
+   *
+   * @param string|null $bundle
+   *   The bundle.
+   *
+   * @return $this
+   */
+  public function setTargetBundle($bundle);
 }

@@ -4,6 +4,8 @@ namespace Drupal\pipeline\Form;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Url;
@@ -30,13 +32,37 @@ abstract class PipelineFormBase extends EntityForm {
   protected $pipelineStorage;
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The entity type bundle info service.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeBundleInfoInterface
+   */
+  protected $entityTypeBundleInfo;
+
+  /**
    * Constructs a base class for pipeline add and edit forms.
    *
    * @param \Drupal\Core\Entity\EntityStorageInterface $pipeline_storage
    *   The pipeline entity storage.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
+   * @param \Drupal\Core\Entity\EntityTypeBundleInfoInterface $entity_type_bundle_info
+   *   The entity type bundle info service.
    */
-  public function __construct(EntityStorageInterface $pipeline_storage) {
+  public function __construct(
+    EntityStorageInterface $pipeline_storage,
+    EntityTypeManagerInterface $entity_type_manager,
+    EntityTypeBundleInfoInterface $entity_type_bundle_info
+  ) {
     $this->pipelineStorage = $pipeline_storage;
+    $this->entityTypeManager = $entity_type_manager;
+    $this->entityTypeBundleInfo = $entity_type_bundle_info;
   }
 
   /**
@@ -44,7 +70,9 @@ abstract class PipelineFormBase extends EntityForm {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity_type.manager')->getStorage('pipeline')
+      $container->get('entity_type.manager')->getStorage('pipeline'),
+      $container->get('entity_type.manager'),
+      $container->get('entity_type.bundle.info')
     );
   }
 
@@ -79,6 +107,70 @@ abstract class PipelineFormBase extends EntityForm {
       '#default_value' => $this->entity->getInstructions(),
       '#required' => TRUE,
     ];
+
+    // Add Application Context fieldset
+    $form['application_context'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Application Context'),
+      '#description' => $this->t('Define where this pipeline can be used as an action.'),
+      '#weight' => 30,
+    ];
+
+    // Get entity types for the dropdown - limited to supported types
+    $entity_type_options = [
+      'node' => $this->t('Content'),
+      'media' => $this->t('Media'),
+      'user' => $this->t('User'),
+      'taxonomy_term' => $this->t('Taxonomy term'),
+    ];
+    
+    $form['application_context']['entity_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Entity Type'),
+      '#description' => $this->t('The entity type where this pipeline will be available as an action.'),
+      '#options' => $entity_type_options,
+      '#default_value' => $this->entity->getTargetEntityType(),
+      '#empty_option' => $this->t('- Select -'),
+      '#required' => FALSE,
+      '#ajax' => [
+        'callback' => '::updateBundleOptions',
+        'wrapper' => 'bundle-container',
+        'event' => 'change',
+      ],
+    ];
+
+    $form['application_context']['bundle_container'] = [
+      '#type' => 'container',
+      '#attributes' => ['id' => 'bundle-container'],
+    ];
+
+    $entity_type = $form_state->getValue(['application_context', 'entity_type']) ?: $this->entity->getTargetEntityType();
+    
+    if ($entity_type) {
+      // Get bundle info for the selected entity type
+      $bundles = $this->entityTypeBundleInfo->getBundleInfo($entity_type);
+      
+      // Always show bundle options
+      $bundle_options = [];
+      foreach ($bundles as $bundle_id => $bundle_info) {
+        $bundle_options[$bundle_id] = $bundle_info['label'];
+      }
+      
+      // For 'user' entity type, which doesn't use standard bundles
+      if ($entity_type == 'user' && empty($bundle_options)) {
+        $bundle_options['user'] = $this->t('User');
+      }
+      
+      $form['application_context']['bundle_container']['bundle'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Bundle'),
+        '#description' => $this->t('The specific bundle where this pipeline will be available.'),
+        '#options' => $bundle_options,
+        '#default_value' => $this->entity->getTargetBundle(),
+        '#empty_option' => $this->t('- Any -'),
+        '#required' => FALSE,
+      ];
+    }
 
     $form['status_container'] = [
       '#type' => 'container',
@@ -232,6 +324,12 @@ abstract class PipelineFormBase extends EntityForm {
     return $form['execution_settings']['schedule_settings'];
   }
 
+  /**
+   * Ajax callback to update bundle options based on selected entity type.
+   */
+  public function updateBundleOptions(array &$form, FormStateInterface $form_state) {
+    return $form['application_context']['bundle_container'];
+  }
 
   /**
    * {@inheritdoc}
@@ -250,10 +348,24 @@ abstract class PipelineFormBase extends EntityForm {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Handle status update
     $status = $form_state->getValue(['status_container', 'status']);
     $this->entity->setStatus($status);
+
+    // Set the entity type and bundle
+    $entity_type = $form_state->getValue(['application_context', 'entity_type']);
+    $this->entity->setTargetEntityType($entity_type);
+    
+    $bundle = NULL;
+    if ($entity_type) {
+      // Make sure we're getting the bundle from the right place - it's inside the bundle_container
+      $bundle = $form_state->getValue(['application_context', 'bundle_container', 'bundle']);
+    }
+    $this->entity->setTargetBundle($bundle);
 
     // Set the execution type
     $execution_type = $form_state->getValue('execution_type');

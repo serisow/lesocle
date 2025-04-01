@@ -78,3 +78,4 @@ node_modules
 /ssow-ideas
 /output
 create_pipeline_llm_context.sh
+/web/lesocle-doc/*

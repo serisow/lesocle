@@ -92,3 +92,11 @@ services:
     class: Drupal\pipeline\StepHandler\UploadImageStepHandler
     arguments: ['@logger.factory', '@file_url_generator']
 
+  pipeline.action:
+    class: Drupal\pipeline\Service\PipelineActionService
+    arguments: 
+      - '@entity_type.manager'
+      - '@current_user'
+      - '@messenger'
+      - '@plugin.manager.step_type'
+

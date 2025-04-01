@@ -18,3 +18,7 @@ access pipeline api:
   title: 'Access Pipeline API'
   description: 'Allow access to the Pipeline API endpoints'
 
+use pipeline actions:
+  title: 'Use Pipeline Actions'
+  description: 'Allow users to execute pipelines as actions on entities.'
+
