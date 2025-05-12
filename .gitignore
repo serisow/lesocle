@@ -70,7 +70,7 @@ node_modules
 /web/themes/custom/*/assets/
 /.editorconfig
 /.gitattributes
-
+.cursor
 
 /coverage
 /backup-files/*
