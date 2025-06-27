@@ -43,6 +43,10 @@ config/sync/pipeline.llm_config.*
 config/sync/pipeline.news_api_settings.yml
 config/sync/pipeline.google_settings.yml
 
+# SQL dumps (may contain sensitive data)
+*.sql
+/web/*.sql
+
 # Ignore Drupal's file directory
 /web/sites/*/files/
 /private-files/
