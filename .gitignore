@@ -40,6 +40,8 @@ docker-compose.override.yml
 # Pipeline configuration files with API keys
 config/sync/pipeline.action_config.*
 config/sync/pipeline.llm_config.*
+config/sync/pipeline.news_api_settings.yml
+config/sync/pipeline.google_settings.yml
 
 # Ignore Drupal's file directory
 /web/sites/*/files/
