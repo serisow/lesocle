@@ -37,6 +37,10 @@ docker-compose.override.yml
 # Ignore sensitive information
 /web/sites/*/settings.local.php
 
+# Pipeline configuration files with API keys
+config/sync/pipeline.action_config.*
+config/sync/pipeline.llm_config.*
+
 # Ignore Drupal's file directory
 /web/sites/*/files/
 /private-files/
